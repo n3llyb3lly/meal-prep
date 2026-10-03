@@ -1,86 +1,15 @@
 {
  "schemaVersion": 1,
- "catalogVersion": "2026.10.02-2346",
- "builtAt": "2026-10-03T04:46:04.563Z",
- "categories": [
-  {
-   "name": "Produce",
-   "section": "Produce",
-   "storage": "fridge",
-   "fridge": 7,
-   "freezer": null,
-   "pantry": null,
-   "tracking": "quantity",
-   "staple": false
-  },
-  {
-   "name": "Meat",
-   "section": "Meat",
-   "storage": "fridge",
-   "fridge": 3,
-   "freezer": 180,
-   "pantry": null,
-   "tracking": "quantity",
-   "staple": false
-  },
-  {
-   "name": "Dairy & eggs",
-   "section": "Dairy & eggs",
-   "storage": "fridge",
-   "fridge": 14,
-   "freezer": null,
-   "pantry": null,
-   "tracking": "quantity",
-   "staple": false
-  },
-  {
-   "name": "Bakery & frozen",
-   "section": "Bakery & frozen",
-   "storage": "freezer",
-   "fridge": 5,
-   "freezer": 240,
-   "pantry": null,
-   "tracking": "quantity",
-   "staple": false
-  },
-  {
-   "name": "Pantry",
-   "section": "Pantry",
-   "storage": "pantry",
-   "fridge": null,
-   "freezer": null,
-   "pantry": 180,
-   "tracking": "quantity",
-   "staple": false
-  },
-  {
-   "name": "Drinks",
-   "section": "Drinks",
-   "storage": "pantry",
-   "fridge": 7,
-   "freezer": null,
-   "pantry": 270,
-   "tracking": "quantity",
-   "staple": false
-  },
-  {
-   "name": "Other",
-   "section": "Other",
-   "storage": "pantry",
-   "fridge": null,
-   "freezer": null,
-   "pantry": 90,
-   "tracking": "quantity",
-   "staple": false
-  }
- ],
+ "catalogVersion": "2026.10.03-1501",
+ "builtAt": "2026-10-03T20:01:36.123Z",
+ "categories": [],
  "items": [
   {
    "id": "bananas",
    "name": "Bananas",
    "cat": "Produce",
-   "family": "banana",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "each",
@@ -102,8 +31,8 @@
    "id": "avocado",
    "name": "Large avocado",
    "cat": "Produce",
-   "family": "avocado",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "each",
@@ -126,7 +55,7 @@
    "name": "Cucumber",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "each",
@@ -148,8 +77,8 @@
    "id": "cherry_tomatoes",
    "name": "Cherub grape tomatoes",
    "cat": "Produce",
-   "family": "tomato",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "10 oz",
@@ -171,8 +100,8 @@
    "id": "spinach",
    "name": "Baby spinach",
    "cat": "Produce",
-   "family": "spinach",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -194,8 +123,8 @@
    "id": "mushrooms",
    "name": "Sliced white mushrooms",
    "cat": "Produce",
-   "family": "mushroom",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -217,8 +146,8 @@
    "id": "broccoli",
    "name": "Broccoli crowns",
    "cat": "Produce",
-   "family": "broccoli",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -240,8 +169,8 @@
    "id": "carrots",
    "name": "Whole carrots",
    "cat": "Produce",
-   "family": "carrot",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "2 lb",
@@ -263,8 +192,8 @@
    "id": "green_onions",
    "name": "Green onions",
    "cat": "Produce",
-   "family": "onion",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "bunch",
@@ -287,7 +216,7 @@
    "name": "Asparagus",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "1 lb",
@@ -309,8 +238,8 @@
    "id": "green_beans",
    "name": "French green beans",
    "cat": "Produce",
-   "family": "bean",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "1 lb",
@@ -332,8 +261,8 @@
    "id": "apples",
    "name": "Honeycrisp apples",
    "cat": "Produce",
-   "family": "apple",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "2 lb bag",
@@ -356,7 +285,7 @@
    "name": "Cara Cara oranges",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "3 lb",
@@ -378,8 +307,8 @@
    "id": "grapes",
    "name": "Green grapes",
    "cat": "Produce",
-   "family": "grape",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -401,8 +330,8 @@
    "id": "blackberries",
    "name": "Blackberries",
    "cat": "Produce",
-   "family": "berry",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "6 oz",
@@ -425,7 +354,7 @@
    "name": "Bartlett pears",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "3 lb",
@@ -447,8 +376,8 @@
    "id": "peppers",
    "name": "Multicolored peppers",
    "cat": "Produce",
-   "family": "pepper",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "3-pack",
@@ -470,8 +399,8 @@
    "id": "butternut",
    "name": "Butternut squash",
    "cat": "Produce",
-   "family": "butter",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -494,7 +423,7 @@
    "name": "Fresh rosemary",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "0.5 oz",
@@ -516,8 +445,8 @@
    "id": "onion",
    "name": "Yellow onions",
    "cat": "Produce",
-   "family": "onion",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "3 lb bag",
@@ -539,8 +468,8 @@
    "id": "garlic",
    "name": "Garlic",
    "cat": "Produce",
-   "family": "garlic",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "3 ct",
@@ -562,8 +491,8 @@
    "id": "potatoes",
    "name": "Russet potatoes",
    "cat": "Produce",
-   "family": "potato",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "5 lb bag",
@@ -585,8 +514,8 @@
    "id": "lemon",
    "name": "Lemon",
    "cat": "Produce",
-   "family": "lemon",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "1 lb bag",
@@ -608,8 +537,8 @@
    "id": "lime",
    "name": "Lime",
    "cat": "Produce",
-   "family": "lime",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "1 lb bag",
@@ -631,8 +560,8 @@
    "id": "chicken_breast",
    "name": "Boneless skinless chicken breast",
    "cat": "Meat",
-   "family": "chicken",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -654,8 +583,8 @@
    "id": "chicken_thigh",
    "name": "Boneless skinless chicken thighs",
    "cat": "Meat",
-   "family": "chicken",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -677,8 +606,8 @@
    "id": "chicken_wings",
    "name": "Whole chicken wings",
    "cat": "Meat",
-   "family": "chicken",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -700,8 +629,8 @@
    "id": "pork_chops",
    "name": "Thin-sliced boneless pork chops",
    "cat": "Meat",
-   "family": "pork",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -723,8 +652,8 @@
    "id": "ground_beef",
    "name": "80/20 ground beef",
    "cat": "Meat",
-   "family": "beef",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -746,8 +675,8 @@
    "id": "beef_shaved",
    "name": "Beef shaved steak",
    "cat": "Meat",
-   "family": "beef",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "14 oz",
@@ -770,7 +699,7 @@
    "name": "Bremer original meatballs, frozen",
    "cat": "Meat",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 oz",
@@ -792,8 +721,8 @@
    "id": "eggs",
    "name": "Large eggs",
    "cat": "Dairy & eggs",
-   "family": "egg",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "dozen",
@@ -815,8 +744,8 @@
    "id": "milk",
    "name": "Whole milk",
    "cat": "Dairy & eggs",
-   "family": "milk",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "1 gal",
@@ -838,8 +767,8 @@
    "id": "butter",
    "name": "Butter",
    "cat": "Dairy & eggs",
-   "family": "butter",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "16 oz",
@@ -861,8 +790,8 @@
    "id": "cottage_cheese",
    "name": "Cottage cheese",
    "cat": "Dairy & eggs",
-   "family": "cheese",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "24 oz",
@@ -884,8 +813,8 @@
    "id": "cream_cheese",
    "name": "Whipped cream cheese spread",
    "cat": "Dairy & eggs",
-   "family": "cheese",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -908,7 +837,7 @@
    "name": "Shredded cheddar",
    "cat": "Dairy & eggs",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "16 oz",
@@ -930,8 +859,8 @@
    "id": "yogurt",
    "name": "Plain yogurt",
    "cat": "Dairy & eggs",
-   "family": "yogurt",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 oz",
@@ -954,7 +883,7 @@
    "name": "Sourdough round",
    "cat": "Bakery & frozen",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "24 oz",
@@ -976,8 +905,8 @@
    "id": "tortillas",
    "name": "Flour tortillas",
    "cat": "Bakery & frozen",
-   "family": "tortilla",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 ct",
@@ -1000,7 +929,7 @@
    "name": "Seasoned French fries, frozen",
    "cat": "Bakery & frozen",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 oz",
@@ -1023,7 +952,7 @@
    "name": "Frozen stir-fry vegetables",
    "cat": "Bakery & frozen",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "16 oz",
@@ -1045,8 +974,8 @@
    "id": "rice",
    "name": "Long-grain rice",
    "cat": "Pantry",
-   "family": "rice",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "80 oz (5 lb)",
@@ -1068,8 +997,8 @@
    "id": "pasta",
    "name": "Spaghetti",
    "cat": "Pantry",
-   "family": "pasta",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 oz",
@@ -1091,8 +1020,8 @@
    "id": "oats",
    "name": "Old-fashioned oats",
    "cat": "Pantry",
-   "family": "oat",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "42 oz",
@@ -1114,8 +1043,8 @@
    "id": "black_beans",
    "name": "Black beans",
    "cat": "Pantry",
-   "family": "bean",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "15 oz can",
@@ -1137,8 +1066,8 @@
    "id": "chickpeas",
    "name": "Chickpeas",
    "cat": "Pantry",
-   "family": "chickpea",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "15.5 oz can",
@@ -1160,8 +1089,8 @@
    "id": "diced_tomatoes",
    "name": "Diced tomatoes",
    "cat": "Pantry",
-   "family": "tomato",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "14.5 oz can",
@@ -1183,8 +1112,8 @@
    "id": "marinara",
    "name": "Marinara sauce",
    "cat": "Pantry",
-   "family": "sauce",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "23 oz jar",
@@ -1206,8 +1135,8 @@
    "id": "broth",
    "name": "Chicken broth",
    "cat": "Pantry",
-   "family": "chicken",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 oz",
@@ -1230,7 +1159,7 @@
    "name": "Salsa",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "16 oz jar",
@@ -1252,10 +1181,10 @@
    "id": "oil",
    "name": "Cooking oil",
    "cat": "Pantry",
-   "family": "oil",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "48 fl oz",
    "unit": "tbsp",
    "pkg": 96,
@@ -1275,10 +1204,10 @@
    "id": "soy_sauce",
    "name": "Soy sauce",
    "cat": "Pantry",
-   "family": "sauce",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "15 fl oz",
    "unit": "tbsp",
    "pkg": 30,
@@ -1299,9 +1228,9 @@
    "name": "Honey",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "24 oz",
    "unit": "tbsp",
    "pkg": 34,
@@ -1322,9 +1251,9 @@
    "name": "Maple-style syrup",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "24 fl oz",
    "unit": "tbsp",
    "pkg": 48,
@@ -1344,8 +1273,8 @@
    "id": "peanut_butter",
    "name": "Peanut butter",
    "cat": "Pantry",
-   "family": "butter",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "18 oz",
@@ -1367,10 +1296,10 @@
    "id": "hot_sauce",
    "name": "Sriracha-style chili sauce",
    "cat": "Pantry",
-   "family": "sauce",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "18 oz",
    "unit": "tbsp",
    "pkg": 36,
@@ -1390,10 +1319,10 @@
    "id": "bbq_sauce",
    "name": "BBQ sauce",
    "cat": "Pantry",
-   "family": "sauce",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "18 oz",
    "unit": "tbsp",
    "pkg": 18,
@@ -1414,9 +1343,9 @@
    "name": "Chili powder",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "2.5 oz",
    "unit": "tsp",
    "pkg": 27,
@@ -1437,9 +1366,9 @@
    "name": "Ground cumin",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "2 oz",
    "unit": "tsp",
    "pkg": 27,
@@ -1460,9 +1389,9 @@
    "name": "Paprika",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1.6 oz",
    "unit": "tsp",
    "pkg": 20,
@@ -1483,9 +1412,9 @@
    "name": "Ground cinnamon",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1.5 oz",
    "unit": "tsp",
    "pkg": 16,
@@ -1506,9 +1435,9 @@
    "name": "Italian seasoning",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "0.75 oz",
    "unit": "tsp",
    "pkg": 21,
@@ -1529,9 +1458,9 @@
    "name": "Ground ginger",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "jar",
    "unit": "tsp",
    "pkg": 36,
@@ -1551,8 +1480,8 @@
    "id": "avocado_oil",
    "name": "Avocado oil",
    "cat": "Pantry",
-   "family": "avocado",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "17 fl oz",
@@ -1574,8 +1503,8 @@
    "id": "greek_yogurt",
    "name": "Plain Greek yogurt",
    "cat": "Dairy & eggs",
-   "family": "yogurt",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 oz",
@@ -1598,9 +1527,9 @@
    "name": "Ginger paste",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "2.8 oz tube",
    "unit": "tbsp",
    "pkg": 5,
@@ -1621,9 +1550,9 @@
    "name": "Ground turmeric",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1.37 oz",
    "unit": "tsp",
    "pkg": 13,
@@ -1644,9 +1573,9 @@
    "name": "Garam masala",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "2 oz jar",
    "unit": "tsp",
    "pkg": 18,
@@ -1667,9 +1596,9 @@
    "name": "Ground coriander",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1.5 oz jar",
    "unit": "tsp",
    "pkg": 20,
@@ -1690,9 +1619,9 @@
    "name": "Kasuri methi (dried fenugreek leaves)",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1 oz bag",
    "unit": "tsp",
    "pkg": 25,
@@ -1713,9 +1642,9 @@
    "name": "Cinnamon sticks",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1 oz jar",
    "unit": "each",
    "pkg": 8,
@@ -1736,9 +1665,9 @@
    "name": "Green cardamom pods",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1 oz jar",
    "unit": "each",
    "pkg": 60,
@@ -1759,9 +1688,9 @@
    "name": "Whole cloves",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "2 oz jar",
    "unit": "each",
    "pkg": 300,
@@ -1781,8 +1710,8 @@
    "id": "tomatoes",
    "name": "Tomatoes on the vine",
    "cat": "Produce",
-   "family": "tomato",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "24 oz",
@@ -1804,8 +1733,8 @@
    "id": "jalapeno",
    "name": "Jalapeño peppers",
    "cat": "Produce",
-   "family": "pepper",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -1828,7 +1757,7 @@
    "name": "Raw cashews",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -1850,10 +1779,10 @@
    "id": "sugar",
    "name": "Granulated sugar",
    "cat": "Pantry",
-   "family": "sugar",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "4 lb",
    "unit": "tsp",
    "pkg": 430,
@@ -1873,8 +1802,8 @@
    "id": "heavy_cream",
    "name": "Heavy whipping cream",
    "cat": "Dairy & eggs",
-   "family": "cream",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "16 fl oz",
@@ -1897,7 +1826,7 @@
    "name": "Fresh cilantro",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "bunch",
@@ -1919,8 +1848,8 @@
    "id": "pork_sausage",
    "name": "Pork sausage roll",
    "cat": "Meat",
-   "family": "pork",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "16 oz",
@@ -1942,8 +1871,8 @@
    "id": "cream_cheese_block",
    "name": "Cream cheese block",
    "cat": "Dairy & eggs",
-   "family": "cheese",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -1966,7 +1895,7 @@
    "name": "Bisquick baking mix",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "40 oz",
@@ -1989,7 +1918,7 @@
    "name": "Cauliflower crown",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "each",
@@ -2011,8 +1940,8 @@
    "id": "cabbage",
    "name": "Green cabbage",
    "cat": "Produce",
-   "family": "cabbage",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -2035,7 +1964,7 @@
    "name": "Zucchini",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "package",
@@ -2057,8 +1986,8 @@
    "id": "sweet_potato",
    "name": "Sweet potatoes",
    "cat": "Produce",
-   "family": "potato",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "3 lb bag",
@@ -2080,8 +2009,8 @@
    "id": "red_onion",
    "name": "Red onions",
    "cat": "Produce",
-   "family": "onion",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "2 lb",
@@ -2104,7 +2033,7 @@
    "name": "Fresh parsley",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "bunch",
@@ -2127,7 +2056,7 @@
    "name": "Fresh thyme",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "0.5 oz",
@@ -2149,8 +2078,8 @@
    "id": "strawberries",
    "name": "Strawberries",
    "cat": "Produce",
-   "family": "berry",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "1 lb",
@@ -2172,8 +2101,8 @@
    "id": "bean_sprouts",
    "name": "Bean sprouts",
    "cat": "Produce",
-   "family": "bean",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "10 oz bag",
@@ -2195,8 +2124,8 @@
    "id": "chicken_thigh_bonein",
    "name": "Bone-in skin-on chicken thighs",
    "cat": "Meat",
-   "family": "chicken",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -2218,8 +2147,8 @@
    "id": "salmon",
    "name": "Fresh Atlantic salmon portions",
    "cat": "Meat",
-   "family": "salmon",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -2241,8 +2170,8 @@
    "id": "shrimp",
    "name": "Jumbo raw peeled shrimp",
    "cat": "Meat",
-   "family": "shrimp",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -2264,8 +2193,8 @@
    "id": "bacon",
    "name": "Sliced bacon",
    "cat": "Meat",
-   "family": "bacon",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "16 oz",
@@ -2287,8 +2216,8 @@
    "id": "pork_shoulder",
    "name": "Pork butt (shoulder) roast",
    "cat": "Meat",
-   "family": "pork",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -2311,7 +2240,7 @@
    "name": "Petite sirloin steak",
    "cat": "Meat",
    "family": null,
-   "soldBy": "weight",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -2333,8 +2262,8 @@
    "id": "pork_chops_thick",
    "name": "Center cut pork chops",
    "cat": "Meat",
-   "family": "pork",
-   "soldBy": "weight",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "per lb",
@@ -2357,7 +2286,7 @@
    "name": "Grated Parmesan",
    "cat": "Dairy & eggs",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -2380,7 +2309,7 @@
    "name": "Shredded mozzarella",
    "cat": "Dairy & eggs",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "16 oz",
@@ -2402,8 +2331,8 @@
    "id": "mexican_cheese",
    "name": "Shredded Mexican cheese",
    "cat": "Dairy & eggs",
-   "family": "cheese",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "12 oz",
@@ -2426,7 +2355,7 @@
    "name": "Queso fresco",
    "cat": "Dairy & eggs",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "10 oz",
@@ -2449,7 +2378,7 @@
    "name": "Mascarpone",
    "cat": "Dairy & eggs",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -2472,7 +2401,7 @@
    "name": "Half & half",
    "cat": "Dairy & eggs",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 fl oz",
@@ -2494,8 +2423,8 @@
    "id": "almond_milk",
    "name": "Unsweetened almond milk",
    "cat": "Dairy & eggs",
-   "family": "milk",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "64 fl oz",
@@ -2517,8 +2446,8 @@
    "id": "buttermilk",
    "name": "Buttermilk",
    "cat": "Dairy & eggs",
-   "family": "butter",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "1 qt",
@@ -2541,7 +2470,7 @@
    "name": "Frozen sweet peas",
    "cat": "Bakery & frozen",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "12 oz",
@@ -2564,7 +2493,7 @@
    "name": "Elbow macaroni",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 oz",
@@ -2586,8 +2515,8 @@
    "id": "lo_mein_noodles",
    "name": "Chow mein / lo mein noodles",
    "cat": "Pantry",
-   "family": "noodle",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -2610,7 +2539,7 @@
    "name": "Quick grits",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "24 oz",
@@ -2632,8 +2561,8 @@
    "id": "crushed_tomatoes",
    "name": "Crushed tomatoes",
    "cat": "Pantry",
-   "family": "tomato",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "28 oz can",
@@ -2655,8 +2584,8 @@
    "id": "beef_broth",
    "name": "Beef broth",
    "cat": "Pantry",
-   "family": "beef",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 oz",
@@ -2678,8 +2607,8 @@
    "id": "enchilada_sauce",
    "name": "Red enchilada sauce",
    "cat": "Pantry",
-   "family": "sauce",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "10 oz can",
@@ -2701,8 +2630,8 @@
    "id": "coconut_cream",
    "name": "Coconut cream",
    "cat": "Pantry",
-   "family": "cream",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "13.5 oz can",
@@ -2724,8 +2653,8 @@
    "id": "olive_oil",
    "name": "Extra virgin olive oil",
    "cat": "Pantry",
-   "family": "oil",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "16.9 fl oz",
@@ -2747,10 +2676,10 @@
    "id": "sesame_oil",
    "name": "Toasted sesame oil",
    "cat": "Pantry",
-   "family": "oil",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "16.9 fl oz",
    "unit": "tsp",
    "pkg": 101,
@@ -2770,10 +2699,10 @@
    "id": "rice_vinegar",
    "name": "Rice vinegar",
    "cat": "Pantry",
-   "family": "rice",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "12 fl oz",
    "unit": "tbsp",
    "pkg": 24,
@@ -2793,10 +2722,10 @@
    "id": "oyster_sauce",
    "name": "Oyster sauce",
    "cat": "Pantry",
-   "family": "sauce",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "9 fl oz",
    "unit": "tbsp",
    "pkg": 18,
@@ -2817,7 +2746,7 @@
    "name": "Mirin",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "10 fl oz",
@@ -2839,8 +2768,8 @@
    "id": "rice_wine",
    "name": "Cooking sake / Shaoxing wine",
    "cat": "Pantry",
-   "family": "rice",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "750 ml",
@@ -2863,7 +2792,7 @@
    "name": "White miso paste",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "14 oz",
@@ -2886,7 +2815,7 @@
    "name": "Dashi powder",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "1.05 oz jar",
@@ -2909,9 +2838,9 @@
    "name": "Toasted sesame seeds",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "2 oz jar",
    "unit": "tsp",
    "pkg": 20,
@@ -2932,9 +2861,9 @@
    "name": "Corn starch",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "16 oz",
    "unit": "tsp",
    "pkg": 168,
@@ -2954,10 +2883,10 @@
    "id": "flour",
    "name": "All-purpose flour",
    "cat": "Pantry",
-   "family": "flour",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "5 lb",
    "unit": "cup",
    "pkg": 18,
@@ -2978,9 +2907,9 @@
    "name": "Baking powder",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "8.1 oz",
    "unit": "tsp",
    "pkg": 50,
@@ -3000,10 +2929,10 @@
    "id": "brown_sugar",
    "name": "Light brown sugar",
    "cat": "Pantry",
-   "family": "sugar",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "32 oz",
    "unit": "cup",
    "pkg": 4.25,
@@ -3024,7 +2953,7 @@
    "name": "Light corn syrup",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "32 fl oz",
@@ -3047,7 +2976,7 @@
    "name": "Dark chocolate morsels",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "10 oz",
@@ -3070,7 +2999,7 @@
    "name": "Unsweetened baking cocoa",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -3093,7 +3022,7 @@
    "name": "Graham crackers",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "14.4 oz box",
@@ -3115,8 +3044,8 @@
    "id": "panko",
    "name": "Panko breadcrumbs",
    "cat": "Pantry",
-   "family": "bread",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "8 oz",
@@ -3139,9 +3068,9 @@
    "name": "Dijon mustard",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "12 oz",
    "unit": "tbsp",
    "pkg": 22,
@@ -3162,9 +3091,9 @@
    "name": "Dried oregano",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "0.75 oz",
    "unit": "tsp",
    "pkg": 21,
@@ -3184,10 +3113,10 @@
    "id": "garlic_powder",
    "name": "Garlic powder",
    "cat": "Pantry",
-   "family": "garlic",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "3.17 oz",
    "unit": "tsp",
    "pkg": 29,
@@ -3207,10 +3136,10 @@
    "id": "onion_powder",
    "name": "Onion powder",
    "cat": "Pantry",
-   "family": "onion",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "2.62 oz",
    "unit": "tsp",
    "pkg": 31,
@@ -3231,9 +3160,9 @@
    "name": "Smoked paprika",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1.6 oz",
    "unit": "tsp",
    "pkg": 20,
@@ -3254,9 +3183,9 @@
    "name": "Seasoned salt",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "16 oz",
    "unit": "tsp",
    "pkg": 90,
@@ -3276,10 +3205,10 @@
    "id": "red_pepper_flakes",
    "name": "Crushed red pepper flakes",
    "cat": "Pantry",
-   "family": "pepper",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1.75 oz jar",
    "unit": "tsp",
    "pkg": 25,
@@ -3300,9 +3229,9 @@
    "name": "Old Bay seasoning",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "2.62 oz",
    "unit": "tsp",
    "pkg": 27,
@@ -3323,9 +3252,9 @@
    "name": "Ground achiote (annatto)",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1.5 oz jar",
    "unit": "tsp",
    "pkg": 20,
@@ -3346,9 +3275,9 @@
    "name": "Dry mustard powder",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1.75 oz jar",
    "unit": "tsp",
    "pkg": 20,
@@ -3369,9 +3298,9 @@
    "name": "Dried dill weed",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "0.75 oz jar",
    "unit": "tsp",
    "pkg": 25,
@@ -3392,9 +3321,9 @@
    "name": "Celery salt",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "3 oz jar",
    "unit": "tsp",
    "pkg": 40,
@@ -3414,10 +3343,10 @@
    "id": "cayenne",
    "name": "Ground cayenne pepper",
    "cat": "Pantry",
-   "family": "pepper",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "1.5 oz jar",
    "unit": "tsp",
    "pkg": 20,
@@ -3438,9 +3367,9 @@
    "name": "Dried thyme leaves",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "0.75 oz",
    "unit": "tsp",
    "pkg": 21,
@@ -3460,8 +3389,8 @@
    "id": "masa_harina",
    "name": "Instant corn masa flour",
    "cat": "Pantry",
-   "family": "flour",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "4.4 lb",
@@ -3483,8 +3412,8 @@
    "id": "kidney_beans",
    "name": "Red kidney beans",
    "cat": "Pantry",
-   "family": "bean",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "15.5 oz can",
@@ -3506,10 +3435,10 @@
    "id": "white_vinegar",
    "name": "Distilled white vinegar",
    "cat": "Pantry",
-   "family": "vinegar",
-   "soldBy": "pack",
+   "family": null,
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "32 fl oz",
    "unit": "cup",
    "pkg": 4,
@@ -3530,7 +3459,7 @@
    "name": "Celery",
    "cat": "Produce",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
    "tracking": null,
    "pack": "1 lb bunch",
@@ -3553,9 +3482,9 @@
    "name": "Dried bay leaves",
    "cat": "Pantry",
    "family": null,
-   "soldBy": "pack",
+   "soldBy": null,
    "altSizes": [],
-   "tracking": "staple",
+   "tracking": null,
    "pack": "0.15 oz jar",
    "unit": "each",
    "pkg": 30,
@@ -3568,6 +3497,1524 @@
    "freezer": null,
    "pantry": 365,
    "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "beef_stew_meat",
+   "name": "Beef stew meat (chuck cubes)",
+   "cat": "Meat",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "per lb",
+   "unit": "lb",
+   "pkg": 1,
+   "price": 6.99,
+   "src": "inventory",
+   "priceDate": "2026-10-02",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 2,
+   "freezer": 120,
+   "pantry": null,
+   "aldi": "USDA Choice Black Angus Stew Meat, per lb",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "yellow_potatoes",
+   "name": "Yellow (Yukon Gold) potatoes",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "5 lb bag",
+   "unit": "lb",
+   "pkg": 5,
+   "price": 3.79,
+   "src": "inventory",
+   "priceDate": "2026-10-02",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 30,
+   "aldi": "Yellow Potatoes",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "tomato_paste",
+   "name": "Tomato paste",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "6 oz can",
+   "unit": "tbsp",
+   "pkg": 10,
+   "price": 0.86,
+   "src": "inventory",
+   "priceDate": "2026-10-02",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 5,
+   "freezer": 90,
+   "pantry": 365,
+   "aldi": "Happy Harvest Tomato Paste",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "dried_basil",
+   "name": "Dried basil",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "0.5 oz jar",
+   "unit": "tsp",
+   "pkg": 20,
+   "price": 1.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "canned_tuna",
+   "name": "Chunk light tuna in water",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "5 oz can",
+   "unit": "oz",
+   "pkg": 5,
+   "price": 0.95,
+   "src": "inventory",
+   "priceDate": "2026-10-02",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 3,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Northern Catch Chunk Light Tuna in Water",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "dill_pickles",
+   "name": "Kosher baby dill pickles",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "16 fl oz jar",
+   "unit": "each",
+   "pkg": 10,
+   "price": 1.99,
+   "src": "inventory",
+   "priceDate": "2026-10-02",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 60,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Great Gherkins Kosher Baby Whole Dill Pickles",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "mayonnaise",
+   "name": "Real mayonnaise",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "30 fl oz",
+   "unit": "cup",
+   "pkg": 3.75,
+   "price": 2.89,
+   "src": "inventory",
+   "priceDate": "2026-10-02",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 60,
+   "freezer": null,
+   "pantry": 180,
+   "aldi": "Burman's Real Mayonnaise",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "american_cheese",
+   "name": "American cheese singles",
+   "cat": "Dairy & eggs",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "12 oz",
+   "unit": "slice",
+   "pkg": 16,
+   "price": 1.85,
+   "src": "inventory",
+   "priceDate": "2026-10-02",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 30,
+   "freezer": 90,
+   "pantry": null,
+   "aldi": "Happy Farms American Cheese Singles",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "angel_hair",
+   "name": "Angel hair pasta (for fideo)",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "32 oz",
+   "unit": "oz",
+   "pkg": 32,
+   "price": 2.19,
+   "src": "inventory",
+   "priceDate": "2026-10-02",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 180,
+   "aldi": "Reggano Family Size Angel Hair Pasta",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "gnocchi",
+   "name": "Potato gnocchi",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "17.6 oz",
+   "unit": "pack",
+   "pkg": 1,
+   "price": 1.89,
+   "src": "inventory",
+   "priceDate": "2026-10-02",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 3,
+   "freezer": null,
+   "pantry": 180,
+   "aldi": "Priano Authentic Italian Potato Gnocchi",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "sundried_tomatoes",
+   "name": "Sun-dried tomatoes in oil",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "8.5 oz jar",
+   "unit": "each",
+   "pkg": 30,
+   "price": 3.49,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 30,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "caraway_seeds",
+   "name": "Caraway seeds",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1 oz jar",
+   "unit": "tsp",
+   "pkg": 13,
+   "price": 3.49,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "red_lentils",
+   "name": "Red lentils",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1 lb bag",
+   "unit": "cup",
+   "pkg": 2.4,
+   "price": 1.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "brown_lentils",
+   "name": "Brown lentils",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1 lb bag",
+   "unit": "lb",
+   "pkg": 1,
+   "price": 1.49,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "plantains",
+   "name": "Ripe plantains (yellow-black)",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "each",
+   "unit": "each",
+   "pkg": 1,
+   "price": 0.69,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "counter",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 5,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "tuna_steak",
+   "name": "Tuna steaks (fresh or frozen)",
+   "cat": "Meat",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "per lb",
+   "unit": "lb",
+   "pkg": 1,
+   "price": 8.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "freezer",
+   "fridge": 2,
+   "freezer": 90,
+   "pantry": null,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "yuca",
+   "name": "Yuca / cassava, frozen",
+   "cat": "Bakery & frozen",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "24 oz bag",
+   "unit": "lb",
+   "pkg": 1.5,
+   "price": 2.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "freezer",
+   "fridge": null,
+   "freezer": 240,
+   "pantry": null,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "sazon",
+   "name": "Sazón seasoning blend",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "3 oz",
+   "unit": "tsp",
+   "pkg": 28,
+   "price": 1.69,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Stonemill Zero Calorie Sazon Blend Seasoning",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "adobo",
+   "name": "Adobo all-purpose seasoning",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "8 oz",
+   "unit": "tsp",
+   "pkg": 80,
+   "price": 2.49,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "chicken_bouillon",
+   "name": "Chicken bouillon cubes",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "3.25 oz",
+   "unit": "each",
+   "pkg": 25,
+   "price": 1.79,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Chef's Cupboard Chicken Bouillon Cubes",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "masarepa",
+   "name": "Precooked white corn meal (P.A.N.)",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1 kg (2.2 lb)",
+   "unit": "cup",
+   "pkg": 6.7,
+   "price": 3.49,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "evaporated_milk",
+   "name": "Evaporated milk",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "12 oz can",
+   "unit": "can",
+   "pkg": 1,
+   "price": 0.99,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Baker's Corner Evaporated Milk",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "condensed_milk",
+   "name": "Sweetened condensed milk",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "14 oz can",
+   "unit": "can",
+   "pkg": 1,
+   "price": 2.29,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Baker's Corner Sweetened Condensed Milk",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "vanilla",
+   "name": "Pure vanilla extract",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "2 fl oz",
+   "unit": "tsp",
+   "pkg": 12,
+   "price": 3.49,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Stonemill Gluten Free Pure Vanilla Extract",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "chipotle_adobo",
+   "name": "Chipotle peppers in adobo",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "7 oz can",
+   "unit": "each",
+   "pkg": 10,
+   "price": 1.49,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 14,
+   "freezer": 90,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "tofu",
+   "name": "Extra firm tofu",
+   "cat": "Meat",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "14 oz",
+   "unit": "oz",
+   "pkg": 14,
+   "price": 1.49,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 7,
+   "freezer": null,
+   "pantry": null,
+   "aldi": "Earth Grown USDA Organic Vegan Extra Firm Tofu",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "wood_ear",
+   "name": "Dried wood ear mushrooms",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1 oz bag",
+   "unit": "cup",
+   "pkg": 2,
+   "price": 3.49,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "bamboo_shoots",
+   "name": "Sliced bamboo shoots",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "8 oz can",
+   "unit": "cup",
+   "pkg": 1,
+   "price": 1.29,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 4,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "dark_soy",
+   "name": "Dark soy sauce",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "16 fl oz",
+   "unit": "tsp",
+   "pkg": 96,
+   "price": 3.49,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "white_pepper",
+   "name": "Ground white pepper",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1.75 oz jar",
+   "unit": "tsp",
+   "pkg": 25,
+   "price": 2.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "lemongrass",
+   "name": "Lemongrass stalks",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "3 ct",
+   "unit": "each",
+   "pkg": 3,
+   "price": 1.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 14,
+   "freezer": 180,
+   "pantry": null,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "red_curry_paste",
+   "name": "Thai red curry paste",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "4 oz jar",
+   "unit": "tsp",
+   "pkg": 24,
+   "price": 2.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 30,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "fish_sauce",
+   "name": "Fish sauce",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "6.76 fl oz",
+   "unit": "tbsp",
+   "pkg": 13.5,
+   "price": 2.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "white_wine",
+   "name": "Dry white wine",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "750 ml",
+   "unit": "cup",
+   "pkg": 3.17,
+   "price": 4.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 5,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "capers",
+   "name": "Capers",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "3.5 oz jar",
+   "unit": "tbsp",
+   "pkg": 6,
+   "price": 2.49,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 180,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "ras_el_hanout",
+   "name": "Ras el hanout",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1.5 oz jar",
+   "unit": "tsp",
+   "pkg": 20,
+   "price": 3.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "raisins",
+   "name": "Raisins",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "20 oz",
+   "unit": "cup",
+   "pkg": 3.75,
+   "price": 2.79,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 180,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "dried_apricots",
+   "name": "Dried apricots",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "6 oz",
+   "unit": "cup",
+   "pkg": 1.1,
+   "price": 2.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 180,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "green_olives",
+   "name": "Pitted green olives",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "7 oz jar",
+   "unit": "cup",
+   "pkg": 1.25,
+   "price": 2.29,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 30,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "ketchup",
+   "name": "Ketchup",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "38 oz",
+   "unit": "tbsp",
+   "pkg": 63,
+   "price": 1.95,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": 180,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Burman's Tomato Ketchup",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "worcestershire",
+   "name": "Worcestershire sauce",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "10 fl oz",
+   "unit": "tsp",
+   "pkg": 60,
+   "price": 1.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "pineapple_chunks",
+   "name": "Pineapple chunks in juice",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "20 oz can",
+   "unit": "can",
+   "pkg": 1,
+   "price": 1.65,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 5,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Sweet Harvest Pineapple Chunks in Pineapple Juice",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "pineapple",
+   "name": "Whole pineapple",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "each",
+   "unit": "each",
+   "pkg": 1,
+   "price": 1.89,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "counter",
+   "fridge": 5,
+   "freezer": 180,
+   "pantry": 3,
+   "aldi": "Pineapple, each",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "okra",
+   "name": "Frozen cut okra",
+   "cat": "Bakery & frozen",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "16 oz",
+   "unit": "lb",
+   "pkg": 1,
+   "price": 1.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "freezer",
+   "fridge": null,
+   "freezer": 240,
+   "pantry": null,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "kielbasa",
+   "name": "Polska kielbasa (smoked sausage)",
+   "cat": "Meat",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "14 oz",
+   "unit": "oz",
+   "pkg": 14,
+   "price": 2.99,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 7,
+   "freezer": 60,
+   "pantry": null,
+   "aldi": "Parkview Polska Kielbasa",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "gumbo_file",
+   "name": "Gumbo filé powder",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1.25 oz jar",
+   "unit": "tbsp",
+   "pkg": 8,
+   "price": 4.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "baguette",
+   "name": "French baguette",
+   "cat": "Bakery & frozen",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "each",
+   "unit": "slice",
+   "pkg": 20,
+   "price": 1.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "counter",
+   "fridge": null,
+   "freezer": 90,
+   "pantry": 2,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "gruyere",
+   "name": "Shredded Swiss and Gruyère",
+   "cat": "Dairy & eggs",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "8 oz",
+   "unit": "oz",
+   "pkg": 8,
+   "price": 2.69,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 21,
+   "freezer": 90,
+   "pantry": null,
+   "aldi": "Emporium Selection Specialty Shredded Swiss and Gruyere Cheese",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "hot_italian_sausage",
+   "name": "Hot Italian sausage links",
+   "cat": "Meat",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "19 oz",
+   "unit": "oz",
+   "pkg": 19,
+   "price": 2.95,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 2,
+   "freezer": 60,
+   "pantry": null,
+   "aldi": "USDA Hot Italian Sausage Links",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "kale",
+   "name": "Chopped kale",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "12 oz",
+   "unit": "oz",
+   "pkg": 12,
+   "price": 3.49,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 5,
+   "freezer": null,
+   "pantry": null,
+   "aldi": "Simply Nature Organic Non-GMO Chopped Kale",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "ground_pork",
+   "name": "Ground pork",
+   "cat": "Meat",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "16 oz",
+   "unit": "lb",
+   "pkg": 1,
+   "price": 3.29,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 2,
+   "freezer": 120,
+   "pantry": null,
+   "aldi": "Never Any! USDA Antibiotic-Free 80% Lean 20% Fat Ground Pork",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "nutmeg",
+   "name": "Ground nutmeg",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1.5 oz",
+   "unit": "tsp",
+   "pkg": 18,
+   "price": 1.99,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Stonemill Nutmeg",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "allspice",
+   "name": "Ground allspice",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1.5 oz jar",
+   "unit": "tsp",
+   "pkg": 20,
+   "price": 1.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "peaches",
+   "name": "Peaches",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "2 lb",
+   "unit": "lb",
+   "pkg": 2,
+   "price": 3.59,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "counter",
+   "fridge": 5,
+   "freezer": 240,
+   "pantry": 3,
+   "aldi": "Peaches",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "baking_soda",
+   "name": "Baking soda",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "1 lb box",
+   "unit": "tsp",
+   "pkg": 96,
+   "price": 0.69,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "granny_smith",
+   "name": "Granny Smith apples",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "3 lb",
+   "unit": "lb",
+   "pkg": 3,
+   "price": 3.29,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 30,
+   "freezer": null,
+   "pantry": 7,
+   "aldi": "Granny Smith Apples",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "blueberries",
+   "name": "Blueberries",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "11 oz",
+   "unit": "oz",
+   "pkg": 11,
+   "price": 3.99,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 7,
+   "freezer": 240,
+   "pantry": null,
+   "aldi": "Blueberries",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "pecans",
+   "name": "Chopped pecans",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "8 oz",
+   "unit": "cup",
+   "pkg": 2,
+   "price": 3.59,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": 365,
+   "pantry": 180,
+   "aldi": "Southern Grove Chopped Pecans",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "sour_cream",
+   "name": "Sour cream",
+   "cat": "Dairy & eggs",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "16 oz",
+   "unit": "cup",
+   "pkg": 2,
+   "price": 1.75,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 14,
+   "freezer": null,
+   "pantry": null,
+   "aldi": "Friendly Farms Sour Cream",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "powdered_sugar",
+   "name": "Powdered sugar",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "2 lb",
+   "unit": "cup",
+   "pkg": 7.5,
+   "price": 1.85,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Baker's Corner Powdered Sugar",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "kiwi",
+   "name": "Kiwi",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "container",
+   "unit": "each",
+   "pkg": 7,
+   "price": 4.19,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 14,
+   "freezer": null,
+   "pantry": 5,
+   "aldi": "Kiwi",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "mandarins",
+   "name": "Mandarin oranges",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "3 lb",
+   "unit": "each",
+   "pkg": 20,
+   "price": 3.99,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "counter",
+   "fridge": 14,
+   "freezer": null,
+   "pantry": 7,
+   "aldi": "Mandarin Oranges",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "red_grapes",
+   "name": "Red grapes",
+   "cat": "Produce",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "per lb",
+   "unit": "lb",
+   "pkg": 1,
+   "price": 1.49,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 7,
+   "freezer": 180,
+   "pantry": null,
+   "aldi": "Red Grapes",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "apple_cider_vinegar",
+   "name": "Apple cider vinegar",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "32 fl oz",
+   "unit": "cup",
+   "pkg": 4,
+   "price": 4.99,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": true,
+   "storage": "pantry",
+   "fridge": null,
+   "freezer": null,
+   "pantry": 365,
+   "aldi": "Simply Nature Organic Apple Cider Vinegar",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "tahini",
+   "name": "Tahini",
+   "cat": "Pantry",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "16 oz jar",
+   "unit": "tbsp",
+   "pkg": 30,
+   "price": 4.99,
+   "src": "estimate",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "pantry",
+   "fridge": 180,
+   "freezer": null,
+   "pantry": 180,
+   "aldi": "",
+   "retired": false,
+   "replacedBy": null
+  },
+  {
+   "id": "mozzarella_block",
+   "name": "Mozzarella block",
+   "cat": "Dairy & eggs",
+   "family": null,
+   "soldBy": null,
+   "altSizes": [],
+   "tracking": null,
+   "pack": "8 oz",
+   "unit": "oz",
+   "pkg": 8,
+   "price": 1.75,
+   "src": "inventory",
+   "priceDate": "2026-10-03",
+   "staple": false,
+   "storage": "fridge",
+   "fridge": 21,
+   "freezer": 90,
+   "pantry": null,
+   "aldi": "Happy Farms Mozzarella Cheese Block",
    "retired": false,
    "replacedBy": null
   }
@@ -6150,1397 +7597,2716 @@
    "freezes": false
   },
   {
-   "id": "b_overnightoats",
-   "meal": "breakfast",
-   "name": "Peanut butter banana overnight oats",
-   "tags": [
-    "sweet",
-    "nocook"
-   ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "oats",
-     1.4,
-     "1/2 cup old-fashioned oats"
-    ],
-    [
-     "milk",
-     0.5,
-     "1/2 cup milk"
-    ],
-    [
-     "peanut_butter",
-     1,
-     "1 tbsp peanut butter"
-    ],
-    [
-     "bananas",
-     0.5,
-     "1/2 banana, sliced"
-    ],
-    [
-     "honey",
-     0.33,
-     "1 tsp honey"
-    ],
-    [
-     "cinnamon",
-     0.25,
-     "Pinch of cinnamon"
-    ]
-   ],
-   "notes": "",
-   "hands": 5,
-   "total": 5,
-   "keeps": 4,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "b_berryyogurt",
-   "meal": "breakfast",
-   "name": "Greek yogurt berry bowl",
-   "tags": [
-    "sweet",
-    "light",
-    "nocook"
-   ],
-   "serv": 1,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "greek_yogurt",
-     0.75,
-     "3/4 cup Greek yogurt"
-    ],
-    [
-     "strawberries",
-     2,
-     "2 oz strawberries, sliced"
-    ],
-    [
-     "blackberries",
-     1.5,
-     "A handful of blackberries"
-    ],
-    [
-     "honey",
-     1,
-     "1 tbsp honey"
-    ],
-    [
-     "oats",
-     0.5,
-     "2 tbsp oats for crunch"
-    ]
-   ],
-   "notes": "",
-   "hands": 5,
-   "total": 5,
-   "keeps": 1,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "b_eggmuffins",
-   "meal": "breakfast",
-   "name": "Spinach cheddar egg muffins",
+   "id": "d_beefstew",
+   "meal": "dinner",
+   "name": "Easy one-pot beef stew",
    "tags": [
     "savory",
-    "oven",
-    "keto"
+    "hearty",
+    "stovetop"
    ],
-   "serv": 6,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
+   "serv": 8,
+   "link": "https://feelgoodfoodie.net/recipe/beef-stew/",
+   "source": "Feel Good Foodie",
+   "rating": "4.99 from 800 votes",
    "ing": [
     [
-     "eggs",
-     2,
-     "2 eggs per serving"
+     "beef_stew_meat",
+     0.25,
+     "2 pounds beef stew meat cut into 1-inch cubes"
     ],
     [
-     "spinach",
-     0.75,
-     "Handful of baby spinach, chopped"
+     "flour",
+     0.02375,
+     "3 tablespoons all-purpose flour"
     ],
     [
-     "cheddar",
-     0.5,
-     "2 tbsp shredded cheddar"
-    ],
-    [
-     "peppers",
-     0.17,
-     "Diced bell pepper"
+     "olive_oil",
+     0.25,
+     "2 tablespoons olive oil divided"
     ],
     [
      "onion",
-     0.03,
-     "Diced onion"
+     0.0625,
+     "1 onion chopped"
     ],
     [
-     "milk",
-     0.06,
-     "Splash of milk"
+     "garlic",
+     0.375,
+     "3 garlic cloves minced"
+    ],
+    [
+     "tomato_paste",
+     0.5,
+     "¼ cup tomato paste"
+    ],
+    [
+     "yellow_potatoes",
+     0.1875,
+     "1 ½ pound yukon potatoes cut into 1-inch cubes"
+    ],
+    [
+     "carrots",
+     0.1125,
+     "6 carrots chopped"
+    ],
+    [
+     "celery",
+     0.0475,
+     "3 celery sticks chopped"
+    ],
+    [
+     "dried_thyme",
+     0.25,
+     "2 teaspoons dried thyme"
+    ],
+    [
+     "dried_basil",
+     0.125,
+     "1 teaspoon dried basil"
+    ],
+    [
+     "bay_leaves",
+     0.25,
+     "2 bay leaves"
+    ],
+    [
+     "beef_broth",
+     0.5,
+     "4 cups vegetable or beef broth"
+    ],
+    [
+     "parsley",
+     0.03125,
+     "Fresh parsley for serving"
     ]
    ],
    "notes": "",
-   "hands": 10,
-   "total": 30,
-   "keeps": 4,
+   "hands": 20,
+   "total": 110,
+   "keeps": 3,
    "reheats": true,
    "freezes": true
   },
   {
-   "id": "b_avoeggtoast",
-   "meal": "breakfast",
-   "name": "Avocado toast with a fried egg",
+   "id": "l_tunamelt",
+   "meal": "lunch",
+   "name": "Tuna melt",
    "tags": [
     "savory",
+    "hearty",
     "stovetop"
    ],
-   "serv": 1,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
+   "serv": 4,
+   "link": "https://www.delish.com/cooking/recipe-ideas/a26146096/tuna-melt-recipe/",
+   "source": "Delish",
+   "rating": "no rating shown",
    "ing": [
     [
-     "sourdough",
-     2,
-     "2 slices sourdough"
-    ],
-    [
-     "avocado",
-     0.5,
-     "1/2 avocado, mashed"
-    ],
-    [
-     "eggs",
-     1,
-     "1 egg"
+     "mayonnaise",
+     0.0825,
+     "1/3 cup mayonnaise"
     ],
     [
      "lemon",
-     0.1,
-     "Squeeze of lemon"
+     0.125,
+     "1/2 lemon, juiced"
     ],
     [
      "red_pepper_flakes",
-     0.1,
-     "Pinch of chili flakes"
+     0.125,
+     "1/2 tsp. crushed red pepper flakes (optional)",
+     1
+    ],
+    [
+     "canned_tuna",
+     3,
+     "2 (6-oz.) cans tuna"
+    ],
+    [
+     "celery",
+     0.03125,
+     "1 celery rib, finely chopped"
+    ],
+    [
+     "dill_pickles",
+     0.5,
+     "2 dill pickles, finely chopped"
+    ],
+    [
+     "red_onion",
+     0.02,
+     "1/4 cup finely chopped red onion"
+    ],
+    [
+     "parsley",
+     0.0375,
+     "2 Tbsp. finely chopped fresh parsley"
+    ],
+    [
+     "butter",
+     1,
+     "4 Tbsp. unsalted butter, softened"
+    ],
+    [
+     "sourdough",
+     2,
+     "8 slices bread, such as sourdough"
+    ],
+    [
+     "tomatoes",
+     0.0825,
+     "1 tomato, sliced"
+    ],
+    [
+     "american_cheese",
+     2,
+     "8 slices cheddar or American cheese"
     ]
    ],
    "notes": "",
-   "hands": 10,
-   "total": 10,
+   "hands": 15,
+   "total": 30,
    "keeps": 1,
    "reheats": false,
    "freezes": false
   },
   {
-   "id": "b_burritos",
-   "meal": "breakfast",
-   "name": "Sausage potato breakfast burritos",
+   "id": "l_sopafideo",
+   "meal": "lunch",
+   "name": "Sopa de fideo (Ecuadorian noodle soup with cheese)",
+   "tags": [
+    "ecuadorian",
+    "savory",
+    "hearty",
+    "stovetop"
+   ],
+   "serv": 6,
+   "link": "https://www.instagram.com/p/Dd7TxRWtCs0/",
+   "source": "Instagram post",
+   "rating": "no rating · servings and times estimated",
+   "ing": [
+    [
+     "green_onions",
+     0.055,
+     "Refrito: 2 cebollas largas"
+    ],
+    [
+     "red_onion",
+     0.041666666666666664,
+     "Refrito: 1/2 cebolla paiteña"
+    ],
+    [
+     "garlic",
+     0.3333333333333333,
+     "Refrito: 2 dientes de ajo"
+    ],
+    [
+     "angel_hair",
+     1.1666666666666667,
+     "2 tazas de fideos"
+    ],
+    [
+     "potatoes",
+     0.10833333333333334,
+     "2 tazas de papa picada en cuadritos"
+    ],
+    [
+     "queso_fresco",
+     1.6666666666666667,
+     "2 tazas de queso picado en cuadritos"
+    ],
+    [
+     "cilantro",
+     0.08333333333333333,
+     "1 puñado de cilantro picado"
+    ],
+    [
+     "milk",
+     0.3333333333333333,
+     "2 tazas de leche licuados con 1/2 taza de la sopa cocida"
+    ]
+   ],
+   "notes": "",
+   "hands": 15,
+   "total": 40,
+   "keeps": 3,
+   "reheats": true,
+   "freezes": false
+  },
+  {
+   "id": "s_ajiqueso",
+   "meal": "snack",
+   "name": "Ají de queso (Ecuadorian cheese hot sauce)",
+   "tags": [
+    "ecuadorian",
+    "savory",
+    "spicy",
+    "nocook"
+   ],
+   "serv": 8,
+   "link": "https://www.instagram.com/p/Dd4xeDctrkk/",
+   "source": "Instagram post",
+   "rating": "no rating · servings and times estimated",
+   "ing": [
+    [
+     "queso_fresco",
+     1.25,
+     "1 queso fresco"
+    ],
+    [
+     "jalapeno",
+     0.1875,
+     "1 ají amarillo, 1/2 ají criollo (jalapeño as stand-in)"
+    ],
+    [
+     "onion",
+     0.015625,
+     "1/4 de cebolla blanca"
+    ],
+    [
+     "garlic",
+     0.125,
+     "1 diente de ajo"
+    ],
+    [
+     "mayonnaise",
+     0.015625,
+     "2 cdas de mayonesa"
+    ]
+   ],
+   "notes": "",
+   "hands": 10,
+   "total": 10,
+   "keeps": 3,
+   "reheats": false,
+   "freezes": false
+  },
+  {
+   "id": "d_gnocchisoup",
+   "meal": "dinner",
+   "name": "Marry me chicken gnocchi soup",
    "tags": [
     "savory",
     "hearty",
     "stovetop"
    ],
    "serv": 6,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "tortillas",
-     1,
-     "1 flour tortilla"
-    ],
-    [
-     "eggs",
-     2,
-     "2 eggs, scrambled"
-    ],
-    [
-     "pork_sausage",
-     0.09999999999999999,
-     "Browned pork sausage"
-    ],
-    [
-     "potatoes",
-     0.15,
-     "Diced potato"
-    ],
-    [
-     "mexican_cheese",
-     0.5,
-     "Shredded Mexican cheese"
-    ],
-    [
-     "salsa",
-     0.06,
-     "Salsa to serve"
-    ]
-   ],
-   "notes": "",
-   "hands": 25,
-   "total": 35,
-   "keeps": 4,
-   "reheats": true,
-   "freezes": true
-  },
-  {
-   "id": "l_chickpeasalad",
-   "meal": "lunch",
-   "name": "Mediterranean chickpea salad",
-   "tags": [
-    "mediterranean",
-    "savory",
-    "light",
-    "nocook"
-   ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "chickpeas",
-     0.5,
-     "1/2 can chickpeas, rinsed"
-    ],
-    [
-     "cucumber",
-     0.33,
-     "1/3 cucumber, diced"
-    ],
-    [
-     "cherry_tomatoes",
-     2,
-     "Handful grape tomatoes, halved"
-    ],
-    [
-     "red_onion",
-     0.05,
-     "Thinly sliced red onion"
-    ],
-    [
-     "lemon",
-     0.25,
-     "Juice of 1/4 lemon"
-    ],
-    [
-     "olive_oil",
-     1,
-     "1 tbsp olive oil"
-    ],
-    [
-     "parsley",
-     0.15,
-     "Chopped parsley"
-    ],
-    [
-     "oregano",
-     0.25,
-     "Pinch of dried oregano"
-    ]
-   ],
-   "notes": "",
-   "hands": 10,
-   "total": 10,
-   "keeps": 4,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "l_burritobowl",
-   "meal": "lunch",
-   "name": "Salsa chicken burrito bowls",
-   "tags": [
-    "mexican",
-    "savory",
-    "hearty",
-    "stovetop"
-   ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
+   "link": "https://www.instagram.com/reel/DRZh6N2EhdO/",
+   "source": "Instagram reel (Soups So Good Ep. 21)",
+   "rating": "no rating · amounts and servings estimated",
    "ing": [
     [
      "chicken_breast",
-     0.25,
-     "1/4 lb chicken breast"
+     0.16666666666666666,
+     "Chicken breast fillet (amount not given; about 1 lb assumed)"
     ],
     [
-     "rice",
-     0.33,
-     "1/3 cup rice (dry)"
-    ],
-    [
-     "black_beans",
-     0.33,
-     "1/3 can black beans"
-    ],
-    [
-     "salsa",
-     0.25,
-     "1/4 cup salsa"
-    ],
-    [
-     "mexican_cheese",
-     0.5,
-     "Shredded Mexican cheese"
-    ],
-    [
-     "lime",
-     0.25,
-     "Lime wedge"
-    ],
-    [
-     "chili_powder",
-     0.5,
-     "1/2 tsp chili powder"
-    ],
-    [
-     "cumin",
-     0.25,
-     "1/4 tsp cumin"
-    ]
-   ],
-   "notes": "",
-   "hands": 15,
-   "total": 30,
-   "keeps": 4,
-   "reheats": true,
-   "freezes": true
-  },
-  {
-   "id": "l_peanutnoodles",
-   "meal": "lunch",
-   "name": "Cold sesame peanut noodles",
-   "tags": [
-    "asian",
-    "chinese",
-    "savory",
-    "spicy",
-    "stovetop"
-   ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "pasta",
-     2,
-     "2 oz spaghetti"
-    ],
-    [
-     "peanut_butter",
-     1.5,
-     "1 1/2 tbsp peanut butter"
-    ],
-    [
-     "soy_sauce",
-     1,
-     "1 tbsp soy sauce"
-    ],
-    [
-     "rice_vinegar",
-     0.5,
-     "1/2 tbsp rice vinegar"
-    ],
-    [
-     "sesame_oil",
-     1,
-     "1 tsp sesame oil"
-    ],
-    [
-     "hot_sauce",
-     0.5,
-     "Chili sauce to taste"
-    ],
-    [
-     "honey",
-     0.5,
-     "1/2 tbsp honey"
-    ],
-    [
-     "cucumber",
-     0.25,
-     "Cucumber matchsticks"
-    ],
-    [
-     "carrots",
-     0.1,
-     "Shredded carrot"
-    ],
-    [
-     "green_onions",
-     0.15,
-     "Sliced green onion"
-    ]
-   ],
-   "notes": "",
-   "hands": 10,
-   "total": 15,
-   "keeps": 4,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "l_quesadillas",
-   "meal": "lunch",
-   "name": "Black bean cheese quesadillas",
-   "tags": [
-    "mexican",
-    "savory",
-    "stovetop"
-   ],
-   "serv": 2,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "tortillas",
-     2,
-     "2 flour tortillas"
-    ],
-    [
-     "black_beans",
-     0.25,
-     "1/4 can black beans"
-    ],
-    [
-     "mexican_cheese",
-     1.5,
-     "Shredded Mexican cheese"
-    ],
-    [
-     "peppers",
-     0.17,
-     "Diced bell pepper"
-    ],
-    [
-     "salsa",
-     0.12,
-     "Salsa to serve"
-    ]
-   ],
-   "notes": "",
-   "hands": 10,
-   "total": 10,
-   "keeps": 2,
-   "reheats": true,
-   "freezes": true
-  },
-  {
-   "id": "l_misosoup",
-   "meal": "lunch",
-   "name": "Miso soup with egg and spinach",
-   "tags": [
-    "japanese",
-    "asian",
-    "light",
-    "stovetop"
-   ],
-   "serv": 2,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "miso",
-     1,
-     "1 tbsp white miso"
-    ],
-    [
-     "dashi",
-     0.5,
-     "1/2 tsp dashi powder"
-    ],
-    [
-     "eggs",
-     1,
-     "1 egg, swirled in"
-    ],
-    [
-     "spinach",
-     1,
-     "Handful baby spinach"
-    ],
-    [
-     "mushrooms",
-     1,
-     "Sliced mushrooms"
-    ],
-    [
-     "green_onions",
-     0.1,
-     "Sliced green onion"
-    ]
-   ],
-   "notes": "",
-   "hands": 5,
-   "total": 10,
-   "keeps": 2,
-   "reheats": true,
-   "freezes": false
-  },
-  {
-   "id": "l_cottagebowl",
-   "meal": "lunch",
-   "name": "Cottage cheese tomato cucumber bowl",
-   "tags": [
-    "savory",
-    "light",
-    "nocook"
-   ],
-   "serv": 1,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "cottage_cheese",
-     6,
-     "3/4 cup cottage cheese"
-    ],
-    [
-     "cherry_tomatoes",
-     2,
-     "Handful grape tomatoes, halved"
-    ],
-    [
-     "cucumber",
-     0.33,
-     "1/3 cucumber, diced"
-    ],
-    [
-     "olive_oil",
-     0.5,
-     "Drizzle of olive oil"
-    ],
-    [
-     "red_pepper_flakes",
-     0.1,
-     "Pinch of chili flakes",
-     1
-    ]
-   ],
-   "notes": "",
-   "hands": 5,
-   "total": 5,
-   "keeps": 1,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "l_beanwraps",
-   "meal": "lunch",
-   "name": "Black bean salsa wraps",
-   "tags": [
-    "mexican",
-    "savory",
-    "nocook"
-   ],
-   "serv": 2,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "tortillas",
-     2,
-     "2 flour tortillas"
-    ],
-    [
-     "black_beans",
-     0.33,
-     "1/3 can black beans, rinsed"
-    ],
-    [
-     "salsa",
-     0.2,
-     "Salsa"
-    ],
-    [
-     "mexican_cheese",
-     1,
-     "Shredded Mexican cheese"
-    ],
-    [
-     "avocado",
-     0.25,
-     "Sliced avocado"
-    ],
-    [
-     "lime",
-     0.1,
-     "Squeeze of lime",
-     1
-    ]
-   ],
-   "notes": "",
-   "hands": 10,
-   "total": 10,
-   "keeps": 2,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "l_avoeggsand",
-   "meal": "lunch",
-   "name": "Avocado egg salad sandwich",
-   "tags": [
-    "savory",
-    "stovetop"
-   ],
-   "serv": 2,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "sourdough",
-     2,
-     "2 slices sourdough"
-    ],
-    [
-     "eggs",
-     2,
-     "2 hard-boiled eggs, chopped"
-    ],
-    [
-     "avocado",
-     0.5,
-     "1/2 avocado, mashed"
-    ],
-    [
-     "lemon",
-     0.1,
-     "Squeeze of lemon"
-    ],
-    [
-     "dijon",
-     0.5,
-     "1/2 tbsp Dijon mustard"
-    ]
-   ],
-   "notes": "",
-   "hands": 8,
-   "total": 15,
-   "keeps": 2,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "l_crunchslaw",
-   "meal": "lunch",
-   "name": "Crunchy peanut cabbage salad",
-   "tags": [
-    "asian",
-    "savory",
-    "light",
-    "nocook"
-   ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "cabbage",
-     0.25,
-     "1/4 lb cabbage, shredded"
-    ],
-    [
-     "carrots",
-     0.08,
-     "Shredded carrot"
-    ],
-    [
-     "green_onions",
-     0.15,
-     "Sliced green onion"
-    ],
-    [
-     "peanut_butter",
-     1,
-     "1 tbsp peanut butter"
-    ],
-    [
-     "soy_sauce",
-     1,
-     "1 tbsp soy sauce"
-    ],
-    [
-     "rice_vinegar",
-     1,
-     "1 tbsp rice vinegar"
-    ],
-    [
-     "honey",
-     0.5,
-     "1/2 tbsp honey"
-    ],
-    [
-     "sesame_seeds",
-     1,
-     "1 tsp sesame seeds",
-     1
-    ]
-   ],
-   "notes": "",
-   "hands": 10,
-   "total": 10,
-   "keeps": 3,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "l_greekwraps",
-   "meal": "lunch",
-   "name": "Greek chickpea yogurt wraps",
-   "tags": [
-    "mediterranean",
-    "savory",
-    "nocook"
-   ],
-   "serv": 2,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "tortillas",
-     1,
-     "1 flour tortilla"
-    ],
-    [
-     "chickpeas",
-     0.33,
-     "1/3 can chickpeas, smashed"
-    ],
-    [
-     "greek_yogurt",
-     0.25,
-     "1/4 cup Greek yogurt"
-    ],
-    [
-     "cucumber",
-     0.25,
-     "Diced cucumber"
-    ],
-    [
-     "lemon",
-     0.1,
-     "Squeeze of lemon"
-    ],
-    [
-     "dill",
-     0.25,
-     "Pinch of dill"
+     "italian_seasoning",
+     0.16666666666666666,
+     "Italian seasoning (about 1 tsp assumed)"
     ],
     [
      "garlic_powder",
-     0.25,
-     "Pinch of garlic powder"
-    ]
-   ],
-   "notes": "",
-   "hands": 10,
-   "total": 10,
-   "keeps": 2,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "l_scramblewrap",
-   "meal": "lunch",
-   "name": "Spinach mushroom scramble wrap",
-   "tags": [
-    "savory",
-    "stovetop"
-   ],
-   "serv": 1,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "tortillas",
-     1,
-     "1 flour tortilla"
+     0.16666666666666666,
+     "Garlic powder (about 1 tsp assumed)"
     ],
     [
-     "eggs",
-     2,
-     "2 eggs"
+     "old_bay",
+     0.16666666666666666,
+     "Old Bay (about 1 tsp assumed)"
     ],
     [
-     "spinach",
-     1,
-     "Handful baby spinach"
+     "paprika",
+     0.16666666666666666,
+     "Paprika (about 1 tsp assumed)"
     ],
     [
-     "mushrooms",
-     1.5,
-     "Sliced mushrooms"
+     "olive_oil",
+     0.16666666666666666,
+     "Olive oil"
     ],
     [
-     "cheddar",
-     0.5,
-     "Shredded cheddar"
-    ]
-   ],
-   "notes": "",
-   "hands": 10,
-   "total": 10,
-   "keeps": 1,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "d_shrimptacos",
-   "meal": "dinner",
-   "name": "Garlic shrimp tacos with lime slaw",
-   "tags": [
-    "mexican",
-    "savory",
-    "light",
-    "stovetop"
-   ],
-   "serv": 2,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "shrimp",
-     0.25,
-     "1/4 lb shrimp"
-    ],
-    [
-     "tortillas",
-     2,
-     "2 flour tortillas"
-    ],
-    [
-     "cabbage",
-     0.1,
-     "Shredded cabbage"
-    ],
-    [
-     "lime",
-     0.25,
-     "Lime juice"
-    ],
-    [
-     "greek_yogurt",
-     0.1,
-     "Greek yogurt for the slaw"
-    ],
-    [
-     "chili_powder",
-     0.5,
-     "1/2 tsp chili powder"
+     "onion",
+     0.16666666666666666,
+     "2 white onions, diced"
     ],
     [
      "garlic",
+     2.1666666666666665,
+     "12-15 garlic cloves, sliced"
+    ],
+    [
+     "carrots",
+     0.041666666666666664,
+     "1 large carrot, diced"
+    ],
+    [
+     "celery",
+     0.020833333333333332,
+     "1 stalk celery, diced"
+    ],
+    [
+     "tomato_paste",
+     0.16666666666666666,
+     "1 tbsp tomato paste"
+    ],
+    [
+     "sundried_tomatoes",
      1,
-     "1 garlic clove"
+     "4-8 pcs of sundried tomatoes, minced"
     ],
     [
-     "oil",
-     0.5,
-     "1/2 tbsp oil"
-    ]
-   ],
-   "notes": "",
-   "hands": 15,
-   "total": 20,
-   "keeps": 1,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "d_beefnoodles",
-   "meal": "dinner",
-   "name": "Garlic beef lo mein",
-   "tags": [
-    "asian",
-    "chinese",
-    "savory",
-    "stovetop"
-   ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "lo_mein_noodles",
-     2,
-     "2 oz lo mein noodles"
-    ],
-    [
-     "beef_shaved",
-     0.2,
-     "Shaved beef"
-    ],
-    [
-     "frozen_veg",
-     3,
-     "Frozen stir-fry vegetables"
-    ],
-    [
-     "soy_sauce",
-     1.5,
-     "1 1/2 tbsp soy sauce"
-    ],
-    [
-     "oyster_sauce",
-     0.5,
-     "1/2 tbsp oyster sauce"
-    ],
-    [
-     "garlic",
+     "broth",
      1,
-     "1 garlic clove"
+     "Chicken stock as needed (about 6 cups assumed)"
     ],
     [
-     "sesame_oil",
-     1,
-     "1 tsp sesame oil"
-    ]
-   ],
-   "notes": "",
-   "hands": 15,
-   "total": 20,
-   "keeps": 3,
-   "reheats": true,
-   "freezes": true
-  },
-  {
-   "id": "d_sausagepasta",
-   "meal": "dinner",
-   "name": "Sausage marinara spaghetti",
-   "tags": [
-    "savory",
-    "hearty",
-    "stovetop"
-   ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "pasta",
-     3,
-     "3 oz spaghetti"
+     "gnocchi",
+     0.16666666666666666,
+     "1 pack gnocchi"
     ],
     [
-     "pork_sausage",
-     0.15,
-     "Pork sausage, browned"
-    ],
-    [
-     "marinara",
-     0.4,
-     "Marinara sauce"
-    ],
-    [
-     "spinach",
-     1,
-     "Handful spinach"
+     "heavy_cream",
+     0.16666666666666666,
+     "1 cup of heavy cream + heavy cream for topping"
     ],
     [
      "parmesan",
      0.25,
-     "Grated Parmesan",
+     "Parmesan to taste"
+    ],
+    [
+     "cheddar",
+     0.3333333333333333,
+     "1/2 cup cheddar cheese"
+    ],
+    [
+     "spinach",
+     1.3333333333333333,
+     "1 bunch of spinach, chopped"
+    ],
+    [
+     "parsley",
+     0.041666666666666664,
+     "Topping: parsley",
      1
     ]
    ],
    "notes": "",
-   "hands": 10,
-   "total": 20,
+   "hands": 25,
+   "total": 60,
+   "keeps": 3,
+   "reheats": true,
+   "freezes": false
+  },
+  {
+   "id": "d_goulash",
+   "meal": "dinner",
+   "name": "Hungarian goulash",
+   "tags": [
+    "savory",
+    "hearty",
+    "stovetop"
+   ],
+   "serv": 6,
+   "link": "https://www.instagram.com/p/DOn5fsTkk6a/",
+   "source": "Instagram post (Soups So Good Ep. 13)",
+   "rating": "no rating · servings estimated",
+   "ing": [
+    [
+     "beef_stew_meat",
+     0.3666666666666667,
+     "1 kg beef chuck, cut into cubes"
+    ],
+    [
+     "onion",
+     0.08333333333333333,
+     "1 white onion, diced"
+    ],
+    [
+     "garlic",
+     1.75,
+     "9-12 garlic cloves, minced"
+    ],
+    [
+     "paprika",
+     2.6666666666666665,
+     "1/3 cup of paprika"
+    ],
+    [
+     "caraway_seeds",
+     0.5,
+     "1 tbsp of caraway seeds"
+    ],
+    [
+     "peppers",
+     0.5,
+     "2 green bell peppers, chopped + 1 red bell pepper, chopped"
+    ],
+    [
+     "tomatoes",
+     0.06666666666666667,
+     "1 cup tomatoes, chopped"
+    ],
+    [
+     "beef_broth",
+     1.3333333333333333,
+     "Beef stock to fill the pot (about 8 cups assumed)"
+    ],
+    [
+     "potatoes",
+     0.08333333333333333,
+     "1 potato, chopped"
+    ],
+    [
+     "carrots",
+     0.024999999999999998,
+     "1 carrot, chopped"
+    ],
+    [
+     "oil",
+     0.3333333333333333,
+     "Oil/lard for frying"
+    ],
+    [
+     "parsley",
+     0.041666666666666664,
+     "Serve with chopped parsley",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 25,
+   "total": 110,
    "keeps": 4,
    "reheats": true,
    "freezes": true
   },
   {
-   "id": "d_tacos",
+   "id": "l_cevichecamaron",
+   "meal": "lunch",
+   "name": "Ecuadorian shrimp ceviche (ceviche de camarón)",
+   "tags": [
+    "ecuadorian",
+    "sour",
+    "fruity",
+    "light",
+    "nocook"
+   ],
+   "serv": 8,
+   "link": "https://www.laylita.com/recipes/ceviche-camaron-shrimp-ceviche/",
+   "source": "Laylita's Recipes",
+   "rating": "4.86 from 1,221 ratings",
+   "ing": [
+    [
+     "shrimp",
+     0.25,
+     "2 pounds of cooked shrimp (poach raw shrimp first)"
+    ],
+    [
+     "red_onion",
+     0.09375,
+     "2 red onions sliced very thinly"
+    ],
+    [
+     "tomatoes",
+     0.20375,
+     "4 tomatoes sliced very thinly or diced + ½ cup of freshly blended or grated tomato (or 2-3 tbs of ketchup)"
+    ],
+    [
+     "peppers",
+     0.125,
+     "1 bell pepper, red or green, finely diced (optional)",
+     1
+    ],
+    [
+     "lime",
+     1.5,
+     "10-15 limes freshly squeezed"
+    ],
+    [
+     "oranges",
+     0.0625,
+     "The juice of 1 orange"
+    ],
+    [
+     "cilantro",
+     0.125,
+     "1 bunch of cilantro chopped very finely"
+    ],
+    [
+     "oil",
+     0.25,
+     "Oil (sunflower, avocado, or light olive oil) to drizzle on top"
+    ]
+   ],
+   "notes": "",
+   "hands": 30,
+   "total": 90,
+   "keeps": 2,
+   "reheats": false,
+   "freezes": false
+  },
+  {
+   "id": "l_encebollado",
+   "meal": "lunch",
+   "name": "Encebollado (Ecuadorian tuna and yuca soup)",
+   "tags": [
+    "ecuadorian",
+    "sour",
+    "savory",
+    "spicy",
+    "stovetop"
+   ],
+   "serv": 6,
+   "link": "https://www.laylita.com/recipes/encebollado-de-pescado/",
+   "source": "Laylita's Recipes",
+   "rating": "4.87 from 241 ratings",
+   "ing": [
+    [
+     "tuna_steak",
+     0.3333333333333333,
+     "2 lbs fresh tuna, albacore or similar"
+    ],
+    [
+     "yuca",
+     0.16666666666666666,
+     "1 lb yuca or cassava, fresh or frozen"
+    ],
+    [
+     "oil",
+     0.3333333333333333,
+     "2 tbs sunflower oil"
+    ],
+    [
+     "tomatoes",
+     0.11166666666666668,
+     "2 tomatoes diced"
+    ],
+    [
+     "red_onion",
+     0.09166666666666667,
+     "½ red onion diced + To serve: curtido de cebolla y tomate (pickled red onion and tomato)"
+    ],
+    [
+     "chili_powder",
+     0.16666666666666666,
+     "1 teaspoon chili powder"
+    ],
+    [
+     "cumin",
+     0.3333333333333333,
+     "2 teaspoons ground cumin"
+    ],
+    [
+     "cilantro",
+     0.03333333333333333,
+     "5 cilantro sprigs"
+    ],
+    [
+     "lime",
+     0.6666666666666666,
+     "To serve: lime juice for the curtido",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 30,
+   "total": 90,
+   "keeps": 3,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "d_menestra",
    "meal": "dinner",
-   "name": "Ground beef tacos",
+   "name": "Arroz con menestra (Ecuadorian lentil stew with rice)",
+   "tags": [
+    "ecuadorian",
+    "savory",
+    "hearty",
+    "stovetop"
+   ],
+   "serv": 7,
+   "link": "https://www.laylita.com/recipes/ecuadorian-lentil-stew-menestra/",
+   "source": "Laylita's Recipes",
+   "rating": "4.83 from 261 ratings",
+   "ing": [
+    [
+     "oil",
+     0.35714285714285715,
+     "2-3 tbs oil"
+    ],
+    [
+     "red_onion",
+     0.049999999999999996,
+     "1 red onion diced"
+    ],
+    [
+     "peppers",
+     0.14285714285714285,
+     "1 bell pepper diced"
+    ],
+    [
+     "tomatoes",
+     0.14285714285714285,
+     "3 tomatoes diced"
+    ],
+    [
+     "garlic",
+     0.8571428571428571,
+     "6 garlic cloves minced"
+    ],
+    [
+     "cumin",
+     0.2857142857142857,
+     "2 tsp cumin"
+    ],
+    [
+     "achiote",
+     0.14285714285714285,
+     "1 tsp achiote powder or ground achiote"
+    ],
+    [
+     "cilantro",
+     0.03571428571428571,
+     "4 tbs chopped cilantro"
+    ],
+    [
+     "brown_lentils",
+     0.14285714285714285,
+     "1 lb lentils rinsed"
+    ],
+    [
+     "rice",
+     0.2857142857142857,
+     "Rice to serve alongside (not itemized on the recipe card)",
+     1
+    ],
+    [
+     "plantains",
+     0.2857142857142857,
+     "Green or ripe plantain (optional, see recipe notes)",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 10,
+   "total": 55,
+   "keeps": 5,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "s_empanadasviento",
+   "meal": "snack",
+   "name": "Empanadas de viento (Ecuadorian sugar-dusted cheese empanadas)",
+   "tags": [
+    "ecuadorian",
+    "sweet",
+    "savory",
+    "stovetop"
+   ],
+   "serv": 8,
+   "link": "https://www.laylita.com/recipes/empanadas-de-viento/",
+   "source": "Laylita's Recipes",
+   "rating": "4.76 from 271 ratings · makes 15, plus 1 hr dough rest",
+   "ing": [
+    [
+     "flour",
+     0.375,
+     "Dough: 3 cups all-purpose flour (or use 15 store-bought empanada discs)"
+    ],
+    [
+     "baking_powder",
+     0.125,
+     "Dough: 1 tsp baking powder"
+    ],
+    [
+     "sugar",
+     3.375,
+     "Dough: 1 tablespoon of sugar (optional) + ½ cup sugar for sprinkling"
+    ],
+    [
+     "butter",
+     1,
+     "Dough: 1 stick of butter, cut in 8 pieces"
+    ],
+    [
+     "oranges",
+     0.05,
+     "Dough: ¼ cup orange juice"
+    ],
+    [
+     "mozzarella",
+     1.25,
+     "~2 ½ cups grated cheese (quesillo, mozzarella, Monterey Jack or Oaxaca)"
+    ],
+    [
+     "onion",
+     0.04375,
+     "1 cup finely chopped white onion (optional)",
+     1
+    ],
+    [
+     "oil",
+     2,
+     "Oil for frying (about 1 cup)"
+    ]
+   ],
+   "notes": "",
+   "hands": 30,
+   "total": 100,
+   "keeps": 3,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "s_platanosasados",
+   "meal": "snack",
+   "name": "Baked ripe plantains with cheese (plátanos asados con queso)",
+   "tags": [
+    "ecuadorian",
+    "sweet",
+    "fruity",
+    "savory",
+    "oven"
+   ],
+   "serv": 6,
+   "link": "https://www.laylita.com/recipes/platanos-asados-con-queso-or-baked-ripe-plantains-with-cheese/",
+   "source": "Laylita's Recipes",
+   "rating": "4.79 from 219 ratings",
+   "ing": [
+    [
+     "plantains",
+     1,
+     "6 ripe plantains, whole"
+    ],
+    [
+     "butter",
+     0.25,
+     "1-2 tbs melted butter or oil"
+    ],
+    [
+     "mozzarella_block",
+     1,
+     "6 thick slices of mozzarella"
+    ]
+   ],
+   "notes": "",
+   "hands": 5,
+   "total": 50,
+   "keeps": 3,
+   "reheats": true,
+   "freezes": false
+  },
+  {
+   "id": "d_arrozconpollo",
+   "meal": "dinner",
+   "name": "Latin arroz con pollo",
+   "tags": [
+    "savory",
+    "hearty",
+    "stovetop"
+   ],
+   "serv": 8,
+   "link": "https://www.skinnytaste.com/arroz-con-pollo-lightened-up/",
+   "source": "Skinnytaste",
+   "rating": "4.70 from 119 ratings",
+   "ing": [
+    [
+     "chicken_thigh",
+     0.25,
+     "8 boneless, skinless chicken thighs"
+    ],
+    [
+     "white_vinegar",
+     0.0078125,
+     "1 tablespoon white vinegar"
+    ],
+    [
+     "sazon",
+     0.25,
+     "2 teaspoons sazon, homemade or store bought"
+    ],
+    [
+     "adobo",
+     0.0625,
+     "1/2 teaspoon Adobo seasoning"
+    ],
+    [
+     "garlic_powder",
+     0.0625,
+     "1/2 teaspoon garlic powder"
+    ],
+    [
+     "olive_oil",
+     0.125,
+     "1 tablespoon olive oil"
+    ],
+    [
+     "onion",
+     0.0225,
+     "1/2 medium onion"
+    ],
+    [
+     "cilantro",
+     0.025,
+     "1/4 cup fresh cilantro"
+    ],
+    [
+     "garlic",
+     0.375,
+     "3 cloves garlic"
+    ],
+    [
+     "green_onions",
+     0.075,
+     "5 scallions"
+    ],
+    [
+     "peppers",
+     0.0125,
+     "2 tbsp bell pepper"
+    ],
+    [
+     "tomatoes",
+     0.04125,
+     "1 medium vine tomato, diced"
+    ],
+    [
+     "rice",
+     0.3125,
+     "2 1/2 cups long grain white rice"
+    ],
+    [
+     "chicken_bouillon",
+     0.125,
+     "1 chicken bouillon cube"
+    ]
+   ],
+   "notes": "",
+   "hands": 10,
+   "total": 55,
+   "keeps": 4,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "l_arepas",
+   "meal": "lunch",
+   "name": "Reina pepiada arepas (Venezuelan chicken avocado arepas)",
+   "tags": [
+    "savory",
+    "sour",
+    "stovetop"
+   ],
+   "serv": 7,
+   "link": "https://www.panningtheglobe.com/reina-pepiada-arepas-chicken-avocado/",
+   "source": "Panning the Globe",
+   "rating": "4.9 from 18 ratings",
+   "ing": [
+    [
+     "avocado",
+     0.2857142857142857,
+     "2 Haas avocados, peeled and pitted"
+    ],
+    [
+     "mayonnaise",
+     0.022857142857142857,
+     "2-3 tablespoons mayonnaise"
+    ],
+    [
+     "lime",
+     0.09571428571428572,
+     "1 tablespoon plus 1 teaspoon fresh lime juice"
+    ],
+    [
+     "chicken_breast",
+     0.12142857142857143,
+     "2 cups shredded cooked chicken (about 0.85 lb raw)"
+    ],
+    [
+     "peppers",
+     0.07142857142857142,
+     "½ red bell pepper, diced"
+    ],
+    [
+     "onion",
+     0.014285714285714287,
+     "3 tablespoons finely chopped white onion"
+    ],
+    [
+     "cilantro",
+     0.02142857142857143,
+     "3 tablespoons finely chopped cilantro"
+    ],
+    [
+     "jalapeno",
+     0.07142857142857142,
+     "½ jalapeño pepper, finely chopped"
+    ],
+    [
+     "garlic",
+     0.2857142857142857,
+     "2 teaspoons finely minced garlic (2 medium cloves)"
+    ],
+    [
+     "masarepa",
+     0.42857142857142855,
+     "3 cups precooked white corn flour (P.A.N. or masarepa)"
+    ],
+    [
+     "oil",
+     0.2857142857142857,
+     "Cooking oil (light olive, canola or avocado)"
+    ]
+   ],
+   "notes": "",
+   "hands": 40,
+   "total": 75,
+   "keeps": 2,
+   "reheats": false,
+   "freezes": true
+  },
+  {
+   "id": "s_tresleches",
+   "meal": "snack",
+   "name": "Tres leches cake",
+   "tags": [
+    "sweet",
+    "oven"
+   ],
+   "serv": 12,
+   "link": "https://natashaskitchen.com/tres-leches-cake/",
+   "source": "Natasha's Kitchen",
+   "rating": "4.98 from 1,137 ratings",
+   "ing": [
+    [
+     "flour",
+     0.08333333333333333,
+     "1 cup all-purpose flour"
+    ],
+    [
+     "baking_powder",
+     0.125,
+     "1 1/2 tsp baking powder"
+    ],
+    [
+     "eggs",
+     0.4166666666666667,
+     "5 eggs (large)"
+    ],
+    [
+     "sugar",
+     4.5,
+     "1 cup sugar, divided into 3/4 and 1/4 cups + Frosting: 2 Tbsp granulated sugar"
+    ],
+    [
+     "vanilla",
+     0.08333333333333333,
+     "1 tsp vanilla extract"
+    ],
+    [
+     "milk",
+     0.0275,
+     "1/3 cup whole milk"
+    ],
+    [
+     "evaporated_milk",
+     0.08333333333333333,
+     "12 oz evaporated milk"
+    ],
+    [
+     "condensed_milk",
+     0.05333333333333334,
+     "9 oz sweetened condensed milk"
+    ],
+    [
+     "heavy_cream",
+     0.19416666666666668,
+     "Milk syrup: 1/3 cup heavy whipping cream + Frosting: 2 cups heavy whipping cream"
+    ],
+    [
+     "blueberries",
+     0.4166666666666667,
+     "1 cup berries, to garnish (optional)",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 30,
+   "total": 120,
+   "keeps": 4,
+   "reheats": false,
+   "freezes": false
+  },
+  {
+   "id": "d_chickentinga",
+   "meal": "dinner",
+   "name": "Chicken tinga",
    "tags": [
     "mexican",
     "savory",
     "spicy",
     "stovetop"
    ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
+   "serv": 6,
+   "link": "https://www.mexicoinmykitchen.com/chicken-tinga-recipe/",
+   "source": "Mexico in My Kitchen",
+   "rating": "4.94 from 61 ratings",
    "ing": [
     [
-     "ground_beef",
-     0.25,
-     "1/4 lb ground beef"
+     "oil",
+     0.3333333333333333,
+     "2 tablespoons of vegetable oil"
+    ],
+    [
+     "onion",
+     0.05833333333333333,
+     "1 medium white onion cut into slices"
+    ],
+    [
+     "garlic",
+     0.3333333333333333,
+     "2 large garlic cloves finely diced"
+    ],
+    [
+     "tomatoes",
+     0.20833333333333334,
+     "3 cups of tomato cut into cubes"
+    ],
+    [
+     "parsley",
+     0.024999999999999998,
+     "2 tablespoons of parsley chopped, extra to decorate"
+    ],
+    [
+     "chipotle_adobo",
+     0.3333333333333333,
+     "2 chipotle peppers in adobo, chopped"
+    ],
+    [
+     "chicken_breast",
+     0.20833333333333334,
+     "3 cups chicken cooked and shredded (about 1.25 lb raw)"
     ],
     [
      "tortillas",
-     2,
-     "2 flour tortillas"
-    ],
-    [
-     "chili_powder",
-     1,
-     "1 tsp chili powder"
-    ],
-    [
-     "cumin",
-     0.5,
-     "1/2 tsp cumin"
-    ],
-    [
-     "mexican_cheese",
-     0.75,
-     "Shredded Mexican cheese"
-    ],
-    [
-     "salsa",
-     0.15,
-     "Salsa"
-    ],
-    [
-     "cabbage",
-     0.05,
-     "Shredded cabbage",
+     1.3333333333333333,
+     "Tortillas or tostadas to serve",
      1
     ]
    ],
    "notes": "",
-   "hands": 15,
-   "total": 20,
-   "keeps": 3,
+   "hands": 10,
+   "total": 30,
+   "keeps": 4,
    "reheats": true,
    "freezes": true
   },
   {
-   "id": "d_honeysalmon",
-   "meal": "dinner",
-   "name": "Honey garlic salmon with green beans",
-   "tags": [
-    "savory",
-    "light",
-    "stovetop"
-   ],
-   "serv": 2,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "salmon",
-     0.33,
-     "1 salmon portion"
-    ],
-    [
-     "honey",
-     1,
-     "1 tbsp honey"
-    ],
-    [
-     "soy_sauce",
-     1,
-     "1 tbsp soy sauce"
-    ],
-    [
-     "garlic",
-     1,
-     "1 garlic clove"
-    ],
-    [
-     "butter",
-     0.5,
-     "1/2 tbsp butter"
-    ],
-    [
-     "green_beans",
-     0.15,
-     "Green beans"
-    ]
-   ],
-   "notes": "",
-   "hands": 10,
-   "total": 15,
-   "keeps": 2,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "d_quickchops",
-   "meal": "dinner",
-   "name": "Paprika pork chops with garlic green beans",
-   "tags": [
-    "southern",
-    "savory",
-    "stovetop"
-   ],
-   "serv": 2,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "pork_chops",
-     0.33,
-     "Thin-sliced pork chops"
-    ],
-    [
-     "green_beans",
-     0.2,
-     "Green beans"
-    ],
-    [
-     "garlic",
-     1,
-     "1 garlic clove"
-    ],
-    [
-     "butter",
-     0.5,
-     "1/2 tbsp butter"
-    ],
-    [
-     "paprika",
-     0.5,
-     "1/2 tsp paprika"
-    ],
-    [
-     "garlic_powder",
-     0.25,
-     "Pinch of garlic powder"
-    ]
-   ],
-   "notes": "",
-   "hands": 10,
-   "total": 20,
-   "keeps": 3,
-   "reheats": true,
-   "freezes": false
-  },
-  {
-   "id": "s_tzatziki",
+   "id": "s_aguapepino",
    "meal": "snack",
-   "name": "Tzatziki with cucumber and carrot sticks",
+   "name": "Agua de pepino (cucumber lime agua fresca)",
    "tags": [
-    "mediterranean",
-    "savory",
-    "light",
+    "mexican",
+    "sour",
+    "fruity",
+    "sweet",
     "nocook"
    ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
+   "serv": 7,
+   "link": "https://inmamamaggieskitchen.com/cucumber-lime-agua-fresca/",
+   "source": "Mamá Maggie's Kitchen",
+   "rating": "4.96 from 49 ratings · makes 7 cups",
    "ing": [
     [
-     "greek_yogurt",
-     0.25,
-     "1/4 cup Greek yogurt"
-    ],
-    [
      "cucumber",
-     0.25,
-     "Grated cucumber"
+     0.2857142857142857,
+     "2 cucumbers, peeled and chopped"
     ],
     [
-     "garlic",
-     0.5,
-     "1/2 garlic clove"
+     "lime",
+     0.7857142857142857,
+     "½ cup fresh lime juice (about 5-6 limes)"
     ],
     [
-     "dill",
-     0.25,
-     "Pinch of dill"
-    ],
-    [
-     "lemon",
-     0.05,
-     "Squeeze of lemon"
-    ],
-    [
-     "carrots",
-     0.1,
-     "Carrot sticks"
+     "sugar",
+     4.571428571428571,
+     "⅔ cup sugar"
     ]
    ],
    "notes": "",
    "hands": 10,
    "total": 10,
-   "keeps": 4,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "s_cottagesavory",
-   "meal": "snack",
-   "name": "Savory cottage cheese with cucumber",
-   "tags": [
-    "savory",
-    "light",
-    "nocook",
-    "keto"
-   ],
-   "serv": 1,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "cottage_cheese",
-     4,
-     "1/2 cup cottage cheese"
-    ],
-    [
-     "cucumber",
-     0.2,
-     "Sliced cucumber"
-    ],
-    [
-     "garlic_powder",
-     0.1,
-     "Pinch of garlic powder"
-    ],
-    [
-     "onion_powder",
-     0.1,
-     "Pinch of onion powder"
-    ],
-    [
-     "sesame_seeds",
-     0.25,
-     "Sesame seeds",
-     1
-    ]
-   ],
-   "notes": "",
-   "hands": 3,
-   "total": 3,
-   "keeps": 1,
-   "reheats": false,
-   "freezes": false
-  },
-  {
-   "id": "s_beandip",
-   "meal": "snack",
-   "name": "Black bean salsa dip with pepper strips",
-   "tags": [
-    "mexican",
-    "savory",
-    "nocook"
-   ],
-   "serv": 4,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
-   "ing": [
-    [
-     "black_beans",
-     0.25,
-     "1/4 can black beans, mashed"
-    ],
-    [
-     "salsa",
-     0.15,
-     "Salsa"
-    ],
-    [
-     "lime",
-     0.1,
-     "Squeeze of lime"
-    ],
-    [
-     "cilantro",
-     0.05,
-     "Chopped cilantro",
-     1
-    ],
-    [
-     "peppers",
-     0.25,
-     "Bell pepper strips"
-    ]
-   ],
-   "notes": "",
-   "hands": 5,
-   "total": 5,
    "keeps": 3,
    "reheats": false,
    "freezes": false
   },
   {
-   "id": "s_avocukes",
-   "meal": "snack",
-   "name": "Avocado cucumber bites",
+   "id": "d_hotsoursoup",
+   "meal": "dinner",
+   "name": "Hot and sour soup",
    "tags": [
+    "chinese",
+    "asian",
+    "sour",
+    "spicy",
     "savory",
-    "light",
-    "nocook",
-    "keto"
+    "stovetop"
    ],
-   "serv": 2,
-   "link": "",
-   "source": "Quick recipe (added Oct 2026)",
-   "rating": "",
+   "serv": 4,
+   "link": "https://www.recipetineats.com/hot-and-sour-soup/",
+   "source": "RecipeTin Eats",
+   "rating": "4.97 from 95 ratings",
    "ing": [
     [
-     "cucumber",
-     0.33,
-     "Cucumber rounds"
+     "chicken_breast",
+     0.12,
+     "220 g / 7oz chicken breast"
     ],
     [
-     "avocado",
-     0.25,
-     "Mashed avocado"
+     "mushrooms",
+     1.25,
+     "12 dried shiitake mushrooms (or 150g/5oz fresh)"
     ],
     [
-     "lime",
-     0.05,
-     "Squeeze of lime"
-    ],
-    [
-     "seasoned_salt",
-     0.1,
-     "Pinch of seasoned salt"
+     "wood_ear",
+     0.125,
+     "1/2 cup wood ear mushrooms, chopped"
     ],
     [
      "red_pepper_flakes",
+     0.25,
+     "1 tsp dried chilli / red pepper flakes"
+    ],
+    [
+     "dark_soy",
+     0.5,
+     "2 tsp dark soy sauce"
+    ],
+    [
+     "soy_sauce",
+     0.25,
+     "1 tbsp light soy sauce"
+    ],
+    [
+     "ginger_paste",
+     0.0825,
+     "1 tsp ginger, finely grated"
+    ],
+    [
+     "white_pepper",
+     0.125,
+     "1/2 tsp white pepper (sub black)"
+    ],
+    [
+     "broth",
+     1.5,
+     "6 cups chicken or veg stock, low sodium"
+    ],
+    [
+     "sesame_oil",
+     0.25,
+     "1 tsp sesame oil"
+    ],
+    [
+     "sugar",
+     0.25,
+     "1 tsp sugar"
+    ],
+    [
+     "white_vinegar",
+     0.0625,
+     "1/4 cup white vinegar (adjust to taste)"
+    ],
+    [
+     "tofu",
+     1.1,
+     "125 g / 4oz firm tofu, cubed"
+    ],
+    [
+     "bamboo_shoots",
+     0.0625,
+     "1/4 cup bamboo shoots, thinly sliced"
+    ],
+    [
+     "eggs",
+     0.5,
+     "2 eggs, whisked"
+    ],
+    [
+     "cornstarch",
+     3,
+     "1/4 cup cornstarch/cornflour"
+    ],
+    [
+     "green_onions",
+     0.0375,
+     "1 shallot/scallion, finely sliced"
+    ]
+   ],
+   "notes": "",
+   "hands": 20,
+   "total": 40,
+   "keeps": 3,
+   "reheats": true,
+   "freezes": false
+  },
+  {
+   "id": "d_tomkha",
+   "meal": "dinner",
+   "name": "Tom kha gai (Thai coconut chicken soup)",
+   "tags": [
+    "asian",
+    "sour",
+    "spicy",
+    "savory",
+    "stovetop"
+   ],
+   "serv": 6,
+   "link": "https://40aprons.com/tom-kha-soup-whole30/",
+   "source": "40 Aprons",
+   "rating": "4.91 from 788 ratings",
+   "ing": [
+    [
+     "oil",
+     0.16666666666666666,
+     "1 tablespoon coconut oil"
+    ],
+    [
+     "onion",
+     0.041666666666666664,
+     "half of one onion, thinly sliced"
+    ],
+    [
+     "garlic",
+     0.3333333333333333,
+     "2 cloves garlic, chopped"
+    ],
+    [
+     "jalapeno",
+     0.08333333333333333,
+     "half of one red jalapeño pepper, sliced (or 1-3 Thai chiles)"
+    ],
+    [
+     "ginger_paste",
+     0.16666666666666666,
+     "3 ¼-inch slices galangal or ginger"
+    ],
+    [
+     "lemongrass",
+     0.16666666666666666,
+     "1 lemongrass stalk, pounded and cut into 2-inch pieces"
+    ],
+    [
+     "red_curry_paste",
+     0.3333333333333333,
+     "2 teaspoons red Thai curry paste"
+    ],
+    [
+     "broth",
+     0.6666666666666666,
+     "4 cups chicken broth"
+    ],
+    [
+     "coconut_cream",
+     0.39999999999999997,
+     "4 cups unsweetened full-fat coconut cream or coconut milk (canned)"
+    ],
+    [
+     "chicken_breast",
+     0.16666666666666666,
+     "2 medium chicken breasts, about 1 pound"
+    ],
+    [
+     "mushrooms",
+     1.3333333333333333,
+     "8 ounces white mushroom caps, sliced"
+    ],
+    [
+     "brown_sugar",
+     0.015666666666666666,
+     "1-2 tablespoons coconut sugar (brown sugar works)"
+    ],
+    [
+     "fish_sauce",
+     0.2916666666666667,
+     "1 ½ – 2 tablespoons fish sauce"
+    ],
+    [
+     "lime",
+     0.20833333333333334,
+     "2-3 tablespoons fresh lime juice"
+    ],
+    [
+     "green_onions",
+     0.06666666666666667,
+     "2-3 green onions, sliced thin"
+    ],
+    [
+     "cilantro",
+     0.03333333333333333,
+     "Fresh cilantro, chopped, for garnish",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 15,
+   "total": 60,
+   "keeps": 3,
+   "reheats": true,
+   "freezes": false
+  },
+  {
+   "id": "l_redlentilsoup",
+   "meal": "lunch",
+   "name": "Greek lemony red lentil soup",
+   "tags": [
+    "mediterranean",
+    "sour",
+    "savory",
+    "light",
+    "stovetop"
+   ],
+   "serv": 6,
+   "link": "https://www.themediterraneandish.com/red-lentil-soup-recipe/",
+   "source": "The Mediterranean Dish",
+   "rating": "4.9 from 268 ratings",
+   "ing": [
+    [
+     "olive_oil",
+     0.3333333333333333,
+     "Extra virgin olive oil (amount not given; about 2 tbsp)"
+    ],
+    [
+     "onion",
+     0.08333333333333333,
+     "1 large onion, chopped"
+    ],
+    [
+     "garlic",
+     0.5,
+     "3 garlic cloves, minced"
+    ],
+    [
+     "carrots",
+     0.049999999999999996,
+     "2 carrots, chopped"
+    ],
+    [
+     "oregano",
+     0.5,
+     "3 tsp dry oregano"
+    ],
+    [
+     "cumin",
+     0.25,
+     "1 1/2 tsp cumin"
+    ],
+    [
+     "rosemary",
+     0.041666666666666664,
+     "1 tsp rosemary"
+    ],
+    [
+     "red_pepper_flakes",
+     0.08333333333333333,
+     "1/2 tsp red pepper flakes"
+    ],
+    [
+     "bay_leaves",
+     0.3333333333333333,
+     "2 dry bay leaves"
+    ],
+    [
+     "crushed_tomatoes",
+     0.049999999999999996,
+     "1 cup crushed tomatoes (from a can)"
+    ],
+    [
+     "broth",
+     1.1666666666666667,
+     "7 cups low-sodium vegetable broth (chicken broth works)"
+    ],
+    [
+     "red_lentils",
+     0.3333333333333333,
+     "2 cups red lentils, rinsed and drained"
+    ],
+    [
+     "lemon",
+     0.3333333333333333,
+     "Zest of 1 lemon and juice of 2 lemons"
+    ],
+    [
+     "parsley",
+     0.041666666666666664,
+     "Fresh parsley for garnish",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 10,
+   "total": 33,
+   "keeps": 5,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "d_piccata",
+   "meal": "dinner",
+   "name": "Chicken piccata (lemon caper chicken)",
+   "tags": [
+    "sour",
+    "savory",
+    "stovetop"
+   ],
+   "serv": 6,
+   "link": "https://natashaskitchen.com/chicken-piccata-recipe/",
+   "source": "Natasha's Kitchen",
+   "rating": "4.97 from 125 ratings",
+   "ing": [
+    [
+     "chicken_breast",
+     0.375,
+     "3 chicken breasts (large), boneless, skinless"
+    ],
+    [
+     "flour",
+     0.08333333333333333,
+     "1/2 cup all-purpose flour"
+    ],
+    [
+     "butter",
+     0.6666666666666666,
+     "4 Tbsp unsalted butter, divided"
+    ],
+    [
+     "olive_oil",
+     0.5,
+     "3 Tbsp olive oil"
+    ],
+    [
+     "white_wine",
+     0.08333333333333333,
+     "1/2 cup dry white wine such as chardonnay"
+    ],
+    [
+     "lemon",
+     0.3333333333333333,
+     "1/4 cup fresh lemon juice (juice of 1 large lemon) + 1 small lemon, sliced into rings"
+    ],
+    [
+     "capers",
+     0.5,
+     "3 Tbsp capers, rinsed"
+    ],
+    [
+     "parsley",
+     0.041666666666666664,
+     "1/4 cup parsley",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 15,
+   "total": 30,
+   "keeps": 3,
+   "reheats": true,
+   "freezes": false
+  },
+  {
+   "id": "d_moroccanchicken",
+   "meal": "dinner",
+   "name": "Moroccan chicken with apricots, raisins and olives",
+   "tags": [
+    "mediterranean",
+    "fruity",
+    "sweet",
+    "savory",
+    "stovetop"
+   ],
+   "serv": 5,
+   "link": "https://www.themediterraneandish.com/moroccan-chicken-recipe/",
+   "source": "The Mediterranean Dish",
+   "rating": "4.9 from 113 ratings",
+   "ing": [
+    [
+     "ras_el_hanout",
+     0.9,
+     "1 1/2 tbsp Ras El Hanout"
+    ],
+    [
+     "cinnamon",
+     0.3,
+     "1 1/2 tsp ground cinnamon"
+    ],
+    [
+     "paprika",
+     0.2,
+     "1 tsp sweet paprika"
+    ],
+    [
+     "ginger",
+     0.2,
+     "1 tsp ground ginger"
+    ],
+    [
+     "chicken_thigh_bonein",
+     0.7,
+     "3 1/2 lb whole chicken cut into bone-in pieces (bone-in thighs work)"
+    ],
+    [
+     "olive_oil",
+     0.4,
+     "Extra virgin olive oil (amount not given; about 2 tbsp)"
+    ],
+    [
+     "onion",
+     0.06999999999999999,
+     "1 medium yellow onion, chopped"
+    ],
+    [
+     "garlic",
+     0.8,
+     "4 garlic cloves, minced"
+    ],
+    [
+     "cilantro",
+     0.12,
+     "1 oz chopped fresh cilantro"
+    ],
+    [
+     "lemon",
+     0.2,
+     "1 lemon, thinly sliced (or 1 preserved lemon)"
+    ],
+    [
+     "green_olives",
+     0.15,
+     "3/4 cup pitted green olives"
+    ],
+    [
+     "raisins",
      0.05,
-     "Chili flakes",
+     "1/4 cup raisins (any kind)"
+    ],
+    [
+     "dried_apricots",
+     0.05,
+     "1/4 cup chopped dry apricots"
+    ],
+    [
+     "tomato_paste",
+     0.6,
+     "3 tbsp tomato paste"
+    ],
+    [
+     "broth",
+     0.3,
+     "1 1/2 cup low-sodium chicken broth"
+    ]
+   ],
+   "notes": "",
+   "hands": 20,
+   "total": 65,
+   "keeps": 4,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "d_sweetsour",
+   "meal": "dinner",
+   "name": "Sweet and sour pineapple chicken stir-fry",
+   "tags": [
+    "chinese",
+    "asian",
+    "sweet",
+    "sour",
+    "fruity",
+    "stovetop"
+   ],
+   "serv": 4,
+   "link": "https://www.recipetineats.com/sweet-and-sour-chicken/",
+   "source": "RecipeTin Eats",
+   "rating": "4.93 from 65 ratings",
+   "ing": [
+    [
+     "sugar",
+     6,
+     "1/2 cup white sugar"
+    ],
+    [
+     "apple_cider_vinegar",
+     0.0825,
+     "1/3 cup apple cider vinegar"
+    ],
+    [
+     "ketchup",
+     0.75,
+     "3 tbsp ketchup"
+    ],
+    [
+     "worcestershire",
+     0.25,
+     "1 tsp Worcestershire sauce"
+    ],
+    [
+     "soy_sauce",
+     0.0825,
+     "1 tsp soy sauce"
+    ],
+    [
+     "oyster_sauce",
+     0.0825,
+     "1 tsp oyster sauce"
+    ],
+    [
+     "cornstarch",
+     0.75,
+     "1 tbsp cornflour / corn starch + 2 tbsp water"
+    ],
+    [
+     "oil",
+     0.375,
+     "1 1/2 tbsp peanut oil (or vegetable)"
+    ],
+    [
+     "garlic",
+     0.25,
+     "1 garlic clove, minced"
+    ],
+    [
+     "onion",
+     0.0875,
+     "1 onion, halved and sliced"
+    ],
+    [
+     "chicken_thigh",
+     0.2,
+     "400 g / 13 oz chicken thigh fillets, bite size"
+    ],
+    [
+     "peppers",
+     0.5,
+     "1 red and 1 green or yellow bell pepper, bite size"
+    ],
+    [
+     "pineapple_chunks",
+     0.1,
+     "1 can (8oz/250g) pineapple pieces in juice, plus 3 tbsp of the juice for the sauce"
+    ],
+    [
+     "green_onions",
+     0.025,
+     "Sliced scallions, for garnish",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 10,
+   "total": 20,
+   "keeps": 3,
+   "reheats": true,
+   "freezes": false
+  },
+  {
+   "id": "d_gumbo",
+   "meal": "dinner",
+   "name": "Chicken and sausage gumbo",
+   "tags": [
+    "southern",
+    "savory",
+    "spicy",
+    "hearty",
+    "stovetop"
+   ],
+   "serv": 6,
+   "link": "https://www.jessicagavin.com/chicken-andouille-sausage-gumbo/",
+   "source": "Jessica Gavin",
+   "rating": "4.90 from 1,644 ratings",
+   "ing": [
+    [
+     "chicken_thigh",
+     0.3333333333333333,
+     "2 pounds boneless skinless chicken breast, or thigh"
+    ],
+    [
+     "okra",
+     0.16666666666666666,
+     "1 pound okra, 1\" pieces, or frozen"
+    ],
+    [
+     "butter",
+     1.3333333333333333,
+     "½ cup unsalted butter"
+    ],
+    [
+     "flour",
+     0.08333333333333333,
+     "½ cup all-purpose flour"
+    ],
+    [
+     "onion",
+     0.08333333333333333,
+     "1 ½ cup yellow onion, diced"
+    ],
+    [
+     "peppers",
+     0.25,
+     "1 ½ cup bell pepper, diced, green and red"
+    ],
+    [
+     "celery",
+     0.016666666666666666,
+     "⅓ cup celery, diced"
+    ],
+    [
+     "garlic",
+     0.3333333333333333,
+     "2 teaspoons minced garlic"
+    ],
+    [
+     "diced_tomatoes",
+     0.19166666666666665,
+     "2 cups diced canned tomatoes"
+    ],
+    [
+     "kielbasa",
+     2,
+     "12 ounces andouille sausage, cooked, ½\" slices (kielbasa is the Aldi stand-in)"
+    ],
+    [
+     "bay_leaves",
+     0.16666666666666666,
+     "1 dried bay leaf"
+    ],
+    [
+     "dried_thyme",
+     0.16666666666666666,
+     "1 teaspoon dried thyme"
+    ],
+    [
+     "dried_basil",
+     0.16666666666666666,
+     "1 teaspoon dried basil"
+    ],
+    [
+     "cayenne",
+     0.16666666666666666,
+     "1 teaspoon cayenne pepper"
+    ],
+    [
+     "gumbo_file",
+     0.16666666666666666,
+     "1 tablespoon gumbo filé"
+    ],
+    [
+     "rice",
+     0.3333333333333333,
+     "Rice to serve (not itemized on the recipe card)",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 15,
+   "total": 135,
+   "keeps": 4,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "d_frenchonion",
+   "meal": "dinner",
+   "name": "French onion soup",
+   "tags": [
+    "savory",
+    "sweet",
+    "hearty",
+    "stovetop"
+   ],
+   "serv": 4,
+   "link": "https://www.recipetineats.com/french-onion-soup/",
+   "source": "RecipeTin Eats",
+   "rating": "4.86 from 493 ratings",
+   "ing": [
+    [
+     "butter",
+     1.75,
+     "100 g / 3.5oz unsalted butter"
+    ],
+    [
+     "onion",
+     0.625,
+     "1.25 kg / 2.5 lb brown / yellow onions, thinly sliced"
+    ],
+    [
+     "white_wine",
+     0.1875,
+     "3/4 cup dry white wine (optional)",
+     1
+    ],
+    [
+     "flour",
+     0.03125,
+     "2 tbsp flour, plain / all purpose"
+    ],
+    [
+     "beef_broth",
+     1.5,
+     "6 cups good quality beef broth (or chicken), low sodium"
+    ],
+    [
+     "bay_leaves",
+     0.5,
+     "2 dried bay leaves (optional)",
+     1
+    ],
+    [
+     "thyme",
+     0.125,
+     "3 sprigs fresh thyme (optional)",
+     1
+    ],
+    [
+     "baguette",
+     1.75,
+     "6–8 slices French baguette or other softish bread"
+    ],
+    [
+     "gruyere",
+     0.875,
+     "100 g / 3.5 oz gruyere or mozzarella cheese"
+    ]
+   ],
+   "notes": "",
+   "hands": 20,
+   "total": 110,
+   "keeps": 4,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "d_zuppatoscana",
+   "meal": "dinner",
+   "name": "Zuppa Toscana (sausage, potato and kale soup)",
+   "tags": [
+    "savory",
+    "spicy",
+    "hearty",
+    "stovetop"
+   ],
+   "serv": 8,
+   "link": "https://natashaskitchen.com/zuppa-toscana-recipe/",
+   "source": "Natasha's Kitchen",
+   "rating": "4.98 from 2,097 ratings",
+   "ing": [
+    [
+     "bacon",
+     0.75,
+     "6 oz bacon, chopped"
+    ],
+    [
+     "hot_italian_sausage",
+     2,
+     "1 lb Italian sausage, the \"Hot\" variety"
+    ],
+    [
+     "garlic",
+     1.25,
+     "1 head of garlic, about 10 large cloves, minced"
+    ],
+    [
+     "onion",
+     0.04375,
+     "1 onion, medium, finely diced"
+    ],
+    [
+     "broth",
+     0.75,
+     "6 cups chicken broth, or chicken stock"
+    ],
+    [
+     "potatoes",
+     0.3125,
+     "5 russet potatoes, medium, peeled and chopped"
+    ],
+    [
+     "kale",
+     1,
+     "1 kale bundle, leaves stripped and chopped (6 cups)"
+    ],
+    [
+     "heavy_cream",
+     0.125,
+     "1 cup whipping cream (or 1 can full fat coconut milk)"
+    ],
+    [
+     "parmesan",
+     0.125,
+     "Parmesan cheese, to serve",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 35,
+   "total": 70,
+   "keeps": 4,
+   "reheats": true,
+   "freezes": false
+  },
+  {
+   "id": "d_swedishmeatballs",
+   "meal": "dinner",
+   "name": "Swedish meatballs in cream gravy",
+   "tags": [
+    "savory",
+    "hearty",
+    "stovetop"
+   ],
+   "serv": 8,
+   "link": "https://natashaskitchen.com/swedish-meatballs-recipe/",
+   "source": "Natasha's Kitchen",
+   "rating": "4.96 from 203 ratings",
+   "ing": [
+    [
+     "ground_beef",
+     0.125,
+     "1 lb lean ground beef (10%-15% fat)"
+    ],
+    [
+     "ground_pork",
+     0.125,
+     "1 lb ground pork"
+    ],
+    [
+     "onion",
+     0.03125,
+     "1 small onion, grated"
+    ],
+    [
+     "garlic",
+     0.25,
+     "2 garlic cloves, minced"
+    ],
+    [
+     "eggs",
+     0.125,
+     "1 large egg"
+    ],
+    [
+     "panko",
+     0.04125,
+     "1/3 cup panko crumbs"
+    ],
+    [
+     "milk",
+     0.03125,
+     "1/4 cup whole milk"
+    ],
+    [
+     "allspice",
+     0.03125,
+     "¼ tsp ground allspice"
+    ],
+    [
+     "nutmeg",
+     0.03125,
+     "¼ tsp ground nutmeg"
+    ],
+    [
+     "olive_oil",
+     0.25,
+     "2 Tbsp olive oil (cooking oil), or as needed"
+    ],
+    [
+     "butter",
+     0.5,
+     "Gravy: 4 Tbsp unsalted butter"
+    ],
+    [
+     "beef_broth",
+     0.375,
+     "Gravy: 3 cups regular beef broth"
+    ],
+    [
+     "heavy_cream",
+     0.125,
+     "Gravy: 1 cup heavy whipping cream"
+    ],
+    [
+     "flour",
+     0.0234375,
+     "Gravy: 3 Tbsp all-purpose flour"
+    ],
+    [
+     "dijon",
+     0.02125,
+     "Gravy: ½ tsp Dijon mustard"
+    ]
+   ],
+   "notes": "",
+   "hands": 15,
+   "total": 40,
+   "keeps": 4,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "s_lemonbars",
+   "meal": "snack",
+   "name": "Lemon bars",
+   "tags": [
+    "sweet",
+    "sour",
+    "fruity",
+    "oven"
+   ],
+   "serv": 24,
+   "link": "https://sallysbakingaddiction.com/lemon-bars-recipe/",
+   "source": "Sally's Baking Addiction",
+   "rating": "4.7 from 1,321 ratings · makes 24 bars",
+   "ing": [
+    [
+     "butter",
+     0.6666666666666666,
+     "Crust: 1 cup unsalted butter, melted"
+    ],
+    [
+     "sugar",
+     5,
+     "Crust: 1/2 cup granulated sugar + Filling: 2 cups granulated sugar"
+    ],
+    [
+     "vanilla",
+     0.08333333333333333,
+     "Crust: 2 teaspoons pure vanilla extract"
+    ],
+    [
+     "flour",
+     0.10416666666666667,
+     "Crust: 2 cups + 2 Tablespoons all-purpose flour + Filling: 6 Tablespoons all-purpose flour"
+    ],
+    [
+     "eggs",
+     0.25,
+     "Filling: 6 large eggs"
+    ],
+    [
+     "lemon",
+     0.20833333333333334,
+     "Filling: 1 cup fresh lemon juice (about 4 lemons); 2 tsp zest optional"
+    ],
+    [
+     "powdered_sugar",
+     0.004166666666666667,
+     "Confectioners' sugar for dusting (optional)",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 10,
+   "total": 230,
+   "keeps": 5,
+   "reheats": false,
+   "freezes": true
+  },
+  {
+   "id": "s_keylimepie",
+   "meal": "snack",
+   "name": "Key lime pie (made with regular limes)",
+   "tags": [
+    "sweet",
+    "sour",
+    "fruity",
+    "oven"
+   ],
+   "serv": 9,
+   "link": "https://www.onceuponachef.com/recipes/key-lime-pie.html",
+   "source": "Once Upon a Chef",
+   "rating": "4.83 from 974 ratings",
+   "ing": [
+    [
+     "graham_crackers",
+     1.3333333333333333,
+     "1½ cups graham cracker crumbs, from about 12 whole crackers"
+    ],
+    [
+     "brown_sugar",
+     0.03666666666666667,
+     "⅓ cup (packed) light brown sugar"
+    ],
+    [
+     "butter",
+     0.4444444444444444,
+     "4 tablespoons unsalted butter, melted"
+    ],
+    [
+     "condensed_milk",
+     0.2222222222222222,
+     "Two 14-oz cans sweetened condensed milk"
+    ],
+    [
+     "greek_yogurt",
+     0.1111111111111111,
+     "1 cup plain Greek yogurt"
+    ],
+    [
+     "lime",
+     0.7777777777777778,
+     "¾ cup fresh lime juice plus 1 tbsp grated zest + Topping: 1 teaspoon lime zest and 8 to 10 thin lime slices"
+    ],
+    [
+     "heavy_cream",
+     0.1111111111111111,
+     "Topping: 1 cup cold heavy cream"
+    ],
+    [
+     "powdered_sugar",
+     0.013888888888888888,
+     "Topping: 2 tablespoons confectioners' sugar"
+    ]
+   ],
+   "notes": "",
+   "hands": 20,
+   "total": 225,
+   "keeps": 4,
+   "reheats": false,
+   "freezes": true
+  },
+  {
+   "id": "s_peachcobbler",
+   "meal": "snack",
+   "name": "Peach cobbler",
+   "tags": [
+    "southern",
+    "sweet",
+    "fruity",
+    "oven"
+   ],
+   "serv": 9,
+   "link": "https://tastesbetterfromscratch.com/peach-cobbler/",
+   "source": "Tastes Better From Scratch",
+   "rating": "4.91 from 9,590 ratings",
+   "ing": [
+    [
+     "peaches",
+     0.15555555555555556,
+     "5 peaches, peeled, cored and sliced (about 4 cups)"
+    ],
+    [
+     "sugar",
+     9.333333333333334,
+     "3/4 cup granulated sugar + 1 cup granulated sugar"
+    ],
+    [
+     "butter",
+     0.6666666666666666,
+     "6 Tablespoons butter"
+    ],
+    [
+     "flour",
+     0.1111111111111111,
+     "1 cup all-purpose flour"
+    ],
+    [
+     "baking_powder",
+     0.2222222222222222,
+     "2 teaspoons baking powder"
+    ],
+    [
+     "milk",
+     0.08333333333333333,
+     "3/4 cup milk"
+    ],
+    [
+     "cinnamon",
+     0.05555555555555555,
+     "Ground cinnamon (amount not given; a sprinkle)"
+    ]
+   ],
+   "notes": "",
+   "hands": 15,
+   "total": 55,
+   "keeps": 4,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "b_bananabread",
+   "meal": "breakfast",
+   "name": "Best banana bread",
+   "tags": [
+    "sweet",
+    "fruity",
+    "oven"
+   ],
+   "serv": 10,
+   "link": "https://sallysbakingaddiction.com/best-banana-bread-recipe/",
+   "source": "Sally's Baking Addiction",
+   "rating": "4.8 from 1,821 ratings · 1 loaf",
+   "ing": [
+    [
+     "flour",
+     0.2,
+     "2 cups all-purpose flour"
+    ],
+    [
+     "baking_soda",
+     0.1,
+     "1 teaspoon baking soda"
+    ],
+    [
+     "cinnamon",
+     0.05,
+     "1/2 teaspoon ground cinnamon"
+    ],
+    [
+     "butter",
+     0.8,
+     "1/2 cup unsalted butter, softened"
+    ],
+    [
+     "brown_sugar",
+     0.075,
+     "3/4 cup packed light or dark brown sugar"
+    ],
+    [
+     "eggs",
+     0.2,
+     "2 large eggs"
+    ],
+    [
+     "bananas",
+     0.35,
+     "1 and 1/2 cups mashed bananas (about 3–4 ripe bananas)"
+    ],
+    [
+     "greek_yogurt",
+     0.033,
+     "1/3 cup plain Greek yogurt or full-fat sour cream"
+    ],
+    [
+     "vanilla",
+     0.1,
+     "1 teaspoon pure vanilla extract"
+    ],
+    [
+     "pecans",
+     0.075,
+     "3/4 cup chopped pecans or walnuts (optional)",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 10,
+   "total": 180,
+   "keeps": 5,
+   "reheats": false,
+   "freezes": true
+  },
+  {
+   "id": "s_applecrisp",
+   "meal": "snack",
+   "name": "Apple crisp",
+   "tags": [
+    "sweet",
+    "fruity",
+    "oven"
+   ],
+   "serv": 6,
+   "link": "https://tastesbetterfromscratch.com/apple-crisp/",
+   "source": "Tastes Better From Scratch",
+   "rating": "4.75 from 1,084 ratings",
+   "ing": [
+    [
+     "oats",
+     0.31666666666666665,
+     "Topping: 2/3 cup old-fashioned rolled oats"
+    ],
+    [
+     "flour",
+     0.10416666666666667,
+     "Topping: 1/2 cup all-purpose flour + Filling: 2 Tablespoons all-purpose flour"
+    ],
+    [
+     "brown_sugar",
+     0.125,
+     "Topping: 1/2 cup light brown sugar + Filling: 1/4 cup light brown sugar"
+    ],
+    [
+     "cinnamon",
+     0.16666666666666666,
+     "Topping: 1/2 teaspoon ground cinnamon + Filling: 1/2 teaspoon ground cinnamon"
+    ],
+    [
+     "baking_powder",
+     0.08333333333333333,
+     "Topping: 1/2 teaspoon baking powder"
+    ],
+    [
+     "butter",
+     1.8333333333333333,
+     "Topping: 1/2 cup salted butter, cut into small pieces + Filling: 3 Tablespoons salted butter, melted"
+    ],
+    [
+     "granny_smith",
+     0.2916666666666667,
+     "3-4 large Granny Smith apples, peeled and thinly sliced"
+    ],
+    [
+     "lemon",
+     0.055,
+     "Filling: 1 Tablespoon lemon juice"
+    ],
+    [
+     "milk",
+     0.03125,
+     "Filling: 3 Tablespoons milk"
+    ],
+    [
+     "vanilla",
+     0.08333333333333333,
+     "Filling: 1/2 teaspoon vanilla extract"
+    ],
+    [
+     "nutmeg",
+     0.041666666666666664,
+     "Filling: 1/4 teaspoon ground nutmeg"
+    ]
+   ],
+   "notes": "",
+   "hands": 15,
+   "total": 50,
+   "keeps": 4,
+   "reheats": true,
+   "freezes": true
+  },
+  {
+   "id": "b_blueberrymuffins",
+   "meal": "breakfast",
+   "name": "Blueberry muffins with streusel",
+   "tags": [
+    "sweet",
+    "fruity",
+    "oven"
+   ],
+   "serv": 12,
+   "link": "https://sallysbakingaddiction.com/blueberry-muffins/",
+   "source": "Sally's Baking Addiction",
+   "rating": "4.8 from 911 ratings · makes 12",
+   "ing": [
+    [
+     "brown_sugar",
+     0.0625,
+     "Streusel: 1/2 cup packed light or dark brown sugar + 1/4 cup packed light or dark brown sugar"
+    ],
+    [
+     "pecans",
+     0.041666666666666664,
+     "Streusel: 1/2 cup chopped walnuts (or pecans)"
+    ],
+    [
+     "cinnamon",
+     0.08333333333333333,
+     "Streusel: 1 teaspoon ground cinnamon"
+    ],
+    [
+     "flour",
+     0.14583333333333334,
+     "1 and 3/4 cups all-purpose flour"
+    ],
+    [
+     "baking_soda",
+     0.08333333333333333,
+     "1 teaspoon baking soda"
+    ],
+    [
+     "baking_powder",
+     0.08333333333333333,
+     "1 teaspoon baking powder"
+    ],
+    [
+     "butter",
+     0.6666666666666666,
+     "1/2 cup unsalted butter, softened"
+    ],
+    [
+     "sugar",
+     2,
+     "1/2 cup granulated sugar"
+    ],
+    [
+     "sour_cream",
+     0.041666666666666664,
+     "1/2 cup sour cream or plain/vanilla yogurt"
+    ],
+    [
+     "eggs",
+     0.16666666666666666,
+     "2 large eggs"
+    ],
+    [
+     "vanilla",
+     0.125,
+     "1 and 1/2 teaspoons pure vanilla extract"
+    ],
+    [
+     "milk",
+     0.020833333333333332,
+     "1/4 cup milk"
+    ],
+    [
+     "blueberries",
+     0.6166666666666667,
+     "1 and 1/2 cups fresh or frozen blueberries"
+    ]
+   ],
+   "notes": "",
+   "hands": 15,
+   "total": 45,
+   "keeps": 4,
+   "reheats": false,
+   "freezes": true
+  },
+  {
+   "id": "b_dutchbaby",
+   "meal": "breakfast",
+   "name": "German pancakes (Dutch baby)",
+   "tags": [
+    "sweet",
+    "oven"
+   ],
+   "serv": 5,
+   "link": "https://tastesbetterfromscratch.com/german-pancakes/",
+   "source": "Tastes Better From Scratch",
+   "rating": "4.97 from 2,281 ratings",
+   "ing": [
+    [
+     "eggs",
+     1.2,
+     "6 large eggs"
+    ],
+    [
+     "milk",
+     0.2,
+     "1 cup milk"
+    ],
+    [
+     "flour",
+     0.2,
+     "1 cup all-purpose flour"
+    ],
+    [
+     "vanilla",
+     0.2,
+     "1 teaspoon vanilla extract"
+    ],
+    [
+     "butter",
+     1,
+     "5 Tablespoons butter"
+    ],
+    [
+     "syrup",
+     0.8,
+     "Syrup, powdered sugar or fruit to top (not on the recipe card)",
      1
     ]
    ],
    "notes": "",
    "hands": 5,
-   "total": 5,
+   "total": 30,
    "keeps": 1,
    "reheats": false,
    "freezes": false
+  },
+  {
+   "id": "s_fruitsalad",
+   "meal": "snack",
+   "name": "Honey-lime rainbow fruit salad",
+   "tags": [
+    "fruity",
+    "sweet",
+    "sour",
+    "light",
+    "nocook"
+   ],
+   "serv": 10,
+   "link": "https://www.cookingclassy.com/honey-lime-rainbow-fruit-salad/",
+   "source": "Cooking Classy",
+   "rating": "4.97 from 83 ratings",
+   "ing": [
+    [
+     "strawberries",
+     1.6,
+     "1 lb fresh strawberries, chopped"
+    ],
+    [
+     "pineapple",
+     0.067,
+     "1 lb chopped fresh pineapple"
+    ],
+    [
+     "blueberries",
+     1.2,
+     "12 oz fresh blueberries"
+    ],
+    [
+     "red_grapes",
+     0.075,
+     "12 oz red grapes, halved"
+    ],
+    [
+     "kiwi",
+     0.4,
+     "4 kiwis, peeled and chopped"
+    ],
+    [
+     "mandarins",
+     0.3,
+     "3 mandarin oranges"
+    ],
+    [
+     "bananas",
+     0.2,
+     "2 bananas, sliced (optional)",
+     1
+    ],
+    [
+     "honey",
+     0.4,
+     "1/4 cup honey"
+    ],
+    [
+     "lime",
+     0.2,
+     "2 tsp lime zest (zest of 2 limes) and 1 1/2 Tbsp fresh lime juice"
+    ]
+   ],
+   "notes": "",
+   "hands": 20,
+   "total": 20,
+   "keeps": 2,
+   "reheats": false,
+   "freezes": false
+  },
+  {
+   "id": "s_pickledonions",
+   "meal": "snack",
+   "name": "Quick-pickled red onions",
+   "tags": [
+    "sour",
+    "light",
+    "stovetop"
+   ],
+   "serv": 8,
+   "link": "https://www.cookieandkate.com/quick-pickled-onions-recipe/",
+   "source": "Cookie and Kate",
+   "rating": "4.9 from 384 ratings · makes 2 cups",
+   "ing": [
+    [
+     "red_onion",
+     0.05,
+     "1 medium red onion, very thinly sliced"
+    ],
+    [
+     "white_vinegar",
+     0.03125,
+     "¼ cup distilled white vinegar"
+    ],
+    [
+     "apple_cider_vinegar",
+     0.03125,
+     "¼ cup apple cider vinegar or additional white vinegar"
+    ],
+    [
+     "honey",
+     0.1875,
+     "1 ½ tablespoons maple syrup or honey"
+    ],
+    [
+     "red_pepper_flakes",
+     0.03125,
+     "¼ teaspoon red pepper flakes (optional)",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 5,
+   "total": 40,
+   "keeps": 14,
+   "reheats": false,
+   "freezes": false
+  },
+  {
+   "id": "s_hummus",
+   "meal": "snack",
+   "name": "Easy smooth hummus",
+   "tags": [
+    "mediterranean",
+    "savory",
+    "sour",
+    "light",
+    "nocook"
+   ],
+   "serv": 6,
+   "link": "https://www.inspiredtaste.net/15938/easy-and-smooth-hummus-recipe/",
+   "source": "Inspired Taste",
+   "rating": "4.9 from 1,980 ratings · makes 1½ cups",
+   "ing": [
+    [
+     "chickpeas",
+     0.16666666666666666,
+     "1 (15-ounce) can chickpeas, drained"
+    ],
+    [
+     "lemon",
+     0.16666666666666666,
+     "¼ cup fresh lemon juice, from 1 large lemon"
+    ],
+    [
+     "tahini",
+     0.6666666666666666,
+     "¼ cup well-stirred tahini"
+    ],
+    [
+     "garlic",
+     0.16666666666666666,
+     "1 small garlic clove, minced"
+    ],
+    [
+     "olive_oil",
+     0.3333333333333333,
+     "2 tablespoons extra-virgin olive oil, plus more for serving"
+    ],
+    [
+     "cumin",
+     0.08333333333333333,
+     "½ teaspoon ground cumin"
+    ],
+    [
+     "paprika",
+     0.016666666666666666,
+     "Dash ground paprika, sumac, or za'atar for serving",
+     1
+    ],
+    [
+     "carrots",
+     0.08333333333333333,
+     "Carrot sticks or cucumber for dipping (not on the recipe card)",
+     1
+    ]
+   ],
+   "notes": "",
+   "hands": 10,
+   "total": 10,
+   "keeps": 5,
+   "reheats": false,
+   "freezes": true
   }
  ],
  "aliases": []
