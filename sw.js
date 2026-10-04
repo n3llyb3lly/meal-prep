@@ -14,6 +14,7 @@ async function servePage(){const c=await caches.open(SHELL);
   return new Response('<!doctype html><meta name=viewport content="width=device-width"><body style="font:17px system-ui;padding:24px;line-height:1.5"><h1>Meal Prep needs a connection once</h1><p>Open the app with internet the first time so it can save itself on this phone. After that it works offline.</p>',{headers:{'Content-Type':'text/html'}});}
 self.addEventListener('fetch',e=>{
   const req=e.request;if(req.method!=='GET')return;const url=new URL(req.url);const same=url.origin===location.origin;
+  if(!same)return; // the Google Sheet script and anything else off-site always go straight to the network
   if(req.mode==='navigate'){ // only the app page itself; tools/*.html go straight to the network
     const root=new URL(self.registration.scope).pathname;
     if(same&&(url.pathname===root||url.pathname===root+'index.html'))e.respondWith(servePage());return;}
