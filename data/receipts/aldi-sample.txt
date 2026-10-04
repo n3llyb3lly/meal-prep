@@ -1,0 +1,59 @@
+ALDI
+7300 Bush Lake Rd
+Edina, MN 55439
+aldi.us
+
+382147   All Purpose Flour         1.95  FA
+356408   Baking Potato             3.69  FA
+341878   Yellow Onions             2.39  FA
+523316   KIND Bfast Protein        4.95  FA
+356490   Bagged Avocados           3.15  FA
+343350   CrunchyGranolaBars        2.25  FA
+356537   Cilantro                  0.89  FA
+382845   Blk Angs Stew Meat        8.04  FA
+382845   Blk Angs Stew Meat        7.90  FA
+356410   Lemons                    3.69  FA
+385901   Sesame Oil                7.49  FA
+365303   Cran 100% Juice           3.25  FA
+382302   Kosher Baby Dills         1.99  FA
+343703   Ravioli                   3.29  FA
+382592   Fresh Mozzarella          2.95  FA
+733566   15G Yogurt Drink          1.97  FA
+733566   15G Yogurt Drink          1.97  FA
+733566   15G Yogurt Drink          1.97  FA
+733566   15G Yogurt Drink          1.97  FA
+733566   15G Yogurt Drink          1.97  FA
+733566   15G Yogurt Drink          1.97  FA
+488568   Jumbo Blueberries         4.89  FA
+356615   Roma Tomatoes LRW         1.55  FA
+(G) 1.831lb - (T) 0.011lb
+(N) 1.82 lb x 0.85/lb
+262678   Herring Fillets           1.99  FA
+262678   Herring Fillets           1.99  FA
+262678   Herring Fillets           1.99  FA
+262678   Herring Fillets           1.99  FA
+262678   Herring Fillets           1.99  FA
+262678   Herring Fillets           1.99  FA
+356371   Garlic                    1.49  FA
+382722   Amer Cheese Sngles        1.85  FA
+600548   Organic Tea               0.99  FA
+356440   Org Baby Carrots          1.79  FA
+405206   Ice Cream                 2.95  FA
+742506   raspberrychaicooki        5.89  FA
+382478   Colby Jack Shreds         2.79  FA
+384491   Imported Brie             3.99  FA
+382589   Sliced Sourdough          3.49  FA
+365916   Restaur Tortilla          2.15  FA
+365513   Baked Potato Crisp        2.99  FA
+575097   Belle Vie 12pk            3.99  FA
+575097   Belle Vie 12pk            3.99  FA
+
+SUBTOTAL                    126.42
+B-Taxable  1.29 @ 7.025%      0.09
+TOTAL                       126.51
+DEBIT                       126.51
+CHANGE                     0.00
+
+42 ITEMS
+
+10/03/26  11:42AM  Store 141  Lane 3

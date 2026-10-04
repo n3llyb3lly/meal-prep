@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet></helmet>
+<div style="max-width:720px;margin:0 auto;padding:24px 18px 48px;display:flex;flex-direction:column;gap:16px">
+  <div>
+    <h1 style="font:700 30px/1.1 'Bricolage Grotesque',sans-serif;margin:0 0 6px">Catalog builder</h1>
+    <p style="margin:0;color:#586878;font-size:15px;line-height:1.45">Turns your master spreadsheet into catalog.json for the Meal Prep app. Nothing leaves this page.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+    <label style="display:flex;flex-direction:column;gap:6px;border:2px dashed #B9C6CF;border-radius:16px;padding:18px;background:#fff;cursor:pointer">
+      <span style="font-weight:600;font-size:16px">1. Master spreadsheet</span>
+      <span style="color:#586878;font-size:13.5px">{{ wbText }}</span>
+      <span style="align-self:flex-start;margin-top:4px;height:44px;padding:0 16px;border-radius:12px;background:#17375E;color:#fff;font-weight:600;display:flex;align-items:center">Choose .xlsx</span>
+      <input type="file" accept=".xlsx,.xls" onChange="{{ onWb }}" style="display:none">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;border:2px dashed #B9C6CF;border-radius:16px;padding:18px;background:#fff;cursor:pointer">
+      <span style="font-weight:600;font-size:16px">2. Current catalog.json</span>
+      <span style="color:#586878;font-size:13.5px">{{ prevText }}</span>
+      <span style="align-self:flex-start;margin-top:4px;height:44px;padding:0 16px;border-radius:12px;border:1px solid #17375E;color:#17375E;font-weight:600;display:flex;align-items:center">Choose .json</span>
+      <input type="file" accept=".json,application/json" onChange="{{ onPrev }}" style="display:none">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;border:2px dashed #B9C6CF;border-radius:16px;padding:18px;background:#fff;cursor:pointer">
+      <span style="font-weight:600;font-size:16px">3. Phone additions</span>
+      <span style="color:#586878;font-size:13.5px">{{ addText }}</span>
+      <span style="align-self:flex-start;margin-top:4px;height:44px;padding:0 16px;border-radius:12px;border:1px solid #17375E;color:#17375E;font-weight:600;display:flex;align-items:center">Choose .json</span>
+      <input type="file" accept=".json,application/json" onChange="{{ onAdd }}" style="display:none">
+    </label>
+  </div>
+
+  <sc-if value="{{ hasResult }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid #D9E1E6;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font:700 20px 'Bricolage Grotesque',sans-serif;flex:1">{{ statusTitle }}</span>
+        <span style="font-weight:600;font-size:13px;padding:5px 11px;border-radius:99px;background:{{ statusBg }};color:{{ statusColor }}">{{ statusBadge }}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">
+        <sc-for list="{{ counts }}" as="c" hint-placeholder-count="4">
+          <div style="background:#EDF1F3;border-radius:12px;padding:10px 12px"><div style="font:700 20px 'Bricolage Grotesque',sans-serif">{{ c.v }}</div><div style="font-size:12.5px;color:#586878">{{ c.k }}</div></div>
+        </sc-for>
+      </div>
+      <button onClick="{{ download }}" disabled="{{ blocked }}" style="height:50px;border-radius:14px;border:0;background:{{ dlBg }};color:{{ dlColor }};font-weight:600;font-size:16px">{{ dlText }}</button>
+      <button onClick="{{ downloadV1 }}" disabled="{{ blocked }}" style="height:44px;border-radius:14px;border:1px solid {{ dlBg }};background:transparent;color:{{ dlV1Color }};font-weight:600;font-size:14.5px">{{ dlV1Text }}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasErrors }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid #F2BDB7;border-radius:16px;padding:14px 16px">
+      <div style="font:700 17px 'Bricolage Grotesque',sans-serif;color:#A9231B;margin-bottom:6px">Errors · fix these to download</div>
+      <sc-for list="{{ errors }}" as="e" hint-placeholder-count="3"><div style="padding:7px 0;border-top:1px solid #F5E0DD;font-size:14px;line-height:1.4">{{ e }}</div></sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasDiff }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid #D9E1E6;border-radius:16px;padding:14px 16px">
+      <div style="font:700 17px 'Bricolage Grotesque',sans-serif;margin-bottom:6px">Compared with the current catalog</div>
+      <sc-for list="{{ diffRows }}" as="d" hint-placeholder-count="5">
+        <div style="padding:8px 0;border-top:1px solid #D9E1E6">
+          <div style="display:flex;justify-content:space-between;gap:10px;font-size:14.5px"><span>{{ d.k }}</span><b>{{ d.n }}</b></div>
+          <div style="font-size:12.5px;color:#586878;line-height:1.4">{{ d.detail }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasWarnings }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid #F2D49B;border-radius:16px;padding:14px 16px">
+      <div style="font:700 17px 'Bricolage Grotesque',sans-serif;color:#8F5200;margin-bottom:6px">Warnings · worth a look</div>
+      <sc-for list="{{ warnings }}" as="w" hint-placeholder-count="3"><div style="padding:7px 0;border-top:1px solid #F7EBD2;font-size:14px;line-height:1.4">{{ w }}</div></sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasAdd }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid #D9E1E6;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <div style="font:700 20px 'Bricolage Grotesque',sans-serif">From your phone</div>
+        <div style="color:#586878;font-size:13.5px;line-height:1.45;margin-top:2px">{{ addSub }}</div>
+      </div>
+      <sc-if value="{{ addErr }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;border-radius:12px;background:#FADFDC;color:#A9231B;font-size:14px;line-height:1.4">{{ addErrText }}</div></sc-if>
+      <sc-if value="{{ hasFlags }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid #F2D49B;border-radius:12px;padding:10px 12px">
+          <div style="font-weight:600;color:#8F5200;margin-bottom:4px">Check these first</div>
+          <sc-for list="{{ flags }}" as="w" hint-placeholder-count="2"><div style="padding:6px 0;border-top:1px solid #F7EBD2;font-size:14px;line-height:1.4">{{ w }}</div></sc-for>
+        </div>
+      </sc-if>
+      <sc-for list="{{ addGroups }}" as="g" hint-placeholder-count="3">
+        <div style="border-top:1px solid #D9E1E6;padding-top:12px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px"><div style="font-weight:600;font-size:15.5px">{{ g.title }} · {{ g.n }}</div><div style="color:#586878;font-size:13px;line-height:1.4">{{ g.where }}</div></div>
+            <button onClick="{{ g.copy }}" disabled="{{ g.empty }}" style="height:44px;padding:0 16px;border-radius:12px;border:0;background:{{ g.bg }};color:{{ g.color }};font-weight:600;font-size:14px">{{ g.copyText }}</button>
+          </div>
+          <sc-if value="{{ g.hasList }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;line-height:1.45">{{ g.list }}</div></sc-if>
+          <sc-if value="{{ g.hasRows }}" hint-placeholder-val="{{ false }}">
+            <textarea readonly="{{ true }}" value="{{ g.preview }}" style="width:100%;height:96px;border:1px solid #D9E1E6;border-radius:10px;padding:8px 10px;background:#EDF1F3;font:12px/1.4 ui-monospace,Menlo,monospace;white-space:pre;resize:vertical"></textarea>
+          </sc-if>
+        </div>
+      </sc-for>
+      <div style="color:#586878;font-size:13px;line-height:1.45">Copied rows are tab-separated, so they land in separate columns. Click the first empty cell in column A of the named sheet and paste. Then rebuild catalog.json above.</div>
+    </div>
+  </sc-if>
+
+  <div style="color:#586878;font-size:13.5px;line-height:1.5">
+    <b style="color:#15202B">Then:</b> upload catalog.json and catalog-v1.json to your meal-prep repository on GitHub, replacing the old ones. catalog.json (schema 2, with stores, offers and the item tree) is for version 6 phones; catalog-v1.json is for phones still on 5.3. Phones connected to the Google Sheet don't need either file. The app picks it up on its next launch with a connection (GitHub can take up to about 10 minutes to serve the new copy).
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state={wb:null,wbName:'',prev:null,prevName:'',res:null,err:'',add:null,addName:'',addRes:null,copied:null};
+  run(){const S=this.state;if(!S.wb||!window.CatalogLib)return;
+    let res=null;try{res=window.CatalogLib.build(window.XLSX,S.wb,S.prev);this.setState({res,err:''});}catch(e){this.setState({res:null,err:'Could not read the spreadsheet: '+e.message});}
+    if(S.add){try{this.setState({addRes:window.CatalogLib.additions(window.XLSX,S.wb,S.add,res&&!res.errors.length?res:null)});}catch(e){this.setState({addRes:{error:'Could not read the additions: '+e.message}});}}}
+  async onAdd(e){const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+    try{const add=JSON.parse(await f.text());this.setState({add,addName:f.name,copied:null},()=>{if(this.state.wb)this.run();else this.setState({addRes:{error:'Choose the master spreadsheet too. The additions are checked against it.'}});});}catch(x){this.setState({addName:f.name,addRes:{error:"That file isn't valid JSON."}});}}
+  async copy(key,text){try{await navigator.clipboard.writeText(text);}catch(e){const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(e2){}t.remove();}
+    this.setState({copied:key});clearTimeout(this._cp);this._cp=setTimeout(()=>this.setState({copied:null}),2500);}
+  async onWb(e){const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+    try{const wb=window.XLSX.read(await f.arrayBuffer());this.setState({wb,wbName:f.name},()=>this.run());}catch(x){this.setState({err:"That file isn't a readable spreadsheet."});}}
+  async onPrev(e){const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+    try{const prev=JSON.parse(await f.text());this.setState({prev,prevName:f.name},()=>this.run());}catch(x){this.setState({err:"That file isn't valid JSON."});}}
+  download(v1){const r=this.state.res;const c=r&&(v1?r.catalogV1:r.catalog);if(!c)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(c,null,1)],{type:'application/json'}));a.download=v1?'catalog-v1.json':'catalog.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+  renderVals(){
+    const S=this.state,r=S.res;const errs=r?r.errors:[];const warns=r?r.warnings:[];const blocked=!r||errs.length>0||!r.catalog;
+    const d=r&&r.diff;const list=(a,f)=>a.length?a.slice(0,12).map(f).join(', ')+(a.length>12?`, and ${a.length-12} more`:''):'';
+    const diffRows=d?[
+      {k:'Prices changed',n:d.pricesChanged.length,detail:list(d.pricesChanged,x=>`${x.name} $${x.from.toFixed(2)} → $${x.to.toFixed(2)}`)},
+      {k:'Items added',n:d.itemsAdded.length,detail:list(d.itemsAdded,x=>x)},{k:'Items retired',n:d.itemsRetired.length,detail:list(d.itemsRetired,x=>x)},
+      {k:'Recipes added',n:d.recipesAdded.length,detail:list(d.recipesAdded,x=>x)},{k:'Recipes changed',n:d.recipesChanged.length,detail:list(d.recipesChanged,x=>x)},
+      {k:'Recipes removed or set inactive',n:d.recipesRemoved.length,detail:list(d.recipesRemoved,x=>x)}].map(x=>({...x,n:String(x.n)})):[];
+    return {
+      wbText:S.wbName||'Your master workbook (Items, Recipes, Ingredients; Offers, Nodes, Stores and Favorites when you have them). Download it from Google Sheets with File › Download › Microsoft Excel.',onWb:e=>this.onWb(e),
+      prevText:S.prevName?`${S.prevName}${S.prev&&S.prev.catalogVersion?` · version ${S.prev.catalogVersion}`:''}`:'Optional. Lets the builder show what changed and catch deleted items.',onPrev:e=>this.onPrev(e),
+      hasResult:!!r||!!S.err,statusTitle:S.err||(blocked?`${errs.length} error${errs.length===1?'':'s'} to fix`:`Ready · version ${r.catalog.catalogVersion}`),
+      statusBadge:S.err?'Failed':blocked?'Blocked':warns.length?`${warns.length} warning${warns.length===1?'':'s'}`:'All checks passed',
+      statusBg:S.err||blocked?'#FADFDC':warns.length?'#FCEBCB':'#DCF1E7',statusColor:S.err||blocked?'#A9231B':warns.length?'#8F5200':'#16734C',
+      counts:r&&r.counts?[{k:'items',v:String(r.counts.items)},{k:'store offers',v:String(r.counts.offers||0)},{k:'stores',v:String(r.counts.stores||0)},{k:'tree nodes',v:String(r.counts.nodes||0)},{k:'recipes in sheet',v:String(r.counts.recipes)},{k:'active recipes',v:String(r.counts.active)},{k:'ingredient rows',v:String(r.counts.ingredients)},{k:'receipt aliases',v:String(r.counts.aliases)}]:[],
+      blocked,dlBg:blocked?'#E3EAF0':'#17375E',dlColor:blocked?'#7A8896':'#fff',dlText:blocked?'Download blocked until errors are fixed':'Download catalog.json (version 6 phones)',download:()=>this.download(false),
+      dlV1Text:'Download catalog-v1.json (phones on 5.3)',dlV1Color:blocked?'#7A8896':'#17375E',downloadV1:()=>this.download(true),
+      addText:S.addName?(S.add&&S.add.exportedAt?`${S.addName} · exported ${String(S.add.exportedAt).slice(0,10)}`:S.addName):'Optional. The file from Settings › Export my additions in the app.',onAdd:e=>this.onAdd(e),
+      ...(()=>{const a=S.addRes;if(!a)return {hasAdd:false,addGroups:[],flags:[]};if(a.error)return {hasAdd:true,addErr:true,addErrText:a.error,addSub:'',addGroups:[],flags:[],hasFlags:false};
+        const tot=a.groups.reduce((n,g)=>n+g.rows.length,0);
+        return {hasAdd:true,addErr:false,addErrText:'',addSub:tot?`${tot} row${tot===1?'':'s'} to bring into the spreadsheet${a.notes.length?`. Skipped ${a.notes.length} already there.`:'.'}`:`Nothing new. ${a.notes.length?`${a.notes.length} thing${a.notes.length===1?' is':'s are'} already in the spreadsheet.`:''}`,
+          flags:a.flags,hasFlags:a.flags.length>0,
+          addGroups:a.groups.map(g=>{const done=S.copied===g.key;const empty=!g.rows.length;return {title:g.title,n:String(g.rows.length),where:(g.key==='prices'||g.key==='numbers'?g.note:`Paste into the ${g.sheet} sheet.${g.note?' '+g.note:''}`),
+            list:g.list.slice(0,15).join(', ')+(g.list.length>15?`, and ${g.list.length-15} more`:''),hasList:g.list.length>0,hasRows:!empty,preview:g.header+'\n'+g.tsv,empty,
+            copyText:empty?'Nothing to copy':done?'Copied':'Copy rows',bg:empty?'#E3EAF0':done?'#16734C':'#17375E',color:empty?'#7A8896':'#fff',copy:()=>this.copy(g.key,g.tsv)};})};})(),
+      hasErrors:errs.length>0,errors:errs,hasWarnings:warns.length>0,warnings:warns,hasDiff:diffRows.length>0,diffRows};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Receipt parser test</title>
+<style>
+  :root { color-scheme: light; --page:#EDF1F3; --surface:#FFFFFF; --ink:#15202B; --muted:#586878; --line:#D9E1E6; --good:#16734C; --good-tint:#DCF1E7; --bad:#A9231B; --bad-tint:#FADFDC; }
+  @media (prefers-color-scheme: dark) { :root { color-scheme: dark; --page:#0F151A; --surface:#1A2229; --ink:#E6ECF0; --muted:#A3B1BD; --line:#2C3943; --good:#7FD3A8; --good-tint:#17352A; --bad:#FF9A90; --bad-tint:#3D1C1A; } }
+  body { margin:0; background:var(--page); color:var(--ink); font:15px/1.45 system-ui, sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .muted { color:var(--muted); }
+  .summary { margin:14px 0; padding:12px 14px; border-radius:12px; font-weight:600; }
+  .ok { background:var(--good-tint); color:var(--good); } .no { background:var(--bad-tint); color:var(--bad); }
+  section { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 14px; margin:10px 0; }
+  h2 { font-size:16px; margin:4px 0 6px; }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  td, th { text-align:left; padding:3px 6px; border-top:1px solid var(--line); vertical-align:top; }
+  td.r, th.r { text-align:right; font-variant-numeric:tabular-nums; }
+  .pass { color:var(--good); font-weight:600; } .fail { color:var(--bad); font-weight:600; }
+  details { margin-top:6px; } summary { cursor:pointer; color:var(--muted); }
+  @media (max-width:600px) { .hide-sm { display:none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Receipt parser test</h1>
+  <div class="muted">Runs <code>receipts.js</code> on the receipts in <code>data/receipts/</code>: each store's sample and an OCR-damaged copy of it. Raw OCR output from photos is shown for information only.</div>
+  <div id="summary" class="summary">Running…</div>
+  <div id="out"></div>
+</main>
+<script src="../receipts.js"></script>
+<script>
+// What each sample receipt prints. The damaged copy must give the same answers.
+var EXPECT = {
+  aldi:    { date: '2026-10-03', count: 42, subtotal: 126.42, tax: 0.09, total: 126.51 },
+  sams:    { date: '2025-10-15', count: 6,  subtotal: 87.20,  tax: 1.47, total: 88.67 },
+  walmart: { date: '2026-08-14', count: 22, subtotal: 123.67, tax: 6.13, total: 129.80 },
+  cub:     { date: '2026-02-19', count: 8,  subtotal: 43.92,  tax: 0,    total: 43.92 }
+};
+var FILES = [];
+var RAW = ['sams', 'walmart', 'cub'];  // stores with a photo run through the phone's text reader (data/receipts/<store>-ocr-raw.txt)
+Object.keys(EXPECT).forEach(function (s) { FILES.push([s, s + '-sample.txt', true], [s, s + '-ocr.txt', true]); if (RAW.indexOf(s) >= 0) FILES.push([s, s + '-ocr-raw.txt', false]); });
+var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+var money = function (n) { return n == null ? '–' : (+n).toFixed(2); };
+
+async function run() {
+  var out = document.getElementById('out'), pass = 0, fail = 0;
+  if (!window.ReceiptParsers) { document.getElementById('summary').textContent = 'receipts.js did not load.'; document.getElementById('summary').className = 'summary no'; return; }
+  for (var i = 0; i < FILES.length; i++) {
+    var store = FILES[i][0], file = FILES[i][1], graded = FILES[i][2];
+    var res = await fetch('../data/receipts/' + file, { cache: 'no-store' }).catch(function () { return null; });
+    if (!res || !res.ok) { if (graded) { fail++; out.insertAdjacentHTML('beforeend', '<section><h2>' + file + '</h2><span class="fail">Missing file</span></section>'); } continue; }
+    var text = await res.text();
+    var detected = ReceiptParsers.detectStore(text), r = ReceiptParsers.parse(text, detected || store), e = EXPECT[store];
+    var units = r.items.reduce(function (a, x) { return a + (x.weighed ? 1 : x.qty); }, 0);
+    var checks = [
+      ['Store', detected, store, detected === store],
+      ['Date', r.date, e.date, r.date === e.date],
+      ['Item count (printed)', r.count, e.count, r.count === e.count],
+      ['Items read', units, e.count, units === e.count],
+      ['Subtotal (printed)', money(r.subtotal), money(e.subtotal), Math.abs((r.subtotal || 0) - e.subtotal) < 0.005],
+      ['Sum of item amounts', money(r.sum), money(e.subtotal), Math.abs(r.sum - e.subtotal) < 0.005],
+      ['Tax', money(r.tax), money(e.tax), Math.abs((r.tax || 0) - e.tax) < 0.005],
+      ['Total', money(r.total), money(e.total), Math.abs((r.total || 0) - e.total) < 0.005]
+    ];
+    var ok = checks.every(function (c) { return c[3]; });
+    if (graded) { if (ok) pass++; else fail++; }
+    var rows = checks.map(function (c) { return '<tr><td>' + c[0] + '</td><td class="r">' + esc(c[1]) + '</td><td class="r">' + esc(c[2]) + '</td><td>' + (graded ? (c[3] ? '<span class="pass">Pass</span>' : '<span class="fail">Fail</span>') : (c[3] ? 'same' : 'differs')) + '</td></tr>'; }).join('');
+    var items = r.items.map(function (x) { return '<tr><td>' + esc(x.num || '') + '</td><td>' + esc(x.text) + (x.discount ? ' <span class="muted">(discount)</span>' : '') + '</td><td class="r">' + (x.weighed ? x.qty + ' lb' : x.qty) + '</td><td class="r">' + money(x.amount) + '</td><td class="r hide-sm">' + x.lines + '</td></tr>'; }).join('');
+    out.insertAdjacentHTML('beforeend', '<section><h2>' + esc(file) + ' ' + (graded ? (ok ? '<span class="pass">Pass</span>' : '<span class="fail">Fail</span>') : '<span class="muted">(information only)</span>') + '</h2>' +
+      '<table><tr><th>Check</th><th class="r">Read</th><th class="r">Expected</th><th></th></tr>' + rows + '</table>' +
+      '<details><summary>' + r.items.length + ' lines read</summary><table><tr><th>Number</th><th>Description</th><th class="r">Qty</th><th class="r">Amount</th><th class="r hide-sm">Lines</th></tr>' + items + '</table></details></section>');
+  }
+  var s = document.getElementById('summary');
+  s.textContent = fail ? fail + ' of ' + (pass + fail) + ' receipts failed. Parser version ' + ReceiptParsers.version + '.' : 'All ' + pass + ' receipts passed. Parser version ' + ReceiptParsers.version + '.';
+  s.className = 'summary ' + (fail ? 'no' : 'ok');
+}
+run();
+</script>
+</body>
+</html>

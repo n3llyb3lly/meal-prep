@@ -21,13 +21,23 @@
 
 var SHEETS = {
   items: 'Items', categories: 'Categories', recipes: 'Recipes', ingredients: 'Ingredients',
-  aliases: 'Receipt aliases', lists: 'Lists', log: 'Change log', idmap: 'Id map', cache: '_catalog'
+  aliases: 'Receipt aliases', lists: 'Lists', log: 'Change log', idmap: 'Id map', cache: '_catalog',
+  offers: 'Offers', nodes: 'Nodes', stores: 'Stores', favorites: 'Favorites'
 };
 var MEALS = ['breakfast', 'lunch', 'snack', 'dinner'];
 var STORAGE = ['fridge', 'freezer', 'pantry', 'counter'];
 var TRACKING = ['quantity', 'staple', 'stocked'];
 var SOLD_BY = ['pack', 'weight'];
-var SCHEMA = 1;                 // catalog.json format the app understands
+var SCHEMA = 2;                 // newest catalog format; ?schema=1 (the default) serves the version 5.3 shape
+var LEVELS = { 1: 'Category', 2: 'Type', 3: 'Form', 4: 'Variety', 5: 'Style' };
+var OFFER_HEADERS = ['item', 'store', 'price', 'pack', 'unit', 'pkg', 'numbers', 'price_date', 'price_source', 'last_changed', 'changed_by'];
+var NODE_HEADERS = ['id', 'name', 'parent', 'level', 'last_changed', 'changed_by'];
+var STORE_HEADERS = ['id', 'name', 'num_digits', 'num_where'];
+var FAVORITE_HEADERS = ['node', 'item', 'last_changed'];
+var DEFAULT_STORES = [['aldi', 'Aldi', '6', 'before'], ['sams', "Sam's Club", '9;10', 'before'], ['walmart', 'Walmart', '12', 'after'], ['cub', 'Cub', '11;12', 'after'], ['target', 'Target', '9', 'before']];
+// Prices live in the Offers tab once "Meal Prep > Move prices to Offers" has run. Before that, the Items
+// price columns are the Aldi offer.
+function migrated_() { return PropertiesService.getScriptProperties().getProperty('OFFERS_MIGRATED') === 'yes'; }
 var MAX_BATCH = 100;            // changes accepted in one request
 var LOG_HEADERS = ['received_at', 'change_id', 'type', 'target_id', 'result', 'message', 'data'];
 var IDMAP_HEADERS = ['phone_id', 'sheet_id', 'kind', 'created_at'];
@@ -113,6 +123,49 @@ function buildCatalog_(prev) {
   if (!tI) E('No "Items" sheet found.'); if (!tR) E('No "Recipes" sheet found.'); if (!tG) E('No "Ingredients" sheet found.');
   if (errors.length) return { errors: errors, warnings: warnings };
   var itemsR = tI.objects(), recR = tR.objects(), ingR = tG.objects(), aliasR = tA ? tA.objects() : [], listR = tL ? tL.objects() : null, catR = tC ? tC.objects() : null;
+  var tO = table_(SHEETS.offers), tN = table_(SHEETS.nodes), tS = table_(SHEETS.stores), tF = table_(SHEETS.favorites);
+  var MIG = migrated_();
+
+  // Stores
+  var stores = [], ST = {};
+  (tS ? tS.objects() : DEFAULT_STORES.map(function (x) { return { id: x[0], name: x[1], num_digits: x[2], num_where: x[3], _row: 0 }; })).forEach(function (r) {
+    var id = str_(r.id).toLowerCase(); if (!id) return;
+    if (ST[id]) { E('Stores row ' + r._row + ': store "' + id + '" is listed twice.'); return; }
+    var digits = str_(r.num_digits).split(/[;,\s]+/).map(function (x) { return parseInt(x, 10); }).filter(function (n) { return n > 0; });
+    var where = str_(r.num_where).toLowerCase() === 'after' ? 'after' : 'before';
+    var st = { id: id, name: str_(r.name) || id, num: { digits: digits, where: where } }; ST[id] = st; stores.push(st);
+  });
+  if (!ST.aldi) E('The Stores tab has no "aldi" row. Older phones need it.');
+
+  // Nodes (the item tree): 1 Category, 2 Type, 3 Form, 4 Variety, 5 Style. A node may skip levels.
+  var nodes = [], ND = {};
+  (tN ? tN.objects() : []).forEach(function (r) {
+    var id = str_(r.id), line = 'Nodes row ' + r._row; if (!id) return;
+    if (ND[id]) { E(line + ': node "' + id + '" is listed twice.'); return; }
+    if (!/^n_[a-z0-9_]+$/.test(id)) E(line + ': node id "' + id + '" should start with n_ and use lowercase letters, numbers and _.');
+    var level = num_(r.level); if (!(level >= 1 && level <= 5 && level === Math.round(level))) E(line + ' (' + id + '): level must be 1 to 5.');
+    var n = { id: id, name: str_(r.name) || id, parent: str_(r.parent) || null, level: level || 1, changed: iso_(r.last_changed) };
+    ND[id] = n; nodes.push(n);
+  });
+  nodes.forEach(function (n) {
+    if (n.parent && !ND[n.parent]) E('Node ' + n.id + ': parent "' + n.parent + '" isn\'t on the Nodes tab.');
+    else if (n.parent && ND[n.parent].level >= n.level) E('Node ' + n.id + ' (level ' + n.level + ') sits under ' + n.parent + ' (level ' + ND[n.parent].level + '). A parent must have a lower level.');
+    if (n.level === 1 && n.parent) E('Node ' + n.id + ' is level 1 but has a parent.');
+    var seenUp = {}, cur = n, hops = 0;
+    while (cur && cur.parent && hops++ < 10) { if (seenUp[cur.id]) break; seenUp[cur.id] = 1; cur = ND[cur.parent]; if (cur && cur.id === n.id) { E('Node ' + n.id + ' is its own ancestor (a loop in parent).'); break; } }
+  });
+
+  // Offers: one row per item per store
+  var OF = {};
+  (tO ? tO.objects() : []).forEach(function (r) {
+    var item = str_(r.item), store = str_(r.store).toLowerCase(), line = 'Offers row ' + r._row; if (!item && !store) return;
+    if (!store || !ST[store]) { E(line + ' (' + item + '): store "' + (r.store || '') + '" isn\'t on the Stores tab.'); return; }
+    var o = { store: store, price: num_(r.price), pack: str_(r.pack), unit: str_(r.unit), pkg: num_(r.pkg), nums: nums_(r.numbers),
+              priceDate: dateStr_(r.price_date), src: str_(r.price_source), changed: iso_(r.last_changed), _line: line, _item: item };
+    var list = OF[item] || (OF[item] = []);
+    if (list.some(function (x) { return x.store === store; })) { E(line + ': ' + item + ' has two rows for ' + store + '. Keep one.'); return; }
+    list.push(o);
+  });
   var today = Utilities.formatDate(new Date(), tz_(), 'yyyy-MM-dd');
 
   var TAGS = null;
@@ -139,8 +192,7 @@ function buildCatalog_(prev) {
     var retired = yn_(r.retired) === 'Y';
     ['staple', 'retired'].forEach(function (k) { if (!blank_(r[k]) && ['Y', 'N'].indexOf(yn_(r[k])) < 0) E(line + ' (' + id + '): ' + k + ' must be Y or N.'); });
     var storage = str_(r.storage).toLowerCase() || null; if (storage && STORAGE.indexOf(storage) < 0) E(line + ' (' + id + '): storage "' + r.storage + '" isn\'t one of ' + STORAGE.join(', ') + '.');
-    var price = num_(r.price); if (!retired && !(price > 0)) E(line + ' (' + id + '): price is missing, zero or not a number.');
-    var pkg = num_(r.package_qty); if (!retired && !(pkg > 0)) E(line + ' (' + id + '): package_qty is missing or zero.');
+    var price = num_(r.price), pkg = num_(r.package_qty);
     var catName = str_(r.category) || 'Pantry'; if (catR && !CATS[catName.toLowerCase()]) E(line + ' (' + id + '): category "' + catName + '" isn\'t on the Categories sheet.');
     var sb = str_(r.sold_by).toLowerCase(); if (!retired && !sb) noSold.push(id); else if (sb && SOLD_BY.indexOf(sb) < 0) E(line + ' (' + id + '): sold_by "' + r.sold_by + '" must be pack or weight.');
     var tr = str_(r.tracking_default).toLowerCase(); if (tr && TRACKING.indexOf(tr) < 0) E(line + ' (' + id + '): tracking_default "' + r.tracking_default + '" isn\'t one of ' + TRACKING.join(', ') + '.');
@@ -151,15 +203,38 @@ function buildCatalog_(prev) {
       src: str_(r.price_source), priceDate: dateStr_(r.price_date), staple: yn_(r.staple) === 'Y', storage: storage,
       fridge: num_(r.fridge_days), freezer: num_(r.freezer_days), pantry: num_(r.pantry_days), aldi: str_(r.aldi_product),
       nums: nums_(r.aldi_numbers), retired: retired, replacedBy: str_(r.replaced_by) || null,
-      changed: iso_(r.last_changed)   // extra: when the row last changed; the app sends it back as the "base"
+      changed: iso_(r.last_changed),   // extra: when the row last changed; the app sends it back as the "base"
+      brand: str_(r.brand) || null, node: str_(r.node) || null, offers: []
     };
+    // Offers: rows from the Offers tab. Before the move to Offers, the Items price columns are the Aldi offer.
+    var rows = (OF[id] || []).map(function (o) {
+      return { store: o.store, price: o.price, pack: o.pack || it.pack, unit: o.unit || it.unit, pkg: o.pkg || it.pkg, nums: o.nums, priceDate: o.priceDate, src: o.src, changed: o.changed };
+    });
+    if (!MIG && price != null && !rows.some(function (o) { return o.store === 'aldi'; }))
+      rows.unshift({ store: 'aldi', price: price, pack: it.pack, unit: it.unit, pkg: pkg || 1, nums: nums_(r.aldi_numbers), priceDate: it.priceDate, src: it.src, changed: it.changed });
+    rows.sort(function (a, b) { return a.store === 'aldi' ? -1 : b.store === 'aldi' ? 1 : 0; });
+    it.offers = rows;
+    // Top-level price fields mirror the Aldi offer, else the first offer with a price (version 5.3 phones read only these).
+    var mirror = rows.filter(function (o) { return o.store === 'aldi' && o.price > 0; })[0] || rows.filter(function (o) { return o.price > 0; })[0];
+    if (mirror) { it.price = mirror.price; it.pack = mirror.pack; it.unit = mirror.unit; it.pkg = mirror.pkg; it.priceDate = mirror.priceDate; it.src = mirror.src; it.nums = mirror.nums; }
+    else { it.nums = (rows.filter(function (o) { return o.store === 'aldi'; })[0] || { nums: MIG ? [] : it.nums }).nums; }
+    if (!retired && !(it.price > 0)) E(line + ' (' + id + '): price is missing, zero or not a number' + (MIG ? ' (add a price on the Offers tab).' : '.'));
+    if (!retired && !(it.pkg > 0)) E(line + ' (' + id + '): package_qty is missing or zero.');
+    if (it.node && !ND[it.node]) E(line + ' (' + id + '): node "' + it.node + '" isn\'t on the Nodes tab.');
     if (!retired && !it.staple && (storage === 'fridge' || storage === 'counter') && it.fridge == null && it.pantry == null) W(id + ': perishable with no shelf-life days.');
     if (!retired && (!it.priceDate || (new Date(today) - new Date(it.priceDate)) / 864e5 > 30)) W(id + ': price_date ' + (it.priceDate || 'missing') + ' is over 30 days old.');
-    it.nums.forEach(function (n) { if (!/^\d{4,8}$/.test(n)) E(line + ' (' + id + '): Aldi number "' + n + '" isn\'t 4 to 8 digits.'); });
+    it.offers.forEach(function (o) {
+      o.nums.forEach(function (n) {
+        if (!/^\d{4,14}$/.test(n)) E(line + ' (' + id + '): ' + (ST[o.store] ? ST[o.store].name : o.store) + ' number "' + n + '" isn\'t 4 to 14 digits.');
+        else if (ST[o.store] && ST[o.store].num.digits.length && ST[o.store].num.digits.indexOf(n.length) < 0) W(id + ': ' + ST[o.store].name + ' number ' + n + ' has ' + n.length + ' digits; that store usually prints ' + ST[o.store].num.digits.join(' or ') + '.');
+      });
+    });
     items.push(it);
   });
+  Object.keys(OF).forEach(function (item) { if (!seen[item]) OF[item].forEach(function (o) { E(o._line + ': item "' + item + '" isn\'t on the Items tab.'); }); });
   var numOwner = {};
-  items.forEach(function (it) { it.nums.forEach(function (n) { if (numOwner[n] && numOwner[n] !== it.id) E('Aldi number ' + n + ' is on both ' + numOwner[n] + ' and ' + it.id + '. Keep it on one item.'); numOwner[n] = it.id; }); });
+  items.forEach(function (it) { it.offers.forEach(function (o) { o.nums.forEach(function (n) { var k = o.store + '|' + n;
+    if (numOwner[k] && numOwner[k] !== it.id) E((ST[o.store] ? ST[o.store].name : o.store) + ' number ' + n + ' is on both ' + numOwner[k] + ' and ' + it.id + '. Keep it on one item.'); numOwner[k] = it.id; }); }); });
   if (catR && noSold.length) W(noSold.length + ' item' + (noSold.length === 1 ? '' : 's') + ' have no sold_by (pack or weight): ' + noSold.slice(0, 12).join(', ') + (noSold.length > 12 ? ', …' : '') + '.');
   var I = {}; items.forEach(function (x) { I[x.id] = x; });
   items.forEach(function (it) { if (it.replacedBy && !I[it.replacedBy]) E(it.id + ': replaced_by "' + it.replacedBy + '" isn\'t an item_id.'); });
@@ -195,13 +270,13 @@ function buildCatalog_(prev) {
   ingR.forEach(function (r) {
     var rid = str_(r.recipe_id), iid = str_(r.item_id), line = 'Ingredients row ' + r._row; if (!rid && !iid) return;
     var rec = R[rid]; if (!rec) { E(line + ': recipe_id "' + rid + '" isn\'t on the Recipes sheet.'); return; }
-    if (!I[iid]) { E(line + ' (' + rid + '): item_id "' + iid + '" isn\'t on the Items sheet.'); return; }
+    if (/^n_/.test(iid) ? !ND[iid] : !I[iid]) { E(line + ' (' + rid + '): ' + (/^n_/.test(iid) ? 'node "' + iid + '" isn\'t on the Nodes tab.' : 'item_id "' + iid + '" isn\'t on the Items sheet.')); return; }
     if (!blank_(r.optional) && ['Y', 'N'].indexOf(yn_(r.optional)) < 0) E(line + ' (' + rid + '): optional must be Y or N.');
     var k = rid + '|' + iid; if (seenLine[k] && rec.active) E(line + ': ' + rid + ' lists ' + iid + ' twice. Add the amounts into one row.'); seenLine[k] = 1;
     var qps = num_(r.qty_per_serving), q = num_(r.qty); if (qps == null && q != null) qps = q / (rec.serv || 1);
     if (qps == null || !(qps > 0)) { E(line + ' (' + rid + ', ' + iid + '): qty missing.'); return; }
-    if (rec.active && qps > 3 * I[iid].pkg) W(rid + ': ' + iid + ' uses ' + Math.round(qps * 100) / 100 + ' ' + I[iid].unit + ' per serving, more than 3 packages. Check the unit.');
-    if (rec.active && I[iid].retired) W(rid + ': uses retired item ' + iid + (I[iid].replacedBy ? ' (replaced by ' + I[iid].replacedBy + ')' : '') + '.');
+    if (rec.active && I[iid] && qps > 3 * I[iid].pkg) W(rid + ': ' + iid + ' uses ' + Math.round(qps * 100) / 100 + ' ' + I[iid].unit + ' per serving, more than 3 packages. Check the unit.');
+    if (rec.active && I[iid] && I[iid].retired) W(rid + ': uses retired item ' + iid + (I[iid].replacedBy ? ' (replaced by ' + I[iid].replacedBy + ')' : '') + '.');
     var opt = yn_(r.optional) === 'Y';
     rec.ing.push(opt ? [iid, qps, str_(r.as_written), 1] : [iid, qps, str_(r.as_written)]);
   });
@@ -212,13 +287,30 @@ function buildCatalog_(prev) {
   var unused = items.filter(function (it) { return !it.retired && !it.staple && !used[it.id]; }).map(function (it) { return it.id; });
   if (unused.length) W(unused.length + ' item' + (unused.length === 1 ? '' : 's') + ' no active recipe uses: ' + unused.join(', ') + '.');
 
-  var aliases = aliasR.map(function (r) { return { text: str_(r.receipt_text), item: str_(r.item_id) }; }).filter(function (a) { return a.text && a.item; });
-  aliases.forEach(function (a) { if (a.item !== 'ignore' && !I[a.item]) E('Receipt alias "' + a.text + '" points to unknown item "' + a.item + '".'); });
+  var aliases = aliasR.map(function (r) { return { text: str_(r.receipt_text), item: str_(r.item_id), store: str_(r.store).toLowerCase() }; }).filter(function (a) { return a.text && a.item; });
+  aliases.forEach(function (a) {
+    if (a.item !== 'ignore' && !I[a.item]) E('Receipt alias "' + a.text + '" points to unknown item "' + a.item + '".');
+    if (a.store && !ST[a.store]) E('Receipt alias "' + a.text + '": store "' + a.store + '" isn\'t on the Stores tab.');
+  });
+
+  // Favorites: one item per node. The item must sit under that node (at it or below it).
+  var favorites = {};
+  var under = function (nodeId, target) { var cur = ND[nodeId], hops = 0; while (cur && hops++ < 10) { if (cur.id === target) return true; cur = cur.parent ? ND[cur.parent] : null; } return false; };
+  (tF ? tF.objects() : []).forEach(function (r) {
+    var node = str_(r.node), item = str_(r.item); if (!node) return;
+    if (!ND[node]) { W('Favorites row ' + r._row + ': node "' + node + '" isn\'t on the Nodes tab.'); return; }
+    if (!item) return;
+    if (!I[item]) { W('Favorites row ' + r._row + ': item "' + item + '" isn\'t on the Items tab.'); return; }
+    if (!I[item].node || !under(I[item].node, node)) W('Favorites row ' + r._row + ': ' + item + ' isn\'t placed under ' + node + ' (its node is ' + (I[item].node || 'blank') + ').');
+    favorites[node] = item;
+  });
+  if (MIG) items.forEach(function (it) { var r = itemsR.filter(function (x) { return str_(x.item_id) === it.id; })[0]; if (r && !blank_(r.price) && it.offers.length && Math.abs(num_(r.price) - (it.offers[0].price || 0)) > 0.005 && it.offers[0].store === 'aldi') W(it.id + ': the Items price column (' + r.price + ') differs from the Aldi offer (' + it.offers[0].price + '). Prices now come from the Offers tab.'); });
 
   var catalog = {
-    schemaVersion: SCHEMA, catalogVersion: null, builtAt: null, categories: categories, items: items,
+    schemaVersion: SCHEMA, catalogVersion: null, builtAt: null, categories: categories, stores: stores,
+    nodes: nodes.map(function (n) { return { id: n.id, name: n.name, parent: n.parent, level: n.level }; }), items: items,
     recipes: recipes.filter(function (r) { return r.active; }).map(function (r) { var o = {}; for (var k in r) if (k !== 'active') o[k] = r[k]; return o; }),
-    aliases: aliases
+    aliases: aliases, favorites: favorites
   };
   return { catalog: catalog, errors: errors, warnings: warnings };
 }
@@ -261,6 +353,42 @@ function currentCatalog_() {
   return { catalog: b.catalog, errors: [], warnings: b.warnings, stale: false };
 }
 
+/**
+ * The catalog in the version 1 shape that version 5.3 phones understand: no stores, nodes, offers or
+ * favorites, and recipe ingredients that point to a node replaced by the favorite product under it,
+ * otherwise the cheapest per unit. An ingredient with no product under its node is left out.
+ */
+function toV1_(c) {
+  var I = {}; c.items.forEach(function (x) { I[x.id] = x; });
+  var kids = {}; (c.nodes || []).forEach(function (n) { if (n.parent) (kids[n.parent] = kids[n.parent] || []).push(n.id); });
+  var below = function (id) { var out = [id], q = [id], hops = 0; while (q.length && hops++ < 500) { var k = kids[q.shift()] || []; k.forEach(function (x) { if (out.indexOf(x) < 0) { out.push(x); q.push(x); } }); } return out; };
+  var depth = {}; (c.nodes || []).forEach(function (n) { depth[n.id] = n.level; });
+  // The favorite, else the cheapest per unit among products in the unit most products under the node use
+  // (ties: the unit of the product placed highest), so the recipe's amount keeps its meaning.
+  var pick = function (nodeId) {
+    var fav = (c.favorites || {})[nodeId]; if (fav && I[fav] && !I[fav].retired) return fav;
+    var set = below(nodeId), cands = c.items.filter(function (it) { return !it.retired && it.node && set.indexOf(it.node) >= 0 && it.price > 0 && it.pkg > 0; });
+    if (!cands.length) return null;
+    var units = {}; cands.forEach(function (it) { var u = units[it.unit] || (units[it.unit] = { n: 0, top: 9 }); u.n++; u.top = Math.min(u.top, depth[it.node] || 9); });
+    var unit = Object.keys(units).sort(function (a, b) { return units[b].n - units[a].n || units[a].top - units[b].top || (a < b ? -1 : 1); })[0];
+    var best = null, bestPer = Infinity;
+    cands.forEach(function (it) { if (it.unit !== unit) return; var per = it.price / it.pkg;
+      if (per < bestPer - 1e-9 || (Math.abs(per - bestPer) < 1e-9 && best && it.name < I[best].name)) { best = it.id; bestPer = per; } });
+    return best;
+  };
+  var V1_ITEM = ['id', 'name', 'cat', 'family', 'soldBy', 'altSizes', 'tracking', 'pack', 'unit', 'pkg', 'price', 'src', 'priceDate', 'staple', 'storage', 'fridge', 'freezer', 'pantry', 'aldi', 'nums', 'retired', 'replacedBy', 'changed'];
+  return {
+    schemaVersion: 1, catalogVersion: c.catalogVersion, builtAt: c.builtAt, categories: c.categories,
+    items: c.items.map(function (it) { var o = {}; V1_ITEM.forEach(function (k) { o[k] = it[k] === undefined ? null : it[k]; }); return o; }),
+    recipes: c.recipes.map(function (r) {
+      var o = {}; for (var k in r) o[k] = r[k];
+      o.ing = r.ing.map(function (x) { if (!/^n_/.test(x[0])) return x; var id = pick(x[0]); return id ? [id].concat(x.slice(1)) : null; }).filter(Boolean);
+      return o;
+    }),
+    aliases: (c.aliases || []).filter(function (a) { return !a.store || a.store === 'aldi'; }).map(function (a) { return { text: a.text, item: a.item }; })
+  };
+}
+
 // ---------------------------------------------------------------- the web app
 
 function json_(obj) { return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
@@ -275,7 +403,8 @@ function keyOk_(given) {
 }
 
 /**
- * GET  <app address>?key=SECRET               -> the catalog
+ * GET  <app address>?key=SECRET               -> the catalog in the version 1 shape (version 5.3 phones)
+ *      <app address>?key=SECRET&schema=2      -> the catalog in the version 2 shape (stores, nodes, offers, favorites)
  *      <app address>?key=SECRET&have=VERSION  -> {notModified:true} if nothing changed
  *      <app address>?key=SECRET&ping=1        -> a quick "it works" check
  */
@@ -287,7 +416,9 @@ function doGet(e) {
   var problems = { errors: c.errors, warnings: c.warnings, stale: c.stale };
   if (!c.catalog) return json_({ ok: false, error: 'sheet-errors', message: 'The sheet has errors and there is no earlier good copy.', problems: problems });
   if (p.have && p.have === c.catalog.catalogVersion) return json_({ ok: true, notModified: true, version: c.catalog.catalogVersion, problems: problems });
-  return json_({ ok: true, version: c.catalog.catalogVersion, catalog: c.catalog, problems: problems });
+  // Version 5.3 phones send no schema and get the version 1 shape. Version 6 sends schema=2.
+  var cat = String(p.schema || '1') === '2' ? c.catalog : toV1_(c.catalog);
+  return json_({ ok: true, version: c.catalog.catalogVersion, schema: cat.schemaVersion, catalog: cat, problems: problems });
 }
 
 /**
@@ -324,7 +455,41 @@ function context_() {
   ctx.map = {}; ctx.idm.objects().forEach(function (r) { if (r.phone_id) ctx.map[String(r.phone_id)] = String(r.sheet_id); });
   ctx.itemRow = {}; ctx.items.objects().forEach(function (r) { if (r.item_id) ctx.itemRow[String(r.item_id)] = r; });
   ctx.recRow = {}; ctx.recipes.objects().forEach(function (r) { if (r.recipe_id) ctx.recRow[String(r.recipe_id)] = r; });
+  ensureSheet_(SHEETS.offers, OFFER_HEADERS); ensureSheet_(SHEETS.nodes, NODE_HEADERS); ensureSheet_(SHEETS.favorites, FAVORITE_HEADERS); ensureStores_();
+  ctx.offers = table_(SHEETS.offers); ctx.nodes = table_(SHEETS.nodes); ctx.favs = table_(SHEETS.favorites);
+  ctx.offerRow = {}; ctx.offers.objects().forEach(function (r) { if (r.item && r.store) ctx.offerRow[String(r.item) + '|' + String(r.store).toLowerCase()] = r; });
+  ctx.nodeRow = {}; ctx.nodes.objects().forEach(function (r) { if (r.id) ctx.nodeRow[String(r.id)] = r; });
+  ctx.storeIds = {}; ctx.storeName = {}; table_(SHEETS.stores).objects().forEach(function (r) { if (r.id) { var k = String(r.id).toLowerCase(); ctx.storeIds[k] = 1; ctx.storeName[k] = str_(r.name) || k; } });
+  ctx.migrated = migrated_();
   return ctx;
+}
+
+// The value in a row object's cell as it is now (after earlier changes in this batch).
+function cell_(t, r, h) { return t.col[h] == null ? null : t.rows[r._row - 2][t.col[h]]; }
+function storeOf_(d) { return String(d.store || 'aldi').toLowerCase(); }
+function dateVal_(d) { return d ? new Date(d + 'T12:00:00') : new Date(); }
+
+// Creates or updates one Offers row. fields use Offers column names.
+function setOffer_(ctx, item, store, fields) {
+  var key = item + '|' + store, r = ctx.offerRow[key];
+  if (r) { for (var h in fields) if (ctx.offers.col[h] != null) ctx.offers.set(r._row, h, fields[h]); stampRow_(ctx.offers, r._row); return r; }
+  var it = ctx.itemRow[item] || {};
+  var row = { item: item, store: store, price: '', pack: cell_(ctx.items, it, 'package_label') || '', unit: cell_(ctx.items, it, 'unit') || '', pkg: cell_(ctx.items, it, 'package_qty') || '',
+              numbers: '', price_date: '', price_source: '', last_changed: new Date(), changed_by: 'phone' };
+  for (var k in fields) row[k] = fields[k];
+  var n = ctx.offers.append(row); ctx.offerRow[key] = { _row: n, item: item, store: store };
+  return ctx.offerRow[key];
+}
+// After the move to Offers, the Items price columns copy the Aldi offer so the sheet stays readable.
+function mirrorAldi_(ctx, item) {
+  var o = ctx.offerRow[item + '|aldi'], r = ctx.itemRow[item]; if (!o || !r || !ctx.migrated) return;
+  ['price', 'price_date', 'price_source'].forEach(function (h) { if (ctx.items.col[h] != null) ctx.items.set(r._row, h, cell_(ctx.offers, o, h)); });
+}
+function ensureStores_() {
+  var sh = sheet_(SHEETS.stores); if (sh) return sh;
+  sh = ensureSheet_(SHEETS.stores, STORE_HEADERS);
+  sh.getRange(2, 1, DEFAULT_STORES.length, 4).setValues(DEFAULT_STORES);
+  return sh;
 }
 
 // A phone id (u_…) or merged id -> the sheet's id.
@@ -390,12 +555,26 @@ var HANDLERS = {
       last_changed: new Date(), changed_by: 'phone'
     });
     ctx.itemRow[id] = { _row: row, item_id: id, name: d.name, aldi_numbers: nums.join('; '), price: d.price };
+    if (ctx.items.col.brand != null && d.brand) ctx.items.set(row, 'brand', d.brand);
+    var node = d.node ? resolve_(ctx, d.node) : ''; if (node && ctx.nodeRow[node] && ctx.items.col.node != null) ctx.items.set(row, 'node', node);
+    // Offers: every store's offer goes to the Offers tab. Before the move to Offers the Aldi offer stays in the Items columns.
+    var offers = (d.offers || []).slice();
+    if (ctx.migrated && !offers.length && +d.price > 0) offers.unshift({ store: 'aldi', price: d.price, pack: d.pack, unit: d.unit, pkg: d.pkg, nums: d.nums, priceDate: d.priceDate, src: d.src });
+    if (ctx.migrated && nums.length && ctx.items.col.aldi_numbers != null) ctx.items.set(row, 'aldi_numbers', '');
+    offers.forEach(function (o) {
+      var st = storeOf_(o); if (!ctx.storeIds[st] || (st === 'aldi' && !ctx.migrated)) return;
+      var on = (o.nums || []).map(String).filter(function (n) { return /^\d{4,14}$/.test(n); });
+      setOffer_(ctx, id, st, { price: o.price != null ? +o.price : '', pack: o.pack || d.pack || '', unit: o.unit || d.unit || '', pkg: o.pkg || d.pkg || '', numbers: on.join('; '),
+        price_date: o.priceDate ? dateVal_(o.priceDate) : '', price_source: o.src === 'estimate' ? 'estimate' : (o.src === 'receipt' ? 'receipt' : 'phone') });
+    });
     addIdMap_(ctx, d.id, id, 'item');
     return { status: 'applied', target: id, message: 'Added ' + d.name + ' as ' + id + '.' };
   },
 
   // Changed details of an item. data = {item, fields:{name, pack, pkg, …}}, base = {fields as the phone last saw them}
+  // Version 6: data = {id, fields:{name?, brand?, pack?, unit?, pkg?, cat?, node?}}, base = {changed}. Conflict if the row changed in the sheet since.
   'item.update': function (ctx, d, base) {
+    if (d.id && !d.item) return itemUpdate6_(ctx, d, base);
     var id = resolve_(ctx, d.item), r = ctx.itemRow[id]; if (!r) return { status: 'rejected', target: id, message: 'No item ' + id + ' in the sheet.' };
     var applied = [], kept = {}, f = d.fields || {}, bf = base.fields || {};
     for (var k in f) {
@@ -409,8 +588,27 @@ var HANDLERS = {
     return { status: 'applied', target: id, message: 'Updated ' + applied.join(', ') + ' on ' + id + '.' };
   },
 
-  // A price from a receipt or a hand correction. data = {item, price, date:'yyyy-mm-dd', via:'receipt'|'edited'}, base = {price, priceDate}
+  // A price from a receipt or a hand correction. data = {item, price, date:'yyyy-mm-dd', via:'receipt'|'edited', store?}, base = {price, priceDate}
+  // Sets that store's offer (creating it). Before the move to Offers, the Aldi price is in the Items columns.
   'price.set': function (ctx, d, base) {
+    var store = storeOf_(d);
+    if (store !== 'aldi' || ctx.migrated) return offerPrice_(ctx, d, base, store, false);
+    return HANDLERS['price.legacy'](ctx, d, base);
+  },
+
+  // A full offer edit: data = {item, store, price, pack, unit, pkg, date, via}, base = {price, priceDate} or {}
+  'offer.set': function (ctx, d, base) {
+    var store = storeOf_(d);
+    if (store === 'aldi' && !ctx.migrated) {   // before the move to Offers: the Items columns are the Aldi offer
+      var out = HANDLERS['price.legacy'](ctx, d, base); if (out.status !== 'applied') return out;
+      var r = ctx.itemRow[out.target];
+      if (d.pack != null) ctx.items.set(r._row, 'package_label', d.pack); if (d.unit != null) ctx.items.set(r._row, 'unit', d.unit); if (d.pkg != null) ctx.items.set(r._row, 'package_qty', +d.pkg);
+      return out;
+    }
+    return offerPrice_(ctx, d, base, store, true);
+  },
+
+  'price.legacy': function (ctx, d, base) {
     var id = resolve_(ctx, d.item), r = ctx.itemRow[id]; if (!r) return { status: 'rejected', target: id, message: 'No item ' + id + ' in the sheet.' };
     if (!(+d.price > 0)) return { status: 'rejected', target: id, message: 'Price must be more than 0.' };
     var row = ctx.items.rows[r._row - 2], nowPrice = row[ctx.items.col.price], nowDate = dateStr_(row[ctx.items.col.price_date]);
@@ -426,8 +624,27 @@ var HANDLERS = {
     return { status: 'applied', target: id, message: name + ' now $' + (+d.price).toFixed(2) + '.' };
   },
 
-  // An Aldi item number linked to an item. data = {num:'382147', item}
+  // A store's item number linked to an item. data = {num, item, store?}. Conflict if the number is on a
+  // different item at the same store.
   'number.link': function (ctx, d) {
+    var store = storeOf_(d);
+    if (store !== 'aldi' || ctx.migrated) {
+      var n2 = String(d.num || '').replace(/\D/g, ''), id2 = resolve_(ctx, d.item);
+      if (!/^\d{4,14}$/.test(n2)) return { status: 'rejected', target: id2, message: 'Number "' + d.num + '" isn\'t 4 to 14 digits.' };
+      if (!ctx.itemRow[id2]) return { status: 'rejected', target: id2, message: 'No item ' + id2 + ' in the sheet.' };
+      if (!ctx.storeIds[store]) return { status: 'rejected', target: id2, message: 'No store "' + store + '" on the Stores tab.' };
+      for (var key in ctx.offerRow) {
+        var o = ctx.offerRow[key]; if (key.split('|')[1] !== store) continue;
+        if (nums_(cell_(ctx.offers, o, 'numbers')).indexOf(n2) >= 0) {
+          var owner = key.split('|')[0];
+          if (owner === id2) return { status: 'applied', target: id2, message: n2 + ' was already on ' + id2 + ' at ' + store + '.' };
+          return { status: 'conflict', target: id2, sheet: { item: owner }, message: 'Number ' + n2 + ' is on ' + (ctx.itemRow[owner] ? ctx.itemRow[owner].name : owner) + ' at ' + store + ' in the sheet. The sheet was kept.' };
+        }
+      }
+      var cur2 = ctx.offerRow[id2 + '|' + store] ? nums_(cell_(ctx.offers, ctx.offerRow[id2 + '|' + store], 'numbers')) : [];
+      cur2.push(n2); setOffer_(ctx, id2, store, { numbers: cur2.join('; ') });
+      return { status: 'applied', target: id2, message: 'Added ' + store + ' number ' + n2 + ' to ' + id2 + '.' };
+    }
     var n = String(d.num || '').replace(/\D/g, ''), id = resolve_(ctx, d.item), r = ctx.itemRow[id];
     if (!/^\d{4,8}$/.test(n)) return { status: 'rejected', target: id, message: 'Aldi number "' + d.num + '" isn\'t 4 to 8 digits.' };
     if (!r) return { status: 'rejected', target: id, message: 'No item ' + id + ' in the sheet.' };
@@ -443,8 +660,9 @@ var HANDLERS = {
     return { status: 'applied', target: id, message: 'Added number ' + n + ' to ' + id + '.' };
   },
 
-  // Receipt wording for an item. data = {text, item}; item "__ignore" means "not food".
+  // Receipt wording for an item. data = {text, item, store?}; item "__ignore" means "not food".
   'alias.add': function (ctx, d) {
+    if (d.store) return aliasForStore_(ctx, d);
     var text = String(d.text || '').toUpperCase().replace(/\s+/g, ' ').trim(); if (!text) return { status: 'rejected', message: 'Empty receipt text.' };
     var item = d.item === '__ignore' || d.item === 'ignore' ? 'ignore' : resolve_(ctx, d.item);
     if (item !== 'ignore' && !ctx.itemRow[item]) return { status: 'rejected', target: item, message: 'No item ' + item + ' in the sheet.' };
@@ -467,6 +685,48 @@ var HANDLERS = {
     }
     addIdMap_(ctx, d.from, to, 'merge');
     return { status: 'applied', target: to, message: 'Linked ' + d.from + ' to ' + to + (was && was !== to ? '; ' + was + ' is now retired.' : '.') };
+  },
+
+  // Places an item in the tree. data = {item, node}. Not a conflict if the sheet's node was blank.
+  'item.place': function (ctx, d) {
+    var id = resolve_(ctx, d.item), node = resolve_(ctx, d.node), r = ctx.itemRow[id];
+    if (!r) return { status: 'rejected', target: id, message: 'No item ' + id + ' in the sheet.' };
+    if (!ctx.nodeRow[node]) return { status: 'rejected', target: id, message: 'No node ' + node + ' on the Nodes tab.' };
+    if (ctx.items.col.node == null) return { status: 'error', target: id, message: 'Items has no "node" column. Run Meal Prep > Set up sheets and dropdowns.' };
+    var now = str_(cell_(ctx.items, r, 'node'));
+    if (now === node) return { status: 'applied', target: id, message: id + ' was already under ' + node + '.' };
+    if (now) return { status: 'conflict', target: id, sheet: { node: now }, message: (r.name || id) + ' is under ' + now + ' in the sheet. The sheet was kept.' };
+    ctx.items.set(r._row, 'node', node); stampRow_(ctx.items, r._row);
+    return { status: 'applied', target: id, message: 'Placed ' + id + ' under ' + node + '.' };
+  },
+
+  // A new node. data = {id:'u_n_…', name, parent, level}; parent may be a phone id sent earlier in the batch.
+  'node.add': function (ctx, d) {
+    if (!d.id || !d.name) return { status: 'rejected', message: 'Node without an id or name.' };
+    if (ctx.map[d.id]) { ctx.idMap[d.id] = resolve_(ctx, d.id); return { status: 'duplicate', target: ctx.idMap[d.id], message: 'Already on the Nodes tab as ' + ctx.idMap[d.id] + '.' }; }
+    var level = +d.level, parent = d.parent ? resolve_(ctx, d.parent) : '';
+    if (!(level >= 1 && level <= 5 && level === Math.round(level))) return { status: 'rejected', message: 'Level must be 1 to 5.' };
+    if (parent && !ctx.nodeRow[parent]) return { status: 'rejected', message: 'Parent ' + parent + ' isn\'t on the Nodes tab.' };
+    if (!parent && level !== 1) return { status: 'rejected', message: 'Only a level 1 node can have no parent.' };
+    if (parent && +cell_(ctx.nodes, ctx.nodeRow[parent], 'level') >= level) return { status: 'rejected', message: 'The parent must have a lower level.' };
+    for (var k in ctx.nodeRow) { var r = ctx.nodeRow[k];
+      if (nname_(cell_(ctx.nodes, r, 'name')) === nname_(d.name) && str_(cell_(ctx.nodes, r, 'parent')) === parent) { addIdMap_(ctx, d.id, k, 'node'); return { status: 'applied', target: k, message: d.name + ' is already on the Nodes tab as ' + k + '. Linked to it.' }; } }
+    var base = 'n_' + (String(d.id).replace(/^u_(n_)?/, '').replace(/[^a-z0-9_]/g, '') || slug_(d.name)); var id = newId_(base, ctx.nodeRow);
+    var row = ctx.nodes.append({ id: id, name: d.name, parent: parent, level: level, last_changed: new Date(), changed_by: 'phone' });
+    ctx.nodeRow[id] = { _row: row, id: id, name: d.name, parent: parent, level: level };
+    addIdMap_(ctx, d.id, id, 'node');
+    return { status: 'applied', target: id, message: 'Added ' + LEVELS[level].toLowerCase() + ' ' + d.name + ' as ' + id + '.' };
+  },
+
+  // The favorite product under a node. data = {node, item}; item null clears it. Last write wins.
+  'favorite.set': function (ctx, d) {
+    var node = resolve_(ctx, d.node); if (!ctx.nodeRow[node]) return { status: 'rejected', message: 'No node ' + node + ' on the Nodes tab.' };
+    var item = d.item ? resolve_(ctx, d.item) : null; if (item && !ctx.itemRow[item]) return { status: 'rejected', target: item, message: 'No item ' + item + ' in the sheet.' };
+    var t = ctx.favs, ri = -1; for (var i = 0; i < t.rows.length; i++) if (String(t.rows[i][t.col.node]) === node) { ri = i; break; }
+    if (!item) { if (ri >= 0) { t.sheet.deleteRow(ri + 2); t.rows.splice(ri, 1); } return { status: 'applied', target: node, message: 'Cleared the favorite for ' + node + '.' }; }
+    if (ri >= 0) { t.set(ri + 2, 'item', item); t.set(ri + 2, 'last_changed', new Date()); }
+    else t.append({ node: node, item: item, last_changed: new Date() });
+    return { status: 'applied', target: node, message: item + ' is the favorite for ' + node + '.' };
   },
 
   // A recipe written on the phone. data = the phone's recipe {id:'u_…', meal, name, tags, serv, ing:[[item, qtyPerServing, asWritten, optional]], total, hands, keeps, reheats, link, notes}
@@ -510,6 +770,59 @@ var HANDLERS = {
   }
 };
 
+// price.set / offer.set for a store's offer on the Offers tab.
+function offerPrice_(ctx, d, base, store, full) {
+  var id = resolve_(ctx, d.item), r = ctx.itemRow[id]; if (!r) return { status: 'rejected', target: id, message: 'No item ' + id + ' in the sheet.' };
+  if (!ctx.storeIds[store]) return { status: 'rejected', target: id, message: 'No store "' + store + '" on the Stores tab.' };
+  if (!(+d.price > 0)) return { status: 'rejected', target: id, message: 'Price must be more than 0.' };
+  var o = ctx.offerRow[id + '|' + store], name = (r.name || id) + (store === 'aldi' ? '' : ' at ' + (ctx.storeName[store] || store));
+  var nowPrice = o ? cell_(ctx.offers, o, 'price') : null, nowDate = o ? dateStr_(cell_(ctx.offers, o, 'price_date')) : null;
+  if (o && !blank_(nowPrice) && base && 'price' in base && !sameVal_(nowPrice, base.price))
+    return { status: 'conflict', target: id, sheet: { price: +nowPrice, priceDate: nowDate, store: store }, message: name + ': the sheet\'s price $' + (+nowPrice).toFixed(2) + ' was kept.' };
+  if (nowDate && d.date && d.date < nowDate)
+    return { status: 'conflict', target: id, sheet: { price: +nowPrice, priceDate: nowDate, store: store }, message: name + ': the sheet has a newer price ($' + (+nowPrice).toFixed(2) + ' on ' + nowDate + ').' };
+  var f = { price: +d.price, price_date: dateVal_(d.date), price_source: d.via === 'receipt' ? 'receipt' : 'edited' };
+  if (full) { if (d.pack != null) f.pack = d.pack; if (d.unit != null) f.unit = d.unit; if (d.pkg != null) f.pkg = +d.pkg; }
+  setOffer_(ctx, id, store, f);
+  if (store === 'aldi') mirrorAldi_(ctx, id);
+  return { status: 'applied', target: id, message: name + ' now $' + (+d.price).toFixed(2) + '.' };
+}
+
+function aliasForStore_(ctx, d) {
+  var store = storeOf_(d), text = String(d.text || '').toUpperCase().replace(/\s+/g, ' ').trim(); if (!text) return { status: 'rejected', message: 'Empty receipt text.' };
+  var item = d.item === '__ignore' || d.item === 'ignore' ? 'ignore' : resolve_(ctx, d.item);
+  if (item !== 'ignore' && !ctx.itemRow[item]) return { status: 'rejected', target: item, message: 'No item ' + item + ' in the sheet.' };
+  if (!ctx.aliases) return { status: 'error', message: 'No "Receipt aliases" sheet.' };
+  var rows = ctx.aliases.objects(), any = null;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].receipt_text).toUpperCase().trim() !== text) continue;
+    var rs = str_(rows[i].store).toLowerCase();
+    if (rs === store) {
+      if (String(rows[i].item_id) === item) return { status: 'applied', target: item, message: '"' + text + '" was already there for ' + store + '.' };
+      return { status: 'conflict', target: item, sheet: { item: String(rows[i].item_id) }, message: '"' + text + '" means ' + rows[i].item_id + ' at ' + store + ' in the sheet. The sheet was kept.' };
+    }
+    if (!rs) any = rows[i];
+  }
+  if (any && String(any.item_id) === item) return { status: 'applied', target: item, message: '"' + text + '" was already there for every store.' };
+  ctx.aliases.append({ receipt_text: text, item_id: item, store: store });
+  return { status: 'applied', target: item, message: 'Added receipt name "' + text + '" for ' + store + '.' };
+}
+
+var ITEM_FIELDS6 = { name: 'name', brand: 'brand', pack: 'package_label', unit: 'unit', pkg: 'package_qty', cat: 'category', node: 'node' };
+function itemUpdate6_(ctx, d, base) {
+  var id = resolve_(ctx, d.id), r = ctx.itemRow[id]; if (!r) return { status: 'rejected', target: id, message: 'No item ' + id + ' in the sheet.' };
+  if (sheetEditedSince_(ctx.items, r, base && base.changed)) return { status: 'conflict', target: id, message: (r.name || id) + ' was changed in the sheet. The sheet\'s version was kept.' };
+  var f = d.fields || {}, done = [];
+  for (var k in f) {
+    var h = ITEM_FIELDS6[k]; if (!h || ctx.items.col[h] == null) continue;
+    var v = f[k]; if (k === 'node') { v = v ? resolve_(ctx, v) : ''; if (v && !ctx.nodeRow[v]) return { status: 'rejected', target: id, message: 'No node ' + v + ' on the Nodes tab.' }; }
+    if (k === 'pkg') v = +v;
+    ctx.items.set(r._row, h, v); done.push(k);
+  }
+  if (done.length) stampRow_(ctx.items, r._row);
+  return { status: 'applied', target: id, message: 'Updated ' + (done.join(', ') || 'nothing') + ' on ' + id + '.' };
+}
+
 function merge_(a, b) { var o = {}; for (var k in a) o[k] = a[k]; for (var j in b) o[j] = b[j]; return o; }
 
 function sheetEditedSince_(t, r, seenIso) {
@@ -552,7 +865,7 @@ function writeRecipe_(ctx, id, d, extra, existing) {
 function onEdit(e) {
   try {
     var sh = e.range.getSheet(), name = sh.getName(), key = norm_(name), r0 = e.range.getRow(), n = e.range.getNumRows();
-    if ([SHEETS.items, SHEETS.recipes, SHEETS.ingredients].map(norm_).indexOf(key) < 0) return;
+    if ([SHEETS.items, SHEETS.recipes, SHEETS.ingredients, SHEETS.offers, SHEETS.nodes, SHEETS.favorites].map(norm_).indexOf(key) < 0) return;
     var lastCol = sh.getLastColumn(), headers = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(norm_);
     if (key === norm_(SHEETS.ingredients)) {  // an ingredient change counts as a change to its recipe
       var rc = headers.indexOf('recipe_id'); if (rc < 0) return;
@@ -570,7 +883,25 @@ function onEdit(e) {
       sh.getRange(r, lcol + 1).setValue(new Date());
       if (ccol >= 0) sh.getRange(r, ccol + 1).setValue('sheet');
     }
+    // After the move to Offers, a price typed on Items goes to the item's Aldi offer, so both stay in step.
+    if (key === norm_(SHEETS.items) && migrated_()) {
+      var pc = ['price', 'price_date', 'price_source'].map(function (h) { return headers.indexOf(h); });
+      if (pc.some(function (c) { return c >= 0 && c + 1 >= c0 && c + 1 <= c1; })) syncAldiFromItems_(sh, headers, Math.max(2, r0), r0 + n - 1);
+    }
   } catch (err) { /* never block an edit */ }
+}
+
+function syncAldiFromItems_(sh, headers, fromRow, toRow) {
+  var t = table_(SHEETS.offers); if (!t) return;
+  var at = {}; t.objects().forEach(function (o) { if (String(o.store).toLowerCase() === 'aldi') at[String(o.item)] = o; });
+  var vals = sh.getRange(fromRow, 1, toRow - fromRow + 1, headers.length).getValues();
+  vals.forEach(function (v) {
+    var id = String(v[headers.indexOf('item_id')] || ''); if (!id) return;
+    var f = { price: v[headers.indexOf('price')], price_date: v[headers.indexOf('price_date')], price_source: headers.indexOf('price_source') >= 0 ? v[headers.indexOf('price_source')] : '' };
+    var o = at[id];
+    if (o) { ['price', 'price_date', 'price_source'].forEach(function (h) { if (t.col[h] != null) t.set(o._row, h, f[h]); }); t.set(o._row, 'last_changed', new Date()); if (t.col.changed_by != null) t.set(o._row, 'changed_by', 'sheet'); }
+    else if (!blank_(f.price)) t.append({ item: id, store: 'aldi', price: f.price, pack: v[headers.indexOf('package_label')], unit: v[headers.indexOf('unit')], pkg: v[headers.indexOf('package_qty')], numbers: '', price_date: f.price_date, price_source: f.price_source, last_changed: new Date(), changed_by: 'sheet' });
+  });
 }
 
 // ---------------------------------------------------------------- the Meal Prep menu
@@ -579,6 +910,7 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('Meal Prep')
     .addItem('Check data', 'menuCheck')
     .addItem('Set up sheets and dropdowns', 'menuSetup')
+    .addItem('Move prices to Offers', 'menuMoveToOffers')
     .addSeparator()
     .addItem('Set the app key', 'menuSetKey')
     .addItem('Show the app address and key', 'menuShowAddress')
@@ -623,6 +955,13 @@ function menuSetup() {
   [SHEETS.items, SHEETS.recipes].forEach(function (n) { ensureColumns_(n, ['last_changed', 'changed_by'], notes); });
   ensureColumns_(SHEETS.items, ['aldi_numbers'], notes);
   ensureListColumn_('price_source', ['photo', 'inventory', 'estimate', 'receipt', 'edited', 'phone']);
+  // Version 6: stores, offers, the item tree and favorites
+  ensureColumns_(SHEETS.items, ['brand', 'node'], notes); ensureColumns_(SHEETS.aliases, ['store'], notes);
+  if (!sheet_(SHEETS.stores)) { ensureStores_(); notes.push('Added the Stores tab with Aldi, Sam\'s Club, Walmart, Cub and Target.'); }
+  if (!sheet_(SHEETS.offers)) { ensureSheet_(SHEETS.offers, OFFER_HEADERS); notes.push('Added the Offers tab. Use Meal Prep > Move prices to Offers to fill it.'); }
+  if (!sheet_(SHEETS.favorites)) { ensureSheet_(SHEETS.favorites, FAVORITE_HEADERS); notes.push('Added the Favorites tab.'); }
+  if (!sheet_(SHEETS.nodes)) { var nn = seedNodes_(); notes.push('Added the Nodes tab with ' + nn + ' starter nodes.'); }
+  var off = colRange_(SHEETS.offers, 'numbers'); if (off) off.setNumberFormat('@');
 
   // Each rule: [sheet, column, kind, source, help]. kind "list" = dropdown from a range ([sheet, column] of the source).
   // A rule whose column or source can't be found is skipped and named in the message, instead of stopping the setup.
@@ -643,7 +982,18 @@ function menuSetup() {
     [RE, 'servings', 'gt', 0], [RE, 'total_min', 'gte', 0], [RE, 'hands_on_min', 'gte', 0], [RE, 'keeps_days', 'gte', 0],
     [RE, 'recipe_id', 'formula', function (c, all) { return '=COUNTIF(' + all + ',' + c + ')=1'; }, 'recipe_id must be unique.'],
     [IN, 'recipe_id', 'list', [RE, 'recipe_id']], [IN, 'item_id', 'list', [IT, 'item_id']], [IN, 'optional', 'list', YN], [IN, 'qty', 'gt', 0],
-    [AL, 'item_id', 'list', [IT, 'item_id'], 'An item_id, or ignore for lines that are not food.']
+    [AL, 'item_id', 'list', [IT, 'item_id'], 'An item_id, or ignore for lines that are not food.'],
+    [AL, 'store', 'list', [SHEETS.stores, 'id'], 'Blank means any store.'],
+    [IT, 'node', 'list', [SHEETS.nodes, 'id'], 'The most specific node this item belongs under.'],
+    [SHEETS.offers, 'item', 'list', [IT, 'item_id']], [SHEETS.offers, 'store', 'list', [SHEETS.stores, 'id']],
+    [SHEETS.offers, 'price', 'gte', 0], [SHEETS.offers, 'pkg', 'gt', 0], [SHEETS.offers, 'price_date', 'date', null],
+    [SHEETS.offers, 'price_source', 'list', [LI, 'price_source']],
+    [SHEETS.offers, 'numbers', 'formula', function (c) { return '=OR(' + c + '="",REGEXMATCH(TO_TEXT(' + c + '),"^\\d{4,14}(;\\s*\\d{4,14})*$"))'; }, 'Digits only (4 to 14). Separate several with semicolons.'],
+    [SHEETS.nodes, 'parent', 'list', [SHEETS.nodes, 'id'], 'Blank for a level 1 node.'],
+    [SHEETS.nodes, 'level', 'values', ['1', '2', '3', '4', '5'], '1 Category, 2 Type, 3 Form, 4 Variety, 5 Style'],
+    [SHEETS.nodes, 'id', 'formula', function (c, all) { return '=AND(COUNTIF(' + all + ',' + c + ')=1,REGEXMATCH(' + c + ',"^n_[a-z0-9_]+$"))'; }, 'Starts with n_; lowercase letters, numbers and _; unique.'],
+    [SHEETS.favorites, 'node', 'list', [SHEETS.nodes, 'id']], [SHEETS.favorites, 'item', 'list', [IT, 'item_id']],
+    [SHEETS.stores, 'num_where', 'values', ['before', 'after']]
   ];
   var n = 0, skipped = [];
   specs.forEach(function (x) {
@@ -666,6 +1016,64 @@ function menuSetup() {
   SpreadsheetApp.getUi().alert('Set up ' + n + ' dropdowns and checks.' + (notes.length ? '\n\n' + notes.join('\n') : '') +
     (skipped.length ? '\n\nSkipped ' + skipped.length + ' (check the header names in row 1):\n' + skipped.join('\n') : '') +
     '\n\nRecipes > tags is left for you: select the tags column, Data > Data validation > Add rule > Dropdown (from a range) =Lists!D2:D, and tick "Allow multiple selections".');
+}
+
+/**
+ * Meal Prep > Move prices to Offers. For every Items row with a price, adds an Offers row for Aldi and
+ * moves aldi_numbers into it. Safe to run again: items that already have an Aldi offer are skipped.
+ */
+function menuMoveToOffers() {
+  var ui = SpreadsheetApp.getUi(), lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) { ui.alert('The sheet is busy. Try again in a minute.'); return; }
+  try {
+    ensureSheet_(SHEETS.offers, OFFER_HEADERS); ensureStores_();
+    var tI = table_(SHEETS.items), tO = table_(SHEETS.offers), have = {}, added = 0, skipped = 0, nums = 0;
+    tO.objects().forEach(function (r) { if (r.item) have[String(r.item) + '|' + String(r.store).toLowerCase()] = 1; });
+    var rows = [];
+    tI.objects().forEach(function (r) {
+      var id = str_(r.item_id); if (!id || num_(r.price) == null) return;
+      if (have[id + '|aldi']) { skipped++; return; }
+      var n = nums_(r.aldi_numbers); nums += n.length;
+      rows.push(OFFER_HEADERS.map(function (h) {
+        return ({ item: id, store: 'aldi', price: num_(r.price), pack: str_(r.package_label), unit: str_(r.unit), pkg: num_(r.package_qty), numbers: n.join('; '),
+                  price_date: r.price_date || '', price_source: str_(r.price_source), last_changed: new Date(), changed_by: 'sheet' })[h];
+      }));
+      if (n.length && tI.col.aldi_numbers != null) tI.set(r._row, 'aldi_numbers', '');
+      added++;
+    });
+    if (rows.length) {
+      var sh = sheet_(SHEETS.offers), start = sh.getLastRow() + 1;
+      sh.getRange(start, 1, rows.length, OFFER_HEADERS.length).setValues(rows);
+      sh.getRange(2, OFFER_HEADERS.indexOf('numbers') + 1, Math.max(1, sh.getMaxRows() - 1)).setNumberFormat('@');
+    }
+    PropertiesService.getScriptProperties().setProperty('OFFERS_MIGRATED', 'yes');
+    ui.alert('Added ' + added + ' Aldi offers' + (nums ? ' and moved ' + nums + ' Aldi numbers into them' : '') + '.' + (skipped ? ' ' + skipped + ' items already had one.' : '') +
+      '\n\nPrices now live on the Offers tab. A price you type on Items is copied to that item\'s Aldi offer, and an Aldi price from the phone is copied back to Items.');
+  } finally { lock.releaseLock(); }
+}
+
+// Level 1 from the categories, plus a starter level 2-3 for Meat, Produce and Dairy.
+function seedNodes_() {
+  var sh = ensureSheet_(SHEETS.nodes, NODE_HEADERS), tC = table_(SHEETS.categories), rows = [], now = new Date();
+  var idOf = function (name) { return 'n_' + slug_(name.replace(/&/g, ' ')); };
+  var cats = tC ? tC.objects().map(function (r) { return str_(r.category); }).filter(String) : ['Produce', 'Meat', 'Dairy & eggs', 'Bakery & frozen', 'Pantry', 'Drinks', 'Other'];
+  cats.forEach(function (c) { rows.push([idOf(c), c, '', 1, now, 'sheet']); });
+  var find = function (word) { var c = cats.filter(function (x) { return x.toLowerCase().indexOf(word) >= 0; })[0]; return c ? idOf(c) : null; };
+  var tree = [
+    [find('meat'), [['Chicken', ['Breasts', 'Thighs', 'Wings', 'Ground chicken']], ['Beef', ['Ground beef', 'Steak', 'Stew meat']], ['Pork', ['Chops', 'Sausage', 'Bacon']]]],
+    [find('produce'), [['Fruit', ['Apples', 'Berries', 'Citrus', 'Bananas']], ['Vegetables', ['Leafy greens', 'Onions and garlic', 'Potatoes', 'Peppers', 'Tomatoes']]]],
+    [find('dairy'), [['Milk', ['Whole milk', 'Dairy-free milk']], ['Cheese', ['Shredded cheese', 'Sliced cheese', 'Block cheese']], ['Yogurt', ['Plain yogurt', 'Greek yogurt']]]]
+  ];
+  tree.forEach(function (t) {
+    if (!t[0]) return;
+    t[1].forEach(function (type) {
+      var tid = 'n_' + slug_(type[0]); rows.push([tid, type[0], t[0], 2, now, 'sheet']);
+      type[1].forEach(function (form) { rows.push(['n_' + slug_(type[0] + ' ' + form.replace(new RegExp('\\b' + type[0].replace(/s$/, '') + '\\b', 'i'), '').trim()), form, tid, 3, now, 'sheet']); });
+    });
+  });
+  var seen = {}; rows = rows.filter(function (r) { if (seen[r[0]]) return false; seen[r[0]] = 1; return true; });
+  sh.getRange(2, 1, rows.length, NODE_HEADERS.length).setValues(rows);
+  return rows.length;
 }
 
 function ensureSheet_(name, headers) {

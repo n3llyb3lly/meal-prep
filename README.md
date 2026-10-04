@@ -19,6 +19,11 @@ Since version 5.3 the catalog (items, prices, Aldi numbers, recipes) lives in a 
 | `design/sheets/Claude Design - Google Sheet sync.md` | How the sync works, the test plan, limits and how to undo it |
 | `design/sheets/*.xlsx` | The sheet layout used to set up the Google Sheet |
 | `design/Meal Prep App Guide v5.md` | What every screen does |
+| `receipts.js` | Reads receipts from Aldi, Sam's Club, Walmart, Cub and Target (typed, CSV or photo text). The app loads it; fixes reach phones without an app update |
+| `vendor/tesseract/` | The on-phone text reader for **Scan receipt** (Tesseract.js 5, about 11 MB). Downloaded the first time someone scans, then works offline |
+| `tools/receipts-test.html` | Runs `receipts.js` on the sample receipts in `data/receipts/` and shows pass or fail |
+| `data/receipts/` | Sample receipts per store, an OCR-damaged copy of each, and raw text the phone's reader got from photos |
+| `catalog-v1.json` | (from the builder) the catalog for phones still on 5.3, only if you go back to GitHub files |
 | `.nojekyll` | Tells GitHub Pages to serve the files as they are |
 
 ## Day to day
@@ -55,3 +60,18 @@ Upload the new `index.html` to this repository, replacing the old one. Phones th
 - **Android:** open the site in Chrome with a connection, tap ⋮, then **Add to Home screen**. Always open the app from that icon.
 - **iPhone:** open it in Safari, tap Share, then **Add to Home Screen**.
 - Then Settings › Google Sheet: paste the app address and key (in the sheet: **Meal Prep › Show the app address and key**) and tap **Test and save**.
+
+## Stores, the item tree and receipt scanning (version 6)
+
+- **Stores** live on the sheet's Stores tab: `id`, `name`, `num_digits` (how many digits the store's item numbers have, several separated by semicolons) and `num_where` (`before` or `after` the description on the receipt).
+- **Offers** hold prices: one row per item per store, with that store's size and item numbers. The Items price columns copy the Aldi offer.
+- **Nodes** are the item tree: 1 Category, 2 Type, 3 Form, 4 Variety, 5 Style. A recipe ingredient can be a node (`n_…`); the phone uses your favorite product under it, otherwise the cheapest.
+- **Favorites** pick one product per node.
+- The script serves version 5.3 phones the old shape (`schema 1`) and version 6 phones the new one (`?schema=2`).
+
+### Adding a store
+
+1. Add a row to the sheet's **Stores** tab, for example `costco, Costco, 6;7, before`.
+2. In `receipts.js`, add the store to `STORES` (number length and position) and its name to `NAMES` (how `detectStore` recognises it). If its receipts have special lines (savings, quantities, departments), handle them in `parseInner` the way Sam's `INST SV` and Cub's departments are.
+3. Type one real receipt into `data/receipts/<store>-sample.txt` with its exact line breaks, and an OCR-damaged copy as `<store>-ocr.txt`. Add the expected date, item count, subtotal, tax and total to `EXPECT` in `tools/receipts-test.html`.
+4. Open `tools/receipts-test.html`. Every receipt should pass. Upload `receipts.js`; phones pick it up the next time they're online.
