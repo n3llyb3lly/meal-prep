@@ -38,7 +38,7 @@ This repository is set up for GitHub Pages: the files at the root are the live s
 
 ## Updating prices or recipes
 
-1. Edit the master spreadsheet in `design/data/`. Paste price values, not lookups, and set `price_date`.
+1. Edit the master spreadsheet in `design/data/`. Paste price values, not lookups, and set `price_date`. Aldi item numbers go in the Items column `aldi_numbers` (add it after `aldi_product` if it isn't there yet); several numbers in one cell are separated by semicolons.
 2. Open `tools/catalog-builder.html`, drop in the spreadsheet and the current `catalog.json`, and fix any errors.
 3. Download `catalog.json` and upload it here, replacing the old one.
 4. Open the app with a connection. It loads the new catalog and shows what changed. No app update prompt appears.
