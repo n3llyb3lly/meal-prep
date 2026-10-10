@@ -80,6 +80,10 @@ Create changes in these places (only when `sheetLink.url` is set, or when buildi
 | Edit a catalog recipe whose `source` is "My recipe" or "My version" (it came from the phone earlier) | `recipe.update` | the full recipe with its sheet `id` | `{changed}` of that recipe in `this.cat` |
 | Edit any other catalog recipe (`recipeEdits`) | `recipe.edit` | `{orig:id, recipe:{…the edited recipe}}` | `{changed}` of `id + '_mine'` in `this.cat` if it exists, else `{}` |
 | Link an own item to a catalog item (`mergeItem`) | `item.merge` | `{from:'u_…', to:catalogId}` | `{}` |
+| Receipt saved (`import63`), each new brand or flavor (6.3; the script accepts it, the phone doesn't queue it yet) | `variant.add` | `{item, vid, brand, flavor}` | `{}` |
+| Receipt saved, each new number on a variant (6.3, same) | `variant.number` | `{vid, store, num}` | `{}` |
+
+Variants go to the **Variants** tab (item_id, variant_id, brand, flavor, store, numbers, last_price, last_date), one row per variant and store. The catalog serves them back as `variants` in the phone's layer shape. Queue `variant.add` before any `variant.number` for the same `vid`, and only once the item is in the sheet (not `u_`).
 
 For items that are still `u_` (not yet in the sheet), do not queue `price.set` or `number.link`: update the queued `item.add` instead (its `price`, `priceDate`, `nums`).
 

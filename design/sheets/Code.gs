@@ -22,7 +22,7 @@
 var SHEETS = {
   items: 'Items', categories: 'Categories', recipes: 'Recipes', ingredients: 'Ingredients',
   aliases: 'Receipt aliases', lists: 'Lists', log: 'Change log', idmap: 'Id map', cache: '_catalog',
-  offers: 'Offers', nodes: 'Nodes', stores: 'Stores', favorites: 'Favorites'
+  offers: 'Offers', nodes: 'Nodes', stores: 'Stores', favorites: 'Favorites', variants: 'Variants'
 };
 var MEALS = ['breakfast', 'lunch', 'snack', 'dinner'];
 var STORAGE = ['fridge', 'freezer', 'pantry', 'counter'];
@@ -34,6 +34,9 @@ var OFFER_HEADERS = ['item', 'store', 'price', 'pack', 'unit', 'pkg', 'numbers',
 var NODE_HEADERS = ['id', 'name', 'parent', 'level', 'last_changed', 'changed_by'];
 var STORE_HEADERS = ['id', 'name', 'num_digits', 'num_where'];
 var FAVORITE_HEADERS = ['node', 'item', 'last_changed'];
+// Version 6.3: brands and flavors of one item (three ice creams under "Ice cream"). One row per variant and store;
+// numbers are that store's item numbers for the variant. A variant with no numbers yet has a row with a blank store.
+var VARIANT_HEADERS = ['item_id', 'variant_id', 'brand', 'flavor', 'store', 'numbers', 'last_price', 'last_date', 'last_changed', 'changed_by'];
 var DEFAULT_STORES = [['aldi', 'Aldi', '6', 'before'], ['sams', "Sam's Club", '9;10', 'before'], ['walmart', 'Walmart', '12', 'after'], ['cub', 'Cub', '11;12', 'after'], ['target', 'Target', '9', 'before']];
 // Prices live in the Offers tab once "Meal Prep > Move prices to Offers" has run. Before that, the Items
 // price columns are the Aldi offer.
@@ -226,6 +229,7 @@ function buildCatalog_(prev) {
       changed: iso_(r.last_changed),   // extra: when the row last changed; the app sends it back as the "base"
       brand: str_(r.brand) || null, node: str_(r.node) || null, offers: []
     };
+    if (str_(r.flavor)) it.flavor = str_(r.flavor);
     // 6.1: food types and household fields
     var ft = str_(r.food_types != null ? r.food_types : r.flags).toLowerCase().split(/[;,]/).map(function (x) { return x.trim().replace(/[\s-]+/g, '_'); }).filter(String);
     ft.forEach(function (f) { if (FOOD_TYPES.indexOf(f) < 0) E(line + ' (' + id + '): food type "' + f + '" isn\'t one of ' + FOOD_TYPES.join(', ') + '.'); });
@@ -342,13 +346,39 @@ function buildCatalog_(prev) {
   });
   if (MIG) items.forEach(function (it) { var r = itemsR.filter(function (x) { return str_(x.item_id) === it.id; })[0]; if (r && !blank_(r.price) && it.offers.length && Math.abs(num_(r.price) - (it.offers[0].price || 0)) > 0.005 && it.offers[0].store === 'aldi') W(it.id + ': the Items price column (' + r.price + ') differs from the Aldi offer (' + it.offers[0].price + '). Prices now come from the Offers tab.'); });
 
+  // Variants, in the phone's layer shape: {itemId: [{vid, brand, flavor, nums: {store: [num]}, last: {price, date, store}}]}
+  var tV = table_(SHEETS.variants), variants = variantsOf_(tV ? tV.objects() : [], I, ST, W);
+
   var catalog = {
     schemaVersion: SCHEMA, catalogVersion: null, builtAt: null, categories: categories, stores: stores,
     nodes: nodes.map(function (n) { return { id: n.id, name: n.name, parent: n.parent, level: n.level }; }), items: items,
     recipes: recipes.filter(function (r) { return r.active; }).map(function (r) { var o = {}; for (var k in r) if (k !== 'active') o[k] = r[k]; return o; }),
-    aliases: aliases, favorites: favorites
+    aliases: aliases, favorites: favorites, variants: variants
   };
   return { catalog: catalog, errors: errors, warnings: warnings };
+}
+
+// Variants rows -> {itemId: [variant]}. Rows of one variant_id are merged; the newest last_date wins for last.
+function variantsOf_(rows, I, ST, W) {
+  var out = {}, byVid = {};
+  rows.forEach(function (r) {
+    var vid = str_(r.variant_id), item = str_(r.item_id); if (!vid && !item) return;
+    if (!vid) { W('Variants row ' + r._row + ': no variant_id.'); return; }
+    if (!I[item]) { W('Variants row ' + r._row + ' (' + vid + '): item "' + item + '" isn\'t on the Items tab.'); return; }
+    var v = byVid[vid];
+    if (v && v._item !== item) { W('Variants row ' + r._row + ': ' + vid + ' is under ' + v._item + ' on an earlier row, not ' + item + '. This row was skipped.'); return; }
+    if (!v) { v = byVid[vid] = { _item: item, vid: vid, brand: str_(r.brand) || null, flavor: str_(r.flavor) || null, nums: {}, last: null }; (out[item] = out[item] || []).push(v); }
+    if (!v.brand && str_(r.brand)) v.brand = str_(r.brand); if (!v.flavor && str_(r.flavor)) v.flavor = str_(r.flavor);
+    var store = str_(r.store).toLowerCase();
+    if (store) {
+      if (!ST[store]) W('Variants row ' + r._row + ' (' + vid + '): store "' + store + '" isn\'t on the Stores tab.');
+      var ns = nums_(r.numbers); if (ns.length) v.nums[store] = (v.nums[store] || []).concat(ns.filter(function (n) { return (v.nums[store] || []).indexOf(n) < 0; }));
+    }
+    var lp = num_(r.last_price), ld = dateStr_(r.last_date);
+    if (lp != null && (!v.last || (ld || '') > (v.last.date || ''))) v.last = { price: lp, date: ld, store: store || null };
+  });
+  for (var k in out) out[k].forEach(function (v) { delete v._item; });
+  return out;
 }
 
 // The last good catalog is kept in a hidden "_catalog" sheet, so a mistake in the sheet never
@@ -496,6 +526,8 @@ function context_() {
   ctx.offerRow = {}; ctx.offers.objects().forEach(function (r) { if (r.item && r.store) ctx.offerRow[String(r.item) + '|' + String(r.store).toLowerCase()] = r; });
   ctx.nodeRow = {}; ctx.nodes.objects().forEach(function (r) { if (r.id) ctx.nodeRow[String(r.id)] = r; });
   ctx.storeIds = {}; ctx.storeName = {}; table_(SHEETS.stores).objects().forEach(function (r) { if (r.id) { var k = String(r.id).toLowerCase(); ctx.storeIds[k] = 1; ctx.storeName[k] = str_(r.name) || k; } });
+  ensureSheet_(SHEETS.variants, VARIANT_HEADERS); ctx.variants = table_(SHEETS.variants);
+  ctx.varRows = {}; ctx.variants.objects().forEach(function (r) { if (r.variant_id) (ctx.varRows[String(r.variant_id)] = ctx.varRows[String(r.variant_id)] || []).push(r); });
   ctx.migrated = migrated_();
   return ctx;
 }
@@ -584,14 +616,16 @@ var HANDLERS = {
     var nums = (d.nums || []).filter(function (n) { return /^\d{4,8}$/.test(String(n)); });
     var row = ctx.items.append({
       item_id: id, name: d.name, category: d.cat || 'Other', package_label: d.pack || '', unit: d.unit || 'each', package_qty: d.pkg || 1,
-      price: d.price, price_source: d.src === 'estimate' ? 'estimate' : 'phone', price_date: d.priceDate ? new Date(d.priceDate + 'T12:00:00') : new Date(),
+      price: d.price, price_source: d.src === 'estimate' ? 'estimate' : (d.src === 'receipt' ? 'receipt' : 'phone'), price_date: d.priceDate ? new Date(d.priceDate + 'T12:00:00') : new Date(),
       staple: d.staple ? 'Y' : 'N', storage: d.storage || '', fridge_days: d.fridge == null ? '' : d.fridge, freezer_days: d.freezer == null ? '' : d.freezer,
       pantry_days: d.pantry == null ? '' : d.pantry, family: d.family || '', sold_by: d.soldBy || 'pack', alt_sizes: '', tracking_default: d.tracking || '',
-      aldi_product: d.aldi || '', aldi_numbers: nums.join('; '), retired: 'N', replaced_by: '', notes: 'Added on the phone',
+      aldi_product: d.aldi || '', aldi_numbers: nums.join('; '), retired: 'N', replaced_by: '',
+      notes: d.src === 'receipt' ? (d.unsorted ? 'Added from a receipt; not placed in the tree yet' : 'Added from a receipt') : 'Added on the phone',
       last_changed: new Date(), changed_by: 'phone'
     });
     ctx.itemRow[id] = { _row: row, item_id: id, name: d.name, aldi_numbers: nums.join('; '), price: d.price };
     if (ctx.items.col.brand != null && d.brand) ctx.items.set(row, 'brand', d.brand);
+    if (ctx.items.col.flavor != null && d.flavor) ctx.items.set(row, 'flavor', d.flavor);
     var node = d.node ? resolve_(ctx, d.node) : ''; if (node && ctx.nodeRow[node] && ctx.items.col.node != null) ctx.items.set(row, 'node', node);
     // Offers: every store's offer goes to the Offers tab. Before the move to Offers the Aldi offer stays in the Items columns.
     var offers = (d.offers || []).slice();
@@ -694,6 +728,52 @@ var HANDLERS = {
     var cur = nums_(ctx.items.rows[r._row - 2][ctx.items.col.aldi_numbers]); cur.push(n);
     ctx.items.set(r._row, 'aldi_numbers', cur.join('; ')); stampRow_(ctx.items, r._row);
     return { status: 'applied', target: id, message: 'Added number ' + n + ' to ' + id + '.' };
+  },
+
+  // A brand or flavor of an item. data = {item, vid, brand, flavor}. Conflict if the vid is under another item.
+  'variant.add': function (ctx, d) {
+    var vid = str_(d.vid), item = resolve_(ctx, d.item);
+    if (!vid) return { status: 'rejected', target: item, message: 'Variant without a vid.' };
+    if (!ctx.itemRow[item]) return { status: 'rejected', target: item, message: 'No item ' + item + ' in the sheet.' };
+    var rows = ctx.varRows[vid] || [];
+    if (rows.length) {
+      var owner = String(cell_(ctx.variants, rows[0], 'item_id'));
+      if (owner !== item) return { status: 'conflict', target: item, sheet: { item: owner }, message: 'Variant ' + vid + ' is under ' + owner + ' in the sheet. The sheet was kept.' };
+      rows.forEach(function (r) {   // fill blanks only: the sheet's own brand and flavor win
+        if (d.brand && blank_(cell_(ctx.variants, r, 'brand'))) ctx.variants.set(r._row, 'brand', d.brand);
+        if (d.flavor && blank_(cell_(ctx.variants, r, 'flavor'))) ctx.variants.set(r._row, 'flavor', d.flavor);
+      });
+      return { status: 'applied', target: item, message: vid + ' was already under ' + item + '.' };
+    }
+    var n = ctx.variants.append({ item_id: item, variant_id: vid, brand: str_(d.brand), flavor: str_(d.flavor), store: '', numbers: '', last_price: '', last_date: '', last_changed: new Date(), changed_by: 'phone' });
+    ctx.varRows[vid] = [{ _row: n, variant_id: vid }];
+    return { status: 'applied', target: item, message: 'Added ' + [d.brand, d.flavor].filter(Boolean).join(' ') + ' (' + vid + ') under ' + item + '.' };
+  },
+
+  // A store's item number for a variant. data = {vid, store, num}. Conflict if the number is on another variant at that store.
+  'variant.number': function (ctx, d) {
+    var vid = str_(d.vid), store = storeOf_(d), n = String(d.num || '').replace(/\D/g, '');
+    var rows = ctx.varRows[vid]; if (!rows || !rows.length) return { status: 'rejected', target: vid, message: 'No variant ' + vid + ' in the sheet. Send variant.add first.' };
+    if (!/^\d{4,14}$/.test(n)) return { status: 'rejected', target: vid, message: 'Number "' + d.num + '" isn\'t 4 to 14 digits.' };
+    if (!ctx.storeIds[store]) return { status: 'rejected', target: vid, message: 'No store "' + store + '" on the Stores tab.' };
+    for (var other in ctx.varRows) {
+      var hit = ctx.varRows[other].some(function (r) { return String(cell_(ctx.variants, r, 'store')).toLowerCase() === store && nums_(cell_(ctx.variants, r, 'numbers')).indexOf(n) >= 0; });
+      if (!hit) continue;
+      if (other === vid) return { status: 'applied', target: vid, message: n + ' was already on ' + vid + ' at ' + store + '.' };
+      return { status: 'conflict', target: vid, sheet: { vid: other }, message: 'Number ' + n + ' is on variant ' + other + ' at ' + store + ' in the sheet. The sheet was kept.' };
+    }
+    var first = rows[0], row = null;
+    rows.forEach(function (r) { if (!row && String(cell_(ctx.variants, r, 'store')).toLowerCase() === store) row = r; });
+    if (!row) rows.forEach(function (r) { if (!row && blank_(cell_(ctx.variants, r, 'store'))) row = r; });   // the row variant.add made
+    if (row) {
+      var cur = nums_(cell_(ctx.variants, row, 'numbers')); cur.push(n);
+      ctx.variants.set(row._row, 'store', store); ctx.variants.set(row._row, 'numbers', cur.join('; ')); stampRow_(ctx.variants, row._row);
+    } else {
+      var nr = ctx.variants.append({ item_id: cell_(ctx.variants, first, 'item_id'), variant_id: vid, brand: cell_(ctx.variants, first, 'brand'), flavor: cell_(ctx.variants, first, 'flavor'),
+        store: store, numbers: n, last_price: '', last_date: '', last_changed: new Date(), changed_by: 'phone' });
+      rows.push({ _row: nr, variant_id: vid });
+    }
+    return { status: 'applied', target: vid, message: 'Added ' + store + ' number ' + n + ' to ' + vid + '.' };
   },
 
   // Receipt wording for an item. data = {text, item, store?}; item "__ignore" means "not food".
@@ -1005,6 +1085,10 @@ function menuSetup() {
   // Version 6.1: food types and household items
   ensureColumns_(SHEETS.items, HOUSE_COLS, notes);
   ensureListColumn_('food_type', FOOD_TYPES); ensureListColumn_('household_group', HOUSE_GROUPS);
+  // Version 6.3: flavor on Items, and the Variants tab
+  ensureColumns_(SHEETS.items, ['flavor'], notes);
+  if (!sheet_(SHEETS.variants)) { ensureSheet_(SHEETS.variants, VARIANT_HEADERS); notes.push('Added the Variants tab.'); }
+  var vn = colRange_(SHEETS.variants, 'numbers'); if (vn) vn.setNumberFormat('@');
 
   // Each rule: [sheet, column, kind, source, help]. kind "list" = dropdown from a range ([sheet, column] of the source).
   // A rule whose column or source can't be found is skipped and named in the message, instead of stopping the setup.
@@ -1036,6 +1120,7 @@ function menuSetup() {
     [SHEETS.nodes, 'level', 'values', ['1', '2', '3', '4', '5'], '1 Category, 2 Type, 3 Form, 4 Variety, 5 Style'],
     [SHEETS.nodes, 'id', 'formula', function (c, all) { return '=AND(COUNTIF(' + all + ',' + c + ')=1,REGEXMATCH(' + c + ',"^n_[a-z0-9_]+$"))'; }, 'Starts with n_; lowercase letters, numbers and _; unique.'],
     [SHEETS.favorites, 'node', 'list', [SHEETS.nodes, 'id']], [SHEETS.favorites, 'item', 'list', [IT, 'item_id']],
+    [SHEETS.variants, 'item_id', 'list', [IT, 'item_id']], [SHEETS.variants, 'store', 'list', [SHEETS.stores, 'id'], 'Blank until the variant has a number at a store.'],
     [SHEETS.stores, 'num_where', 'values', ['before', 'after']],
     [IT, 'food_types', 'formula', function (c) { return '=OR(' + c + '="",REGEXMATCH(LOWER(' + c + '),"^\\s*(' + FOOD_TYPES.join('|') + ')\\s*([;,]\\s*(' + FOOD_TYPES.join('|') + ')\\s*)*$"))'; },
       'What this food contains, from: ' + FOOD_TYPES.join(', ') + '. Separate several with semicolons, e.g. beef; dairy. Blank if none.'],
