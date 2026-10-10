@@ -41,6 +41,26 @@ function migrated_() { return PropertiesService.getScriptProperties().getPropert
 var MAX_BATCH = 100;            // changes accepted in one request
 var LOG_HEADERS = ['received_at', 'change_id', 'type', 'target_id', 'result', 'message', 'data'];
 var IDMAP_HEADERS = ['phone_id', 'sheet_id', 'kind', 'created_at'];
+// Version 6.1: what a food contains (Items > food_types, several separated by ; or ,) and household items
+// (Items > group plus the columns below). Same names as tools/house-core.js in the app.
+var FOOD_TYPES = ['pork', 'beef', 'poultry', 'fish', 'shellfish', 'dairy', 'egg', 'gluten', 'peanut', 'tree_nut', 'soy', 'sesame'];
+var HOUSE_GROUPS = ['kitchen', 'paper', 'cleaning', 'personal'];
+var HOUSE_COLS = ['food_types', 'group', 'unit_label', 'units_per_package', 'typical_days', 'scales_with_people'];
+// The app's starter household items: [group, name, unit, units per package, typical days per unit, price, scales with people]
+var STARTER_HOUSE = [
+  ['kitchen', 'Kitchen trash bags', 'bag', 40, 4, 5.49], ['kitchen', 'Large trash bags', 'bag', 20, 10, 6.99], ['kitchen', 'Parchment paper', 'roll', 1, 45, 3.49],
+  ['kitchen', 'Aluminum foil', 'roll', 1, 40, 3.99], ['kitchen', 'Plastic wrap', 'roll', 1, 60, 2.99], ['kitchen', 'Sandwich bags', 'bag', 100, 30, 2.49],
+  ['kitchen', 'Gallon bags', 'bag', 30, 30, 2.99], ['kitchen', 'Dish soap', 'bottle', 1, 30, 2.29], ['kitchen', 'Dishwasher pods', 'pod', 40, 1, 8.99],
+  ['kitchen', 'Sponges', 'sponge', 6, 14, 2.99],
+  ['paper', 'Paper towels', 'roll', 6, 9, 7.99, true], ['paper', 'Toilet paper', 'roll', 12, 4, 8.49, true], ['paper', 'Facial tissues', 'box', 4, 10, 4.99, true],
+  ['paper', 'Napkins', 'pack', 1, 30, 2.49, true],
+  ['cleaning', 'Laundry detergent', 'bottle', 1, 40, 8.99, true], ['cleaning', 'Dryer sheets', 'box', 1, 60, 3.49, true], ['cleaning', 'All-purpose cleaner', 'bottle', 1, 45, 2.99],
+  ['cleaning', 'Hand soap', 'bottle', 1, 21, 1.99, true],
+  ['personal', 'Toothpaste', 'tube', 1, 40, 2.49, true], ['personal', 'Toothbrushes', 'brush', 2, 90, 2.99, true], ['personal', 'Floss', 'pack', 1, 60, 1.99, true],
+  ['personal', 'Mouthwash', 'bottle', 1, 30, 3.99, true], ['personal', 'Shampoo', 'bottle', 1, 45, 3.99, true], ['personal', 'Conditioner', 'bottle', 1, 50, 3.99, true],
+  ['personal', 'Body wash', 'bottle', 1, 30, 3.99, true], ['personal', 'Deodorant', 'stick', 1, 45, 2.99], ['personal', 'Razors', 'razor', 4, 28, 6.99]
+];
+var HOUSE_CATEGORY = 'Household';
 
 // ---------------------------------------------------------------- small helpers
 
@@ -206,6 +226,22 @@ function buildCatalog_(prev) {
       changed: iso_(r.last_changed),   // extra: when the row last changed; the app sends it back as the "base"
       brand: str_(r.brand) || null, node: str_(r.node) || null, offers: []
     };
+    // 6.1: food types and household fields
+    var ft = str_(r.food_types != null ? r.food_types : r.flags).toLowerCase().split(/[;,]/).map(function (x) { return x.trim().replace(/[\s-]+/g, '_'); }).filter(String);
+    ft.forEach(function (f) { if (FOOD_TYPES.indexOf(f) < 0) E(line + ' (' + id + '): food type "' + f + '" isn\'t one of ' + FOOD_TYPES.join(', ') + '.'); });
+    if (ft.length) it.flags = ft.filter(function (f, i) { return FOOD_TYPES.indexOf(f) >= 0 && ft.indexOf(f) === i; }).join(';');
+    var grp = str_(r.group).toLowerCase();
+    if (grp && HOUSE_GROUPS.indexOf(grp) < 0) E(line + ' (' + id + '): group "' + r.group + '" isn\'t one of ' + HOUSE_GROUPS.join(', ') + ' (blank for food).');
+    var upp = num_(r.units_per_package), days = num_(r.typical_days), sc = yn_(r.scales_with_people);
+    if (!blank_(r.units_per_package) && !(upp >= 1 && upp === Math.round(upp))) E(line + ' (' + id + '): units_per_package must be a whole number, 1 or more.');
+    if (!blank_(r.typical_days) && !(days > 0)) E(line + ' (' + id + '): typical_days must be more than 0.');
+    if (sc && ['Y', 'N'].indexOf(sc) < 0) E(line + ' (' + id + '): scales_with_people must be Y or N.');
+    if (grp && HOUSE_GROUPS.indexOf(grp) >= 0) {
+      it.group = grp; it.unit_label = str_(r.unit_label) || 'unit'; it.units_per_package = upp >= 1 ? Math.round(upp) : 1;
+      it.typical_days = days > 0 ? days : 14; it.scales_with_people = sc === 'Y' ? 'Y' : 'N';
+      if (ft.length) W(id + ': household item with food types. Food types only matter for food.');
+    } else if (!grp && ['unit_label', 'units_per_package', 'typical_days', 'scales_with_people'].some(function (k) { return !blank_(r[k]); }))
+      W(id + ': has household columns filled in but no group, so the app treats it as food.');
     // Offers: rows from the Offers tab. Before the move to Offers, the Items price columns are the Aldi offer.
     var rows = (OF[id] || []).map(function (o) {
       return { store: o.store, price: o.price, pack: o.pack || it.pack, unit: o.unit || it.unit, pkg: o.pkg || it.pkg, nums: o.nums, priceDate: o.priceDate, src: o.src, changed: o.changed };
@@ -222,7 +258,7 @@ function buildCatalog_(prev) {
     if (!retired && !(it.pkg > 0)) E(line + ' (' + id + '): package_qty is missing or zero.');
     if (it.node && !ND[it.node]) E(line + ' (' + id + '): node "' + it.node + '" isn\'t on the Nodes tab.');
     if (!retired && !it.staple && (storage === 'fridge' || storage === 'counter') && it.fridge == null && it.pantry == null) W(id + ': perishable with no shelf-life days.');
-    if (!retired && (!it.priceDate || (new Date(today) - new Date(it.priceDate)) / 864e5 > 30)) W(id + ': price_date ' + (it.priceDate || 'missing') + ' is over 30 days old.');
+    if (!retired && !it.group && (!it.priceDate || (new Date(today) - new Date(it.priceDate)) / 864e5 > 30)) W(id + ': price_date ' + (it.priceDate || 'missing') + ' is over 30 days old.');
     it.offers.forEach(function (o) {
       o.nums.forEach(function (n) {
         if (!/^\d{4,14}$/.test(n)) E(line + ' (' + id + '): ' + (ST[o.store] ? ST[o.store].name : o.store) + ' number "' + n + '" isn\'t 4 to 14 digits.');
@@ -284,7 +320,7 @@ function buildCatalog_(prev) {
   var bare = recipes.filter(function (r) { return r.active && !r.link && !r.notes; }).map(function (r) { return r.id; });
   if (bare.length) W(bare.length + ' recipe' + (bare.length === 1 ? ' has' : 's have') + ' no notes and no link: ' + bare.slice(0, 10).join(', ') + (bare.length > 10 ? ', …' : '') + '.');
   var used = {}; recipes.forEach(function (rec) { if (rec.active) rec.ing.forEach(function (x) { used[x[0]] = 1; }); });
-  var unused = items.filter(function (it) { return !it.retired && !it.staple && !used[it.id]; }).map(function (it) { return it.id; });
+  var unused = items.filter(function (it) { return !it.retired && !it.staple && !it.group && !used[it.id]; }).map(function (it) { return it.id; });
   if (unused.length) W(unused.length + ' item' + (unused.length === 1 ? '' : 's') + ' no active recipe uses: ' + unused.join(', ') + '.');
 
   var aliases = aliasR.map(function (r) { return { text: str_(r.receipt_text), item: str_(r.item_id), store: str_(r.store).toLowerCase() }; }).filter(function (a) { return a.text && a.item; });
@@ -687,7 +723,8 @@ var HANDLERS = {
     return { status: 'applied', target: to, message: 'Linked ' + d.from + ' to ' + to + (was && was !== to ? '; ' + was + ' is now retired.' : '.') };
   },
 
-  // Places an item in the tree. data = {item, node}. Not a conflict if the sheet's node was blank.
+  // Places or moves an item in the tree. data = {item, node}. Not a conflict if the sheet's node was blank or the
+  // row was last changed by the phone; a conflict if the row was last edited in the sheet.
   'item.place': function (ctx, d) {
     var id = resolve_(ctx, d.item), node = resolve_(ctx, d.node), r = ctx.itemRow[id];
     if (!r) return { status: 'rejected', target: id, message: 'No item ' + id + ' in the sheet.' };
@@ -695,7 +732,8 @@ var HANDLERS = {
     if (ctx.items.col.node == null) return { status: 'error', target: id, message: 'Items has no "node" column. Run Meal Prep > Set up sheets and dropdowns.' };
     var now = str_(cell_(ctx.items, r, 'node'));
     if (now === node) return { status: 'applied', target: id, message: id + ' was already under ' + node + '.' };
-    if (now) return { status: 'conflict', target: id, sheet: { node: now }, message: (r.name || id) + ' is under ' + now + ' in the sheet. The sheet was kept.' };
+    // Moving an item that already has a node: the sheet wins only if that row was last edited in the sheet.
+    if (now && String(cell_(ctx.items, r, 'changed_by') || '') === 'sheet') return { status: 'conflict', target: id, sheet: { node: now }, message: (r.name || id) + ' is under ' + now + ' in the sheet. The sheet was kept.' };
     ctx.items.set(r._row, 'node', node); stampRow_(ctx.items, r._row);
     return { status: 'applied', target: id, message: 'Placed ' + id + ' under ' + node + '.' };
   },
@@ -911,6 +949,8 @@ function onOpen() {
     .addItem('Check data', 'menuCheck')
     .addItem('Set up sheets and dropdowns', 'menuSetup')
     .addItem('Move prices to Offers', 'menuMoveToOffers')
+    .addItem('Add starter household items', 'menuAddHousehold')
+    .addItem('Suggest food types', 'menuSuggestFoodTypes')
     .addSeparator()
     .addItem('Set the app key', 'menuSetKey')
     .addItem('Show the app address and key', 'menuShowAddress')
@@ -962,6 +1002,9 @@ function menuSetup() {
   if (!sheet_(SHEETS.favorites)) { ensureSheet_(SHEETS.favorites, FAVORITE_HEADERS); notes.push('Added the Favorites tab.'); }
   if (!sheet_(SHEETS.nodes)) { var nn = seedNodes_(); notes.push('Added the Nodes tab with ' + nn + ' starter nodes.'); }
   var off = colRange_(SHEETS.offers, 'numbers'); if (off) off.setNumberFormat('@');
+  // Version 6.1: food types and household items
+  ensureColumns_(SHEETS.items, HOUSE_COLS, notes);
+  ensureListColumn_('food_type', FOOD_TYPES); ensureListColumn_('household_group', HOUSE_GROUPS);
 
   // Each rule: [sheet, column, kind, source, help]. kind "list" = dropdown from a range ([sheet, column] of the source).
   // A rule whose column or source can't be found is skipped and named in the message, instead of stopping the setup.
@@ -993,7 +1036,13 @@ function menuSetup() {
     [SHEETS.nodes, 'level', 'values', ['1', '2', '3', '4', '5'], '1 Category, 2 Type, 3 Form, 4 Variety, 5 Style'],
     [SHEETS.nodes, 'id', 'formula', function (c, all) { return '=AND(COUNTIF(' + all + ',' + c + ')=1,REGEXMATCH(' + c + ',"^n_[a-z0-9_]+$"))'; }, 'Starts with n_; lowercase letters, numbers and _; unique.'],
     [SHEETS.favorites, 'node', 'list', [SHEETS.nodes, 'id']], [SHEETS.favorites, 'item', 'list', [IT, 'item_id']],
-    [SHEETS.stores, 'num_where', 'values', ['before', 'after']]
+    [SHEETS.stores, 'num_where', 'values', ['before', 'after']],
+    [IT, 'food_types', 'formula', function (c) { return '=OR(' + c + '="",REGEXMATCH(LOWER(' + c + '),"^\\s*(' + FOOD_TYPES.join('|') + ')\\s*([;,]\\s*(' + FOOD_TYPES.join('|') + ')\\s*)*$"))'; },
+      'What this food contains, from: ' + FOOD_TYPES.join(', ') + '. Separate several with semicolons, e.g. beef; dairy. Blank if none.'],
+    [IT, 'group', 'values', HOUSE_GROUPS, 'Household items only: kitchen, paper, cleaning or personal. Leave blank for food.'],
+    [IT, 'units_per_package', 'formula', function (c) { return '=OR(' + c + '="",AND(ISNUMBER(' + c + '),' + c + '>=1,INT(' + c + ')=' + c + '))'; }, 'Household items: how many rolls, bags or bottles come in one package (a whole number).'],
+    [IT, 'typical_days', 'gt', 0, 'Household items: about how many days one unit lasts.'],
+    [IT, 'scales_with_people', 'list', YN, 'Household items: Y if more people use it up faster.']
   ];
   var n = 0, skipped = [];
   specs.forEach(function (x) {
@@ -1050,6 +1099,93 @@ function menuMoveToOffers() {
     ui.alert('Added ' + added + ' Aldi offers' + (nums ? ' and moved ' + nums + ' Aldi numbers into them' : '') + '.' + (skipped ? ' ' + skipped + ' items already had one.' : '') +
       '\n\nPrices now live on the Offers tab. A price you type on Items is copied to that item\'s Aldi offer, and an Aldi price from the phone is copied back to Items.');
   } finally { lock.releaseLock(); }
+}
+
+/**
+ * Meal Prep > Add starter household items. Adds the app's 27 starter household items (trash bags, paper towels,
+ * soap and so on) to Items, with an estimated price. Skips any whose name is already there. Safe to run again.
+ */
+function menuAddHousehold() {
+  var ui = SpreadsheetApp.getUi(), lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) { ui.alert('The sheet is busy. Try again in a minute.'); return; }
+  try { var r = addHousehold_(); ui.alert(r.added ? 'Added ' + r.added + ' household items' + (r.skipped ? ' (' + r.skipped + ' were already there)' : '') + '. Their prices are estimates: change them on ' + (migrated_() ? 'the Offers tab' : 'Items') + ' when you know the real ones.' + (r.notes.length ? '\n\n' + r.notes.join('\n') : '')
+    : 'All ' + r.skipped + ' starter household items are already on Items.'); }
+  finally { lock.releaseLock(); }
+}
+function addHousehold_() {
+  var notes = [];
+  ensureColumns_(SHEETS.items, ['brand', 'node', 'last_changed', 'changed_by'].concat(HOUSE_COLS), notes);
+  // A Household category (so the Items category check passes) and a Household node.
+  var tC = table_(SHEETS.categories);
+  if (tC && !tC.objects().some(function (r) { return str_(r.category).toLowerCase() === HOUSE_CATEGORY.toLowerCase(); })) {
+    tC.append({ category: HOUSE_CATEGORY, store_section: HOUSE_CATEGORY, storage: 'pantry', fridge_days: '', freezer_days: '', pantry_days: '', tracking_default: 'quantity', staple_default: 'N' });
+    notes.push('Added the ' + HOUSE_CATEGORY + ' category.');
+  }
+  var tN = table_(SHEETS.nodes), node = 'n_household';
+  if (tN && !tN.objects().some(function (r) { return str_(r.id) === node; })) tN.append({ id: node, name: HOUSE_CATEGORY, parent: '', level: 1, last_changed: new Date(), changed_by: 'sheet' });
+  if (!tN) node = '';
+  var tI = table_(SHEETS.items), mig = migrated_(), tO = mig ? table_(SHEETS.offers) : null;
+  var names = {}, ids = {}; tI.objects().forEach(function (r) { names[nname_(r.name)] = 1; ids[str_(r.item_id)] = 1; });
+  var today = new Date(Utilities.formatDate(new Date(), tz_(), 'yyyy-MM-dd') + 'T12:00:00'), added = 0, skipped = 0;
+  STARTER_HOUSE.forEach(function (s) {
+    var name = s[1]; if (names[nname_(name)]) { skipped++; return; }
+    var id = newId_(slug_(name), ids); ids[id] = 1;
+    var pack = s[3] + ' ' + s[2] + (s[3] === 1 ? '' : (/(s|x|sh|ch)$/.test(s[2]) ? 'es' : 's'));
+    var row = { item_id: id, name: name, category: HOUSE_CATEGORY, package_label: pack, unit: 'each', package_qty: s[3], staple: 'N', storage: 'pantry', sold_by: 'pack', retired: 'N',
+      notes: 'Starter household item', node: node, group: s[0], unit_label: s[2], units_per_package: s[3], typical_days: s[4], scales_with_people: s[6] ? 'Y' : 'N',
+      last_changed: new Date(), changed_by: 'sheet' };
+    if (!mig) { row.price = s[5]; row.price_source = 'estimate'; row.price_date = today; }
+    tI.append(row);
+    if (tO) tO.append({ item: id, store: 'aldi', price: s[5], pack: pack, unit: 'each', pkg: s[3], numbers: '', price_date: today, price_source: 'estimate', last_changed: new Date(), changed_by: 'sheet' });
+    added++;
+  });
+  return { added: added, skipped: skipped, notes: notes };
+}
+
+/**
+ * Meal Prep > Suggest food types. Fills blank food_types cells from the item name (chicken -> poultry,
+ * cheese -> dairy, pasta -> gluten ...). Never changes a cell that has something in it. Check the result:
+ * it is a guess from the name, and labels can surprise you (e.g. soy in bread).
+ */
+var FOOD_WORDS = [
+  ['poultry', /\b(chicken|turkey|wings?|drumsticks?)\b/], ['beef', /\b(beef|steak|sirloin|brisket|chuck|ribeye|hamburger|meatballs?)\b/],
+  ['pork', /\b(pork|bacon|ham|sausage|kielbasa|chorizo|prosciutto|pepperoni|salami|carnitas)\b/],
+  ['fish', /\b(fish|salmon|tuna|tilapia|cod|pollock|swai|anchov(y|ies)|sardines?|halibut|mahi|trout|catfish|dashi|bonito|worcestershire)\b/],
+  ['shellfish', /\b(shrimp|crab|lobster|scallops?|clams?|mussels?|oysters?|crawfish)\b/],
+  ['dairy', /\b(milk|cheese|cheddar|mozzarella|parmesan|brie|gruyere|feta|ricotta|mascarpone|yogurt|butter|buttermilk|cream|half half|ghee|whey|queso|alfredo)\b/],
+  ['egg', /\b(eggs?|mayo|mayonnaise)\b/],
+  ['gluten', /\b(bread|sourdough|baguette|bagels?|buns?|tortillas?|pasta|spaghetti|penne|macaroni|lasagna|fettuccine|rigatoni|ziti|linguine|rotini|tortellini|ravioli|angel hair|noodles?|lo mein|gnocchi|flour|crackers?|pita|naan|croutons|breadcrumbs|panko|couscous|barley|cereal|waffles?|biscuits?|pizza|seitan|orzo|ramen|udon|bisquick)\b/],
+  ['peanut', /\b(peanuts?)\b/], ['tree_nut', /\b(almonds?|almondmilk|pecans?|walnuts?|cashews?|pistachios?|hazelnuts?|macadamia|pine nuts)\b/],
+  ['soy', /\b(soy|tofu|edamame|tempeh|miso)\b/], ['sesame', /\b(sesame|tahini)\b/]
+];
+// Phrases that look like a food type but aren't (removed before matching), and "X free" labels.
+var NOT_FOOD_WORDS = /\b(pasta sauce|pancake syrup|pancake mix|peanut butter|apple butter|butternut|butter beans?|cream of tartar|coconut (milk|cream)|(almond|oat|rice|soy|coconut) ?milk|eggplant|corn tortillas?|rice noodles?|corn masa flour|masa harina|corn flour|rice flour|almond flour|ham hock bone broth)\b/g;
+function suggestFoodTypes_(name) {
+  var n = nname_(name), out = [];
+  var clean = n.replace(NOT_FOOD_WORDS, ' ');
+  FOOD_WORDS.forEach(function (w) { if (w[1].test(clean)) out.push(w[0]); });
+  if (/\bpeanut butter\b/.test(n)) out.push('peanut');
+  if (/\balmond ?milk\b|\balmond flour\b/.test(n)) out.push('tree_nut');
+  if (/\bsoy ?milk\b/.test(n)) out.push('soy');
+  if (/\bsoy sauce\b/.test(n) && !/\b(tamari|gluten free)\b/.test(n)) out.push('gluten');
+  ['gluten', 'dairy', 'egg', 'soy', 'peanut'].forEach(function (f) { if (new RegExp('\\b' + f + ' free\\b').test(n)) out = out.filter(function (x) { return x !== f; }); });
+  if (/\b(dairy free|non dairy|plant based|vegan)\b/.test(n)) out = out.filter(function (x) { return x !== 'dairy' && x !== 'egg'; });
+  return out.filter(function (x, i) { return out.indexOf(x) === i; });
+}
+function menuSuggestFoodTypes() {
+  var ui = SpreadsheetApp.getUi(), notes = []; ensureColumns_(SHEETS.items, ['food_types'], notes);
+  var r = suggestFoodTypes_all_();
+  ui.alert(r.filled ? 'Filled in food types for ' + r.filled + ' items, from their names. Blank cells only; nothing you typed was changed.\n\nPlease look them over (sort or filter Items by food_types). ' + r.left + ' foods are still blank: that is right for most produce, drinks and spices.'
+    : 'Nothing to fill: every food that looks like it contains something already has food types.');
+}
+function suggestFoodTypes_all_() {
+  var t = table_(SHEETS.items), filled = 0, left = 0;
+  t.objects().forEach(function (r) {
+    if (!str_(r.item_id) || !blank_(r.food_types) || !blank_(r.group) || yn_(r.retired) === 'Y') return;
+    var f = suggestFoodTypes_(r.name + ' ' + str_(r.aldi_product));
+    if (f.length) { t.set(r._row, 'food_types', f.join('; ')); filled++; } else left++;
+  });
+  return { filled: filled, left: left };
 }
 
 // Level 1 from the categories, plus a starter level 2-3 for Meat, Produce and Dairy.
