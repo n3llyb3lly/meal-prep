@@ -3,7 +3,8 @@
 // about 11 MB) is cache-first and downloaded only the first time the app asks for it, not at install.
 const SHELL='aldi-meal-prep-shell',DATA='aldi-meal-prep-data',VENDOR='aldi-meal-prep-vendor';
 const PRE=['./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/maskable-512.png'];
-// Everything the text reader needs offline. Both cores: phones without SIMD load the plain one.
+// Everything the text reader needs offline, saved on the first scan so the next one works with no connection.
+// Both cores: phones without SIMD load the plain one. Versions are pinned in vendor/tesseract/VERSION.
 const VENDOR_FILES=['tesseract.min.js','worker.min.js','tesseract-core-simd-lstm.wasm.js','tesseract-core-lstm.wasm.js','eng.traineddata.gz'];
 const hash=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(x=>x.toString(16).padStart(2,'0')).join('');
 const timeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
