@@ -1,9 +1,11 @@
 // Meal Prep service worker. index.html, catalog.json and receipts.js are network-first, so a new upload reaches
 // phones without changing this file. Icons and the manifest are cache-first. vendor/ (the receipt text reader,
 // about 11 MB) is cache-first and downloaded only the first time the app asks for it, not at install.
-const SHELL='aldi-meal-prep-shell',DATA='aldi-meal-prep-data',VENDOR='aldi-meal-prep-vendor';
+// Photos shared to the installed app (Android share sheet) arrive as a POST to ./share; see receiveShare below.
+const SHELL='aldi-meal-prep-shell-v2',DATA='aldi-meal-prep-data',VENDOR='aldi-meal-prep-vendor';
 const PRE=['./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/maskable-512.png'];
-// Everything the text reader needs offline. Both cores: phones without SIMD load the plain one.
+// Everything the text reader needs offline, saved on the first scan so the next one works with no connection.
+// Both cores: phones without SIMD load the plain one. Versions are pinned in vendor/tesseract/VERSION.
 const VENDOR_FILES=['tesseract.min.js','worker.min.js','tesseract-core-simd-lstm.wasm.js','tesseract-core-lstm.wasm.js','eng.traineddata.gz'];
 const hash=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(x=>x.toString(16).padStart(2,'0')).join('');
 const timeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
@@ -27,9 +29,20 @@ function serveVendor(e,req,url){
   const base=url.href.slice(0,url.href.indexOf('/vendor/tesseract/')+'/vendor/tesseract/'.length);
   e.waitUntil(fillVendor(base));
   return caches.open(VENDOR).then(c=>c.match(req,{ignoreSearch:true}).then(hit=>hit||fetch(req).then(r=>{if(r.ok){const cp=r.clone();c.put(req,cp);}return r;})));}
+// Share target (manifest share_target). Android posts the shared photos here; save them in the meal-prep-share
+// cache and open the app with ?share=1, which reads that cache, loads the photos into Add receipt and empties it.
+const SHARE='meal-prep-share';
+async function receiveShare(req){const scope=self.registration.scope;
+  try{const files=(await req.formData()).getAll('receipt').filter(f=>f&&typeof f!=='string'&&f.size);
+    if(files.length){const c=await caches.open(SHARE);const t=Date.now();
+      await Promise.all(files.map((f,i)=>c.put(new URL(`./shared/${t}-${i}`,scope).href,new Response(f,{headers:{'Content-Type':f.type||'image/jpeg','X-File-Name':encodeURIComponent(f.name||`receipt-${i+1}.jpg`)}}))));}
+  }catch(e){}
+  return Response.redirect(new URL('./?share=1',scope).href,303);}
 self.addEventListener('fetch',e=>{
-  const req=e.request;if(req.method!=='GET')return;const url=new URL(req.url);const same=url.origin===location.origin;
+  const req=e.request;const url=new URL(req.url);const same=url.origin===location.origin;
   if(!same)return; // the Google Sheet script and anything else off-site always go straight to the network
+  if(req.method==='POST'&&url.pathname===new URL('./share',self.registration.scope).pathname){e.respondWith(receiveShare(req));return;}
+  if(req.method!=='GET')return;
   if(req.mode==='navigate'){ // only the app page itself; tools/*.html go straight to the network
     const root=new URL(self.registration.scope).pathname;
     if(same&&(url.pathname===root||url.pathname===root+'index.html'))e.respondWith(servePage());return;}

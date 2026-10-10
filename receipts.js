@@ -9,7 +9,7 @@
 // the description), add its name to NAMES for detectStore, and add a fixture in data/receipts/.
 (function () {
   'use strict';
-  var VERSION = '2026.10.1';
+  var VERSION = '2026.10.2';
 
   var STORES = {
     aldi: { digits: [6], where: 'before' },
@@ -74,6 +74,18 @@
     }
     return null;
   }
+  // Time printed on the same line as the date (Aldi prints both on the card line): "11:42AM" -> "11:42", "3:05 PM" -> "15:05".
+  function parseTime(lines) {
+    for (var i = 0; i < lines.length; i++) {
+      if (!/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/.test(lines[i])) continue;
+      var m = /\b(\d{1,2}):(\d{2})(?::\d{2})?\s*([AP])?\.?M?\b/i.exec(lines[i]);
+      if (!m) continue;
+      var h = +m[1], mi = +m[2], ap = (m[3] || '').toUpperCase();
+      if (ap === 'P' && h < 12) h += 12; if (ap === 'A' && h === 12) h = 0;
+      if (h < 24 && mi < 60) return ('0' + h).slice(-2) + ':' + ('0' + mi).slice(-2);
+    }
+    return null;
+  }
   function lastAmount(line) {
     var toks = tidy(line).split(' ');
     for (var i = toks.length - 1; i >= 0; i--) { var p = priceOf(toks[i]); if (p != null) return p; }
@@ -86,10 +98,10 @@
   }
   var SUBTOTAL_RE = /^S\s*U\s*[BR8]\s*-?\s*T\s*[O0]\s*T\s*A\s*L\b/i;
   var TOTAL_RE = /^T\s*[O0]\s*T\s*A\s*L\b(?!\s*(TENDER|SAV|ITEMS|DISC))/i;
-  var TAX_RE = /^(TAX\b|B-?\s*Taxable|.*\bTAX\s+[\d.]+\s*%|[A-Z]\s*=\s*.*TAX)/i;
+  var TAX_RE = /^(TAX\b|[A-Z]-?\s*Taxable|.*\bTAX\s+[\d.]+\s*%|[A-Z]\s*=\s*.*TAX)/i;
   var PAY_RE = /^(CHANGE|CASH|VISA|MASTERCARD|DEBIT|CREDIT|DISCOVER|AMEX|EBT|TEND|PAYMENT|BALANCE|AMOUNT|APPR|REF|TERMINAL|TC#|AID|AUTH)/i;
 
-  function emptyResult(store) { return { store: store || null, date: null, total: null, subtotal: null, tax: 0, count: null, sum: 0, items: [] }; }
+  function emptyResult(store) { return { store: store || null, date: null, time: null, total: null, subtotal: null, tax: 0, count: null, sum: 0, items: [] }; }
 
   function parse(text, store) {
     try { return parseInner(text, store); }
@@ -101,7 +113,7 @@
     var lines = raw.map(function (l) { return l.replace(/\s+$/, ''); }).filter(function (l) { return l.trim() !== ''; });
     store = store && STORES[store] ? store : (detectStore(text) || 'aldi');
     var S = STORES[store], res = emptyResult(store);
-    res.date = parseDate(lines);
+    res.date = parseDate(lines); res.time = parseTime(lines);
     var items = [], last = null, pending = null, inItems = true, afterSub = false, prevWasItem = false;
 
     function push(it) { items.push(it); last = it; prevWasItem = true; }

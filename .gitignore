@@ -1,0 +1,6 @@
+# Receipt photos show card digits, a cashier name and a store address. Never commit them.
+test-images/*
+!test-images/README.md
+test-images/**/*.jpg
+test-images/**/*.jpeg
+test-images/**/*.png
