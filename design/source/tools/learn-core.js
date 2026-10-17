@@ -101,8 +101,14 @@ function numLearn(L,store,now){return {fix:raw=>{const b=best(L,'number','fix:'+
 function itemFor(L,x,store,now){if(!L)return null;if(x.num){const b=best(L,'number',nk(store,x.num),now);if(b&&isItem(b.value)&&b.weight>=BUILTIN)return {iid:b.value.slice(1),how:'number'};}
   for(const t of [x.text,x.fixedText]){const b=t&&best(L,'name',norm(t),now);if(b&&isItem(b.value)&&b.weight>=BUILTIN)return {iid:b.value.slice(1),how:'learned'};}return null;}
 
+// Words learned from receipts, for the OCR repair vocabulary.
+function words(L,now){const V=new Set();for(const k in (L&&L.recs)||{}){if(!(k.startsWith('word|')||k.startsWith('name|as:')))continue;const b=best(L,k.slice(0,k.indexOf('|')),k.slice(k.indexOf('|')+1),now);
+  if(b&&b.weight>=BUILTIN)for(const w of String(b.value).toLowerCase().split(/[^a-z]+/))if(w.length>=3)V.add(w);}return V;}
+// How many printed texts point at each item. Fuzzy matching adds 0.1 for each.
+function aliasCount(L,now){const c={};for(const k in (L&&L.recs)||{}){if(!k.startsWith('name|')||k.startsWith('name|as:'))continue;const b=best(L,'name',k.slice(5),now);if(b&&isItem(b.value)&&b.weight>=BUILTIN){const id=b.value.slice(1);c[id]=(c[id]||0)+1;}}return c;}
+
 // How many records of each kind, for Diagnostics.
 function counts(L){const c={};for(const k in (L&&L.recs)||{}){const kind=k.slice(0,k.indexOf('|'));c[kind]=(c[kind]||0)+1;}return c;}
 
-window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two,nk,digitPairs,editsOf,fromReceipt,knownNums,pairs,numLearn,itemFor};
+window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two,nk,digitPairs,editsOf,fromReceipt,knownNums,pairs,numLearn,itemFor,words,aliasCount};
 })();

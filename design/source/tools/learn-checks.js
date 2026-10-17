@@ -43,6 +43,26 @@ window.LearnChecks=function(){const LC=window.LearnCore,RC=window.ReceiptCore;co
     const L=LC.fromReceipt(LC.empty(),[r],{date:t});eq('Putting the printed word back is learned as "keep as printed"',LC.best(L,'word','ocr:sov',t).value,'sov');}
   {const r={text:'Pasta',num:'399573',num0:'399573',total0:'1.37',total:'1.87',iid:'u2',iid0:'u2',how:'number'};const L=LC.fromReceipt(LC.empty(),[r],{date:t});
     eq('An edited price is learned as a digit pair',[...LC.pairs(L,'price',t)],['3~8']);eq('Edits on a matched row: the price',LC.editsOf(r).map(e=>e[0]),['price']);}
+
+  grp('Using what was learned first (learning step 3)');
+  {const S=replayState();replay(S);const lk=LC.lookup(S.L,t);
+    const mc=RC.suggest('Mild Cheddar',{lookup:lk});eq('Mild cheddar now suggests your brand, marked as learned',[mc.brand,mc.brandFrom],['Tillamook','learned']);
+    eq('A name you typed is suggested for the same printed text',RC.suggest('Glbl Ssnng Blds',{lookup:lk}).name,'Seasoning blend');
+    eq('A flavor you typed comes back',RC.suggest('Barista Cold Foams',{lookup:lk}).flavor,'Vanilla');
+    eq('The row says which parts came from earlier receipts',RC.suggest('Mild Cheddar',{lookup:lk}).learned,['brand']);
+    eq('A suggestion used once weighs the same as the built-in guess and fades below it',LC.best(S.L,'group','n:mild cheddar',t).weight<LC.BUILTIN,true);
+    eq('A line with a new item number is linked by its printed text',LC.itemFor(S.L,{num:'999001',text:'Mild Chedclar'},'aldi',t),{iid:'u_383412',how:'learned'});}
+  {let L=LC.empty();L=LC.record(L,'word','ocr:sov','sov','user-edit',t);L=LC.record(L,'word','ocr:bnna','banana','user-edit',t);L=LC.record(L,'word','abbr:chz','cheese','user-edit',t);const lk=LC.lookup(L,t);
+    eq('A word you put back as printed is not repaired again',RC.ocrFix('Sov Sauce',null,lk).text,'Sov Sauce');
+    eq('A learned repair is used before the built-in rules',RC.ocrFix('Bnna Chips',null,lk).text,'Banana Chips');
+    eq('A learned abbreviation is expanded',RC.cleanName('Chz Puffs',null,lk),'Cheese puffs');
+    eq('Learned words join the repair vocabulary',[...LC.words(L,t)].sort(),['banana','cheese','sov']);}
+  {const K=new Map([['123456',[]]]);
+    eq('Without a learned pair, 123496 is not taken for 123456',RC.fixNum('123496',K,'').num,'123496');
+    eq('With 5 and 9 learned as a misread pair, it is',RC.fixNum('123496',K,'',{pairs:new Set(['5~9'])}).num,'123456');
+    eq('A learned price pair settles a total with two possible fixes',[RC.solveTotal([1.27,2],3.77),(RC.solveTotal([1.27,2],3.77,null,new Set(['2~7']))||{}).to],[null,1.77]);}
+  {let L=LC.empty();L=LC.record(L,'name','mild cheddar','@a','receipt-confirmed',t);L=LC.record(L,'name','mild chedclar','@a','receipt-confirmed',t);L=LC.record(L,'name','sharp cheddar','@b','receipt-confirmed',t);
+    eq('Fuzzy matching gets 0.1 per learned alias of an item',LC.aliasCount(L,t),{a:2,b:1});}
   return out;};
 
 // A person logging the 10/10 receipt: the photo misreads five item numbers and two words, and they fix a few suggestions.
