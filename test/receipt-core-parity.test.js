@@ -1,8 +1,8 @@
-// node --test: receipts.js must read Aldi receipts the same way as tools/receipt-core.js (window.ReceiptCore),
+// node --test: receipts.js must read Aldi receipts the same way as design/source/tools/receipt-core.js (window.ReceiptCore),
 // which the app tries first for Aldi. Ground truth is the 10/10 receipt in ReceiptCore.F1010.
 const test = require('node:test'), assert = require('node:assert');
 const { loadScripts, exists } = require('./load');
-const CORE = 'tools/receipt-core.js';
+const CORE = 'design/source/tools/receipt-core.js';
 
 test('10/10 Aldi receipt: receipts.js matches ReceiptCore', { skip: !exists(CORE) && `${CORE} is not in the repo yet` }, () => {
   const w = loadScripts([CORE, 'receipts.js']), C = w.ReceiptCore, R = w.ReceiptParsers;
