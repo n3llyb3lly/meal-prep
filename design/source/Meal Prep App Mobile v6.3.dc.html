@@ -4424,7 +4424,9 @@ class Component extends DCLogic {
     const al={};for(const a of S.aliases||[])(al[a.item]=al[a.item]||[]).push(a.text);
     for(const k in (S.numLinks||{})){const [s,n]=splitKey(k);if(s!==store)continue;const id=S.numLinks[k];add(n,P[id]&&P[id].name);for(const t of al[id]||[])add(n,t);}
     for(const r of S.receipts||[])if((r.store||'aldi')===store)for(const x of r.rows||[])if(x.num)add(x.num,x.text||(P[x.item]&&P[x.item].name));
+    if(window.LearnCore&&S.learn)for(const [n,nm] of window.LearnCore.knownNums(S.learn,store,id=>P[id]&&P[id].name))add(n,nm[0]);
     return K;}
+  numLearn(store){return window.LearnCore&&this.state.learn?window.LearnCore.numLearn(this.state.learn,store||'aldi',this.today()):null;}
   variantsOf(id){const S=this.state;const v=(S.variants||{})[id];if(v&&v.length)return v;const p=this.P()[id];return p&&p.brand?[{vid:'b_'+id,brand:p.brand,flavor:'',auto:true}]:[];}
   varLabel(id,vid){if(!vid)return '';const v=this.variantsOf(id).find(x=>x.vid===vid);return v?[v.brand,v.flavor].filter(Boolean).join(' · '):'';}
   brandGuess(text){const t=String(text||'');const m=t.match(/ben\s*&\s*jerry'?s|la\s*croix|belle\s*vie|kraft|heinz|barilla|tillamook|chobani|oikos|starbucks|coca[\s-]?cola|pepsi/i);if(!m)return '';const s=m[0].toLowerCase();
@@ -4437,7 +4439,7 @@ class Component extends DCLogic {
     const p=iid&&iid!=='__ignore'?this.atStore(P[iid],store):null;const w=!!x.weighed||(!!p&&this.isWeighed(p));const qn=w?(x.wt||(p?p.pkg:1)):Math.max(1,Math.round(x.qty||1));
     const name0=sg.name;const sz=RC.parseSize(sg.fixedText);const g={cat:sg.cat,sub:sg.sub};
     const vid=iid&&x.num?((S.numVar||{})[nkey(store,x.num)]||null):null;
-    return {rid:uid(),iid,text:x.text,num:x.num||'',how,count:!w?qn:1,size:p?p.pkg:1,other:'',wt:w?String(qn):'',wtUnit:x.wtUnit||'lb',total:r2(x.amount).toFixed(2),unitP:(w&&x.unitP?r2(x.unitP):r2(x.amount/(qn||1))).toFixed(2),
+    return {rid:uid(),iid,iid0:iid,text:x.text,fixedText:sg.fixedText,num:x.num||'',num0:x.num||'',total0:r2(x.amount).toFixed(2),how,count:!w?qn:1,size:p?p.pkg:1,other:'',wt:w?String(qn):'',wtUnit:x.wtUnit||'lb',total:r2(x.amount).toFixed(2),unitP:(w&&x.unitP?r2(x.unitP):r2(x.amount/(qn||1))).toFixed(2),
       sale:x.disc?true:null,discAuto:!!x.disc,disc:x.disc?String(x.disc):'',showDisc:false,name0,nCat0:g.cat,nSub:g.sub,nSize:sz?{label:sz.label,amt:sz.base.amt,unit:sz.base.unit}:null,
       vid,brand0:sg.brand,brandFrom:sg.brandFrom,flavor0:sg.flavor,variety0:sg.variety,fixes:sg.changes,sugConf:sg.conf,priceDoubt:(()=>{if(!p||!(p.price>0)||w)return false;const a=r2(x.amount/(qn||1)).toFixed(2),b=r2(p.price).toFixed(2);if(a===b||a.length!==b.length)return false;let d=0,ok=true;for(let i=0;i<a.length;i++)if(a[i]!==b[i]){d++;if(!RC.confusable(a[i],b[i]))ok=false;}return d===1&&ok&&(x.conf?x.conf.price<92:false);})(),conf:x.conf||null,corrected:!!x.corrected,from:x.from||'',unclear:!!x.unclear,rawNum:x.raw||'',crop:x.crop||null,tax:x.tax||'',printed:x.printed||null};}
   facts(d,pr,store){const u=d.userSet||{};const o={};const set=(k,v)=>{if(v!=null&&v!==''&&!u[k])o[k]=String(v);};
@@ -4451,7 +4453,7 @@ class Component extends DCLogic {
     this.saveDraft({...d,...this.facts(d,pr,store),tab:'table',rows,solve,countRead:RC.itemCount(g),photoNote:extra&&extra.note||''});
     const n=rows.filter(r=>!r.gap&&r.iid&&r.how!=='guess').length;this.flash(`${this.storeName(store)} receipt: ${RC.itemCount(g)} items read${n?`, ${n} matched`:''}.`);}
   readText63(txt){const RC=window.ReceiptCore;if(!RC)return false;const S=this.state,d=S.receiptDraft;const det=detectStoreLocal(txt);const store=d.store||det||S.lastStore||this.mainStore();if(store!=='aldi'&&det!=='aldi')return false;
-    const pr=RC.parseLines(String(txt||'').split(/\r?\n/),{known:this.knownNums('aldi')});if(!pr.items.length)return false;this.rcFromParsed(pr,pr.store||store);return true;}
+    const pr=RC.parseLines(String(txt||'').split(/\r?\n/),{known:this.knownNums('aldi'),learn:this.numLearn('aldi')});if(!pr.items.length)return false;this.rcFromParsed(pr,pr.store||store);return true;}
   // OCR (WP48): prepare, cut strips, read lines, re-read the number and price columns with tight character sets.
   async prep63(file){const url=URL.createObjectURL(file);try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
     let sc=Math.max(1,Math.min(3,1600/img.width));if(img.height*sc>12000)sc=12000/img.height;const W=Math.round(img.width*sc),H=Math.round(img.height*sc);
@@ -4493,7 +4495,7 @@ class Component extends DCLogic {
       const known=this.knownNums('aldi');let all=null,overlapWarn=false,head=null,foot=null,gaps=[];
       for(let i=0;i<fs.length;i++){step(0,fs.length>1?` (${i+1} of ${fs.length})`:'');const cv=await this.prep63(fs[i]);const ls=await this.ocrPhoto(w,cv,k=>step(k,fs.length>1?` (${i+1} of ${fs.length})`:''));
         const pre=RC.parseLines(ls,{});const kn=new Map(known);for(const x of pre.items)if(x.num&&x.num.length===6&&(x.conf.num>=85)){const v=kn.get(x.num)||[];if(!v.includes(x.text))v.push(x.text);kn.set(x.num,v);}
-        const pr=RC.parseLines(ls,{known:kn});const raw=pr.items.map(x=>({...x,crop:x.meta&&x.meta.crop}));
+        const pr=RC.parseLines(ls,{known:kn,learn:this.numLearn('aldi')});const raw=pr.items.map(x=>({...x,crop:x.meta&&x.meta.crop}));
         const ys=raw.filter(x=>x.meta).map(x=>({i:x.lines[0],y0:x.meta.y0,y1:x.meta.y1}));for(const gp of RC.findGaps(ys)){const yc=this.cropOf(cv,0,gp.y0,cv.width,gp.y1,80);gaps.push({...gp,crop:yc?this.keepCrop(yc):null,photo:i});}
         if(!head||pr.store)head=head||pr;if(pr.total!=null||pr.subtotal!=null||pr.count!=null)foot=pr;
         if(!all)all=raw;else{const s=RC.stitch(all,raw);if(!s.overlap)overlapWarn=true;all=s.items;}}
@@ -4590,8 +4592,9 @@ class Component extends DCLogic {
       if(!vid&&nvv){const list=vars[r.iid]||[];const ex=list.find(v=>(v.brand||'')===(nvv.brand||'')&&(v.flavor||'')===(nvv.flavor||''));vid=ex?ex.vid:'v_'+uid();if(!ex)vars[r.iid]=[...list,{vid,brand:nvv.brand||'',flavor:nvv.flavor||'',nums:{}}];}
       if(!vid)continue;if(vid.startsWith('b_')&&!(vars[r.iid]||[]).some(v=>v.vid===vid)){const p=P2[r.iid];vars[r.iid]=[...(vars[r.iid]||[]),{vid,brand:p&&p.brand||'',flavor:'',nums:{}}];}
       const v=(vars[r.iid]||[]).find(z=>z.vid===vid);if(v){if(r.num){v.nums[st]=[...new Set([...(v.nums[st]||[]),r.num])];nv[nkey(st,r.num)]=vid;}v.last={price:r2(parseFloat(r.unitP)||0),date,store:st};}r._vid=vid;}
+    const LC=window.LearnCore;const learn=LC?LC.fromReceipt(S.learn,fin,{store:st,date,names:id=>P2[id]&&P2[id].name}):S.learn;
     const keepImg=this._keepImg;this._keepImg=null;
-    this.relayer({ownItems:own,outbox:ob,nameDict:dict,brandDict:bdict,variants:vars,numVar:nv,receiptDraft:{...d,rows:fin.map(r=>{const {_vid,...rest}=r;return {...rest,vid:_vid||r.vid||null};})}},()=>{
+    this.relayer({learn,ownItems:own,outbox:ob,nameDict:dict,brandDict:bdict,variants:vars,numVar:nv,receiptDraft:{...d,rows:fin.map(r=>{const {_vid,...rest}=r;return {...rest,vid:_vid||r.vid||null};})}},()=>{
       const before=new Set(Object.values(this.state.inv||{}).flat().map(b=>b.bid));this.importDraft();
       const inv=this.copyInv();let ch=false;for(const r of fin){if(!r._vid||!inv[r.iid])continue;for(const b of inv[r.iid])if(!before.has(b.bid)&&!b.vid){b.vid=r._vid;ch=true;}}
       if(ch)this.relayer({inv});

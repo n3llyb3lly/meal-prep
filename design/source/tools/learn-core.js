@@ -17,11 +17,12 @@ function empty(){return {v:1,mv:0,recs:{}};}
 // Copy before a batch of records. Only touched records are copied again.
 function clone(L){return L&&L.recs?{...L,recs:{...L.recs}}:empty();}
 // One fact: kind, key, value, where it came from, and the date it was seen.
-function record(L,kind,key,value,source,at){
+function record(L,kind,key,value,source,at,was){
   if(!KINDS.includes(kind)||key==null||key===''||value==null||value===''||W[source]==null)return L;
   at=day(at)||today();key=String(key);const v=String(value);const k=kind+'|'+key;const r0=L.recs[k];
   const r=r0?{...r0,vals:{...r0.vals}}:{n:0,first:at,last:at,vals:{}};const e=r.vals[v];const w=W[source];
   r.vals[v]=!e?{w,at,n:1,src:source}:at>=e.at?{w:decay(e.w,e.at,at)+w,at,n:e.n+1,src:source}:{...e,w:e.w+decay(w,at,e.at),n:e.n+1};
+  if(was!=null&&String(was)!==v)r.vals[v].was=String(was);
   r.n++;if(at<r.first)r.first=at;if(at>=r.last){r.last=at;r.lastValue=v;}
   if(kind==='price'||kind==='size')r.recent=[...(r.recent||[]),[v,at]].slice(-5);
   L.recs[k]=r;return L;}
@@ -40,12 +41,68 @@ function migrate(L,s,now){L=L&&L.recs?L:empty();s=s||{};now=day(now)||today();if
   for(const a of s.aliases||[])if(a&&a.text&&a.item&&a.item!=='__ignore')record(L,'name',norm(a.text),'@'+a.item,'receipt-confirmed',now);
   for(const k in s.numLinks||{})record(L,'number',k,'@'+s.numLinks[k],'receipt-confirmed',now);
   for(const k in s.nameDict||{})record(L,'word','abbr:'+k,s.nameDict[k],'user-edit',now);
-  for(const k in s.brandDict||{})record(L,'brand',k,s.brandDict[k],'user-edit',now);
+  for(const k in s.brandDict||{})record(L,'brand','n:'+k,s.brandDict[k],'user-edit',now);
   for(const iid in s.variants||{})for(const v of s.variants[iid]||[]){if(v.brand)record(L,'brand','@'+iid,v.brand,'receipt-confirmed',(v.last&&v.last.date)||now);if(v.flavor)record(L,'flavor','@'+iid,v.flavor,'receipt-confirmed',(v.last&&v.last.date)||now);}
   for(const k in s.numVar||{})record(L,'number','var:'+k,s.numVar[k],'receipt-confirmed',now);
   L.mv=1;return L;}
+// ---- Step 2: learn from a logged receipt ----
+const nk=(store,num)=>{num=String(num||'').trim();return !store||store==='aldi'?num:store+':'+num;};
+const isItem=v=>typeof v==='string'&&v[0]==='@';
+// One-digit misreads between two strings of the same length, as sorted pairs like "3~8".
+function digitPairs(a,b){a=String(a||'');b=String(b||'');if(a.length!==b.length)return [];const d=[];for(let i=0;i<a.length;i++)if(a[i]!==b[i])d.push(i);
+  if(d.length!==1||!/\d/.test(a[d[0]])||!/\d/.test(b[d[0]]))return [];return [[a[d[0]],b[d[0]]].sort().join('~')];}
+const same=(a,b)=>norm(a)===norm(b);
+// What the person changed on a review row, against what the reader gave them: [field, was, now].
+function editsOf(r){const e=[];if(!r||r.gap)return e;
+  const n0=String(r.num0??r.num??''),n1=String(r.num||'');if(n0!==n1)e.push(['number',n0,n1]);
+  if(r.total0!=null&&r.total!=null&&(+r.total0).toFixed(2)!==(+r.total||0).toFixed(2))e.push(['price',(+r.total0).toFixed(2),(+r.total||0).toFixed(2)]);
+  if(r.iid0&&r.iid&&r.iid0!==r.iid)e.push(['item',r.iid0,r.iid]);else if(!r.iid0&&r.how==='picked')e.push(['item','',r.iid]);
+  if(r.how==='named'){const nv=r.vNew||r.nv||{brand:r.brand0||'',flavor:r.flavor0||''};
+    if(r.nName!=null&&!same(r.nName,r.name0))e.push(['name',r.name0||'',r.nName]);
+    if(r.nCat!=null&&r.nCat!==r.nCat0)e.push(['group',r.nCat0||'',r.nCat]);
+    if(!same(nv.brand,r.brand0))e.push(['brand',r.brand0||'',nv.brand||'']);
+    if(!same(nv.flavor,r.flavor0))e.push(['flavor',r.flavor0||'',nv.flavor||'']);}
+  return e;}
+// Record what a finished receipt taught. rows: review rows after import (iid set). ctx: {store, date, names: iid → item name}.
+// '-' stands for "no brand" or "no flavor" when the person cleared a suggestion.
+function fromReceipt(L0,rows,ctx){ctx=ctx||{};const L=clone(L0);const st=ctx.store||'aldi',at=day(ctx.date)||today();const RC=(typeof window!=='undefined'&&window.ReceiptCore)||null;
+  const nameOf=id=>typeof ctx.names==='function'?ctx.names(id):(ctx.names||{})[id];
+  for(const r of rows||[]){if(!r||r.gap||!r.iid)continue;const ed=editsOf(r);const has=k=>ed.find(x=>x[0]===k);const t=norm(r.text),ft=norm(r.fixedText||r.text);
+    const linkSrc=has('item')||r.how==='picked'?'user-edit':r.how==='guess'?'suggestion-accepted':'receipt-confirmed';
+    if(t){record(L,'name',t,'@'+r.iid,linkSrc,at,r.iid0?'@'+r.iid0:null);if(ft&&ft!==t)record(L,'name',ft,'@'+r.iid,linkSrc,at);}
+    if(r.iid==='__ignore')continue;
+    const hn=has('number');
+    if(r.num)record(L,'number',nk(st,r.num),'@'+r.iid,hn?'user-edit':'receipt-confirmed',at);
+    const raw=hn?(r.from||r.rawNum||r.num0):(r.corrected?r.from:'');
+    if(raw&&r.num&&raw!==r.num){record(L,'number','fix:'+nk(st,raw),r.num,hn?'user-edit':'receipt-confirmed',at,hn?r.num0:null);for(const p of digitPairs(raw,r.num))record(L,'number','pair',p,hn?'user-edit':'receipt-confirmed',at);}
+    const hp=has('price');if(hp)for(const p of digitPairs(hp[1],hp[2]))record(L,'price','pair',p,'user-edit',at);
+    const fin=String(r.how==='named'?(r.nName??r.name0??''):(nameOf(r.iid)||'')).toLowerCase();const undo=new Set((r.fixUndo||[]).map(w=>String(w).toLowerCase()));
+    for(const [w,f] of r.fixes||[]){const lw=String(w).toLowerCase(),lf=String(f).toLowerCase();
+      if(undo.has(lw)||(!fin.includes(lf)&&fin.includes(lw)))record(L,'word','ocr:'+lw,lw,'user-edit',at,lf);
+      else if(fin.includes(lf))record(L,'word','ocr:'+lw,lf,'receipt-confirmed',at);}
+    if(r.how!=='named')continue;
+    const name=String(r.nName??r.name0??'').trim();const keys=[...new Set(['t:'+t,'n:'+norm(name),'w2:'+two(name),'n:'+norm(r.name0)])].filter(k=>k.length>2);
+    const src=k=>has(k)?'user-edit':'suggestion-accepted';
+    if(name&&t)record(L,'name','as:'+t,name,src('name'),at,r.name0);
+    if(has('name')&&RC){const ab=RC.learnNames(r.text,name);for(const k in ab)record(L,'word','abbr:'+k,ab[k],'user-edit',at);}
+    if(!r.later){const g0=(r.nCat0||'Other')+'›'+(r.nSub||''),g1=r.nCat!=null&&r.nCat!==r.nCat0?r.nCat+'›':g0;for(const k of keys)record(L,'group',k,g1,src('group'),at,g0);}
+    const nv=r.vNew||r.nv||{brand:r.brand0||'',flavor:r.flavor0||''};
+    for(const [kind,v0,v1] of [['brand',r.brand0,nv.brand],['flavor',r.flavor0,nv.flavor]]){const v=String(v1||'').trim()||'-';if(v==='-'&&!v0)continue;
+      for(const k of keys)record(L,kind,k,v,src(kind),at,v0||'-');record(L,kind,'@'+r.iid,v,src(kind),at);}}
+  return L;}
+// Item numbers this store store knows from earlier receipts. Map num → [item name].
+function knownNums(L,store,nameOf){const K=new Map();store=store||'aldi';for(const k in (L&&L.recs)||{}){if(!k.startsWith('number|'))continue;const key=k.slice(7);if(/^(fix|var|pair)\b/.test(key))continue;
+  const i=key.indexOf(':');const s=i<0?'aldi':key.slice(0,i),n=i<0?key:key.slice(i+1);if(s!==store||!/^\d{6}$/.test(n))continue;const b=best(L,'number',key);if(!b||!isItem(b.value)||b.weight<BUILTIN)continue;
+  const nm=nameOf?nameOf(b.value.slice(1)):'';K.set(n,nm?[nm]:[]);}return K;}
+// Misreads to fix before guessing: a raw number the person corrected before, and digit pairs they confused.
+function pairs(L,kind,now){const out=new Set();for(const v of values(L,kind,'pair',now))if(v.weight>=BUILTIN)out.add(v.value);return out;}
+function numLearn(L,store,now){return {fix:raw=>{const b=best(L,'number','fix:'+nk(store,raw),now);return b&&b.weight>=BUILTIN?b.value:null;},pairs:pairs(L,'number',now)};}
+// The item a receipt line was linked to before: by item number, then by the printed text.
+function itemFor(L,x,store,now){if(!L)return null;if(x.num){const b=best(L,'number',nk(store,x.num),now);if(b&&isItem(b.value)&&b.weight>=BUILTIN)return {iid:b.value.slice(1),how:'number'};}
+  for(const t of [x.text,x.fixedText]){const b=t&&best(L,'name',norm(t),now);if(b&&isItem(b.value)&&b.weight>=BUILTIN)return {iid:b.value.slice(1),how:'learned'};}return null;}
+
 // How many records of each kind, for Diagnostics.
 function counts(L){const c={};for(const k in (L&&L.recs)||{}){const kind=k.slice(0,k.indexOf('|'));c[kind]=(c[kind]||0)+1;}return c;}
 
-window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two};
+window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two,nk,digitPairs,editsOf,fromReceipt,knownNums,pairs,numLearn,itemFor};
 })();

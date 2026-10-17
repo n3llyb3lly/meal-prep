@@ -42,8 +42,10 @@ function guessGroup(name,known){const n=norm(name);let best=null;for(const k of 
   if(best)return {cat:best.cat,sub:'',from:'similar item'};for(const [cat,sub,re] of KW)if(re.test(n))return {cat,sub,from:'words'};return {cat:'Other',sub:'',from:'none'};}
 
 // Item-number correction against numbers the app already knows. known: Map num → [names].
-function fixNum(raw,known,text){const d=String(raw||'').replace(/[^0-9]/g,'');const K=known||new Map();
+// learn: {fix: raw → number the person corrected it to before, pairs: Set of learned digit pairs like '3~8'}.
+function fixNum(raw,known,text,learn){const d=String(raw||'').replace(/[^0-9]/g,'');const K=known||new Map();
   if(d.length===6&&K.has(d))return {num:d,ok:true};
+  if(learn&&learn.fix){const f=learn.fix(d);if(f&&f!==d&&K.has(f))return {num:f,ok:true,corrected:true,from:d,learned:true};}
   const nameSim=n=>Math.max(0,...(K.get(n)||[]).map(x=>sim(x,text)));const cands=[];
   const oneDiff=s=>{for(const k of K.keys()){if(k.length!==6)continue;let diff=-1,cnt=0;for(let i=0;i<6;i++)if(k[i]!==s[i]){cnt++;diff=i;if(cnt>1)break;}if(cnt===1)cands.push({n:k,conf:confusable(k[diff],s[diff])});}};
   if(d.length===6)oneDiff(d);
@@ -78,7 +80,7 @@ function parseLines(lines,opts){opts=opts||{};const L=(lines||[]).map((x,i)=>typ
     if(/^\((G|T)\)/i.test(t))continue;
     if((m=t.match(DISC))){const p=out.items[out.items.length-1];if(p){p.disc=r2((p.disc||0)+(+m[2].replace(',','.')));p.lines.push(l.i);}continue;}
     if((m=t.match(ITEM))){const amt=(m[4]?-1:1)*+m[3].replace(',','.');const it={num:m[1],text:m[2].trim(),amount:r2(amt),qty:1,tax:m[5]||'',lines:[l.i],conf:{num:l.numConf??100,name:l.nameConf??100,price:l.priceConf??100},meta:l.meta||null};
-      if(opts.known){const f=fixNum(it.num,opts.known,it.text);if(f.corrected){it.from=it.num;it.num=f.num;it.corrected=true;}else if(!f.ok){it.unclear=true;it.raw=it.num;it.num='';}}
+      if(opts.known){const f=fixNum(it.num,opts.known,it.text,opts.learn);if(f.corrected){it.from=it.num;it.num=f.num;it.corrected=true;}else if(!f.ok){it.unclear=true;it.raw=it.num;it.num='';}}
       out.items.push(it);continue;}}
   out.tax=out.taxes.length?r2(out.taxes.reduce((a,x)=>a+x.amount,0)):null;if(out.total!=null&&out.subtotal!=null&&(out.tax==null||Math.abs(out.subtotal+out.tax-out.total)>.005)&&out.total>=out.subtotal)out.tax=r2(out.total-out.subtotal);
   return out;}
