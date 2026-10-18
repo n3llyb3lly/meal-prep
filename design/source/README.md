@@ -6,6 +6,7 @@
 - `tools/receipt-core.js` (window.ReceiptCore) holds the receipt reading rules and suggestions.
 - `tools/house-core.js` (window.HouseCore) holds the household, portion and gallery rules.
 - `tools/meal-core.js` (window.MealCore) holds the shared rules, units and tokens.
+- `tools/recipe-core.js` (window.RecipeCore) reads web recipes (a schema.org Recipe block, page text or pasted lines) and matches their ingredients to catalog items with the receipt matcher.
 - `tools/catalog-lib.js` is used by the catalog builder.
 - `Self Test.dc.html` is the self-test. Open it in a browser and every check should pass.
 
