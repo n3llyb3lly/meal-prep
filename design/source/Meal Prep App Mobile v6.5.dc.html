@@ -4984,7 +4984,7 @@ class Component extends DCLogic {
     if(/\b(cucumber salad|plantains?|maduros|patacones)\b/.test(n)&&!/fruit salad/.test(n))return 'side';
     if(r.meal==='snack')return 'snack';
     if(r.meal!=='breakfast'&&C&&C.proteinOf((r.ing||[]).map(x=>String(x[2]||x[0])).concat([n]))==='Everything else'&&/\b(rice|arroz|slaw|salad|beans|fries|plantains?|patacones|maduros|mashed|roasted (?:vegetables|potatoes|broccoli|carrots)|cornbread|garlic bread|menestra|tortillas?|elote|corn on the cob)\b/.test(n)
-      &&!/\b(bowl|burrito|soup|sopa|stew|curry|tacos?|pasta|lasagna|llapingachos?|fried rice|chicken|beef|pork|shrimp|salmon|tuna|steak)\b/.test(n))return 'side';
+      &&!/\b(bowl|burrito|soup|sopa|stew|curry|tacos?|pasta|lasagna|llapingachos?|pupusas?|arepas?|empanadas?|quesadillas?|tamales?|enchiladas?|fried rice|chicken|beef|pork|shrimp|salmon|tuna|steak)\b/.test(n))return 'side';
     return 'main';}
   kind65(r,L){const ov=(L.recKind||{})[r.id];const k=ov||this.kindGuess(r);const bo=(L.recBfast||{})[r.id];const n=String(r.name||'').toLowerCase();
     const bf=bo!=null?!!bo:r.alsoBreakfast!=null?!!r.alsoBreakfast:/llapingacho|bol[oó]n|huevos|shakshuka|frittata|\bhash\b|tigrillo|chilaquiles|breakfast/.test(n);

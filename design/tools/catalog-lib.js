@@ -5,6 +5,10 @@ const STORAGE=['fridge','freezer','pantry','counter'];
 const FOOD_TYPES=['pork','beef','poultry','fish','shellfish','dairy','egg','gluten','peanut','tree_nut','soy','sesame'],HOUSE_GROUPS=['kitchen','paper','cleaning','personal'];
 const TRACKING=['quantity','staple','stocked'];const SOLD_BY=['pack','weight'];
 const SCHEMA=2;
+// 6.5: recipe kinds. Same rules as the sheet script's kindChecks_.
+const KINDS=['main','side','dessert','drink','snack','sauce'];
+const SIDE_BASICS=[['white rice',/\brice\b|\barroz\b/i],['black beans',/black beans|frijoles negros/i],['tortillas',/tortillas?/i],['garlic bread',/garlic bread/i],['green salad',/green salad|garden salad|side salad|mixed greens/i]];
+const truthy=v=>v===true||/^(y|yes|true|1)$/i.test(str(v));
 const DEFAULT_STORES=[['aldi','Aldi','6','before'],['sams',"Sam's Club",'9;10','before'],['walmart','Walmart','12','after'],['cub','Cub','11;12','after'],['target','Target','9','before']];
 const numList=v=>str(v).split(/[;,\s]+/).map(x=>x.trim()).filter(Boolean);
 // The steps cell: JSON text of an array of strings. Anything that doesn't parse is no steps.
@@ -22,7 +26,7 @@ function build(X,wb,prev,today){
   today=today||new Date().toISOString().slice(0,10);
   const errors=[],warnings=[];const E=(m)=>errors.push(m),W=(m)=>warnings.push(m);
   const itemsR=rowsOf(X,wb,'Items'),recR=rowsOf(X,wb,'Recipes'),ingR=rowsOf(X,wb,'Ingredients'),aliasR=rowsOf(X,wb,'Receipt aliases')||[],listR=rowsOf(X,wb,'Lists'),catR=rowsOf(X,wb,'Categories');
-  const offR=rowsOf(X,wb,'Offers')||[],nodeR=rowsOf(X,wb,'Nodes')||[],storeR=rowsOf(X,wb,'Stores'),favR=rowsOf(X,wb,'Favorites')||[],varR=rowsOf(X,wb,'Variants')||[],learnR=rowsOf(X,wb,'Learned')||[];
+  const offR=rowsOf(X,wb,'Offers')||[],nodeR=rowsOf(X,wb,'Nodes')||[],storeR=rowsOf(X,wb,'Stores'),favR=rowsOf(X,wb,'Favorites')||[],varR=rowsOf(X,wb,'Variants')||[],learnR=rowsOf(X,wb,'Learned')||[],pairR=rowsOf(X,wb,'Pairings');
   if(!itemsR)E('No "Items" sheet found.');if(!recR)E('No "Recipes" sheet found.');if(!ingR)E('No "Ingredients" sheet found.');
   if(errors.length)return {errors,warnings};
   let TAGS=null;if(listR){const t=listR.map(r=>str(r.tags).toLowerCase()).filter(Boolean);if(t.length)TAGS=new Set(t);}
@@ -120,7 +124,21 @@ function build(X,wb,prev,today){
       hands:hands??total,total,keeps:num(r.keeps_days)??1,reheats:yn(r.reheats)==='Y',freezes:yn(r.freezes)==='Y',active};
     // Optional, from Meal Prep > Fetch photos and steps: photo_url and steps (a JSON array). Left out when empty.
     const photo=str(r.photo_url).replace(/[;'"()\\\s]/g,c=>'%'+('0'+c.charCodeAt(0).toString(16).toUpperCase()).slice(-2)),steps=stepsCell(r.steps);if(/^https:\/\/\S+$/i.test(photo))rec.photo=photo;if(steps.length)rec.steps=steps;
+    // 6.5: kind is always written (blank is main); alsoBreakfast only when ticked on a main.
+    let kind=str(r.kind).toLowerCase()||'main';if(!KINDS.includes(kind)){W(`${line} (${id}): kind "${r.kind}" isn't one of ${KINDS.join(', ')}. Read as main.`);kind='main';}rec.kind=kind;
+    if(truthy(r.also_breakfast)){if(kind==='main')rec.alsoBreakfast=true;else if(active)W(`${id}: also_breakfast is ticked, but it is a ${kind}. Only a main can also be breakfast.`);}
     R[id]=rec;recipes.push(rec);});
+  // Pairings (or the Recipes sides column when there is no Pairings sheet) -> recipe.sides on mains.
+  const pairs=pairR?groupPairings(pairR):Object.fromEntries(recR.map(r=>[str(r.recipe_id),str(r.sides).split(/[;,]/).map(x=>x.trim()).filter(Boolean)]).filter(([id,l])=>id&&l.length));
+  for(const [mid,list] of Object.entries(pairs)){const m=R[mid];if(!m){W(`Pairings: main "${mid}" isn't on the Recipes sheet.`);continue;}
+    if(m.kind!=='main'){W(`Pairings: ${mid} is a ${m.kind}, not a main. Its sides were left out.`);continue;}
+    const ok=list.filter(sid=>{if(!R[sid]){W(`Pairings: ${mid} lists side "${sid}", which isn't on the Recipes sheet.`);return false;}if(!R[sid].active){W(`Pairings: ${mid} lists ${sid}, which isn't active.`);return false;}
+      if(R[sid].kind!=='side'){W(`Pairings: ${mid} lists ${sid}, which is a ${R[sid].kind}, not a side.`);return false;}return true;});
+    if(ok.length)m.sides=ok;}
+  const kinds=Object.fromEntries(KINDS.map(k=>[k,recipes.filter(r=>r.active&&r.kind===k).length]));
+  W(`Recipe kinds: ${KINDS.map(k=>`${kinds[k]} ${k}`).join(', ')}.`);
+  {const sideNames=recipes.filter(r=>r.active&&r.kind==='side').map(r=>r.name);const missing=SIDE_BASICS.filter(([,re])=>!sideNames.some(n=>re.test(n))).map(([b])=>b);
+    if(missing.length)W(`No side recipe yet for: ${missing.join(', ')}. Mains have only ${sideNames.length} side${sideNames.length===1?'':'s'} to pair with.`);}
   // ingredients
   const seenLine=new Set();
   ingR.forEach((r,i)=>{const rid=str(r.recipe_id),iid=str(r.item_id);const line=`Ingredients row ${i+2}`;if(!rid&&!iid)return;
@@ -148,8 +166,10 @@ function build(X,wb,prev,today){
   const catalog={schemaVersion:SCHEMA,catalogVersion:`${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`,builtAt:d.toISOString(),
     categories,stores,nodes,items,recipes:recipes.filter(r=>r.active).map(({active,...r})=>r),aliases,favorites,variants,learned};
   const offers=items.reduce((n,it)=>n+it.offers.length,0);
-  return {catalog,catalogV1:toV1(catalog),errors,warnings,diff:withLearned(diff(prev&&prev.schemaVersion===1?prev:prev?toV1(prev):null,toV1(catalog)),prev,learned),counts:{learned:learned.length,items:items.length,offers,stores:stores.length,nodes:nodes.length,recipes:recipes.length,active:catalog.recipes.length,ingredients:ingR.length,aliases:aliases.length}};
+  return {catalog,catalogV1:toV1(catalog),errors,warnings,diff:withLearned(diff(prev&&prev.schemaVersion===1?prev:prev?toV1(prev):null,toV1(catalog)),prev,learned),counts:{learned:learned.length,items:items.length,offers,stores:stores.length,nodes:nodes.length,recipes:recipes.length,active:catalog.recipes.length,ingredients:ingR.length,aliases:aliases.length,kinds}};
 }
+// Pairings rows -> {main_id:[side_id,…]} in row order, without repeats. Same rule as the sheet script's groupPairings_.
+function groupPairings(rows){const out={};for(const r of rows){const m=str(r.main_id),sd=str(r.side_id);if(!m||!sd)continue;const l=out[m]||(out[m]=[]);if(!l.includes(sd))l.push(sd);}return out;}
 // 6.3: Variants rows (one per variant and store) -> the phone's layer shape {itemId:[{vid,brand,flavor,nums:{store:[num]},last:{price,date,store}}]}.
 // Same rule as the sheet script's variantsOf_.
 function variantsOf(rows,I,ST,W){const out={},byVid={};
@@ -187,7 +207,8 @@ function toV1(c){if(!c)return c;if(c.schemaVersion===1&&!c.nodes)return c;
 // A schema 2 catalog back to sheet rows (column name -> value), one array per sheet. Used to check the
 // round trip and to rebuild a sheet from a catalog.
 function toRows(c){const yn=b=>b?'Y':'N',semi=a=>(a||[]).join('; ');
-  const out={Stores:[],Nodes:[],Items:[],Offers:[],Favorites:[],Recipes:[],Ingredients:[],'Receipt aliases':[],Categories:[],Variants:[]};
+  const out={Stores:[],Nodes:[],Items:[],Offers:[],Favorites:[],Recipes:[],Ingredients:[],'Receipt aliases':[],Categories:[],Variants:[],Pairings:[]};
+  const RN=Object.fromEntries(c.recipes.map(r=>[r.id,r.name]));
   for(const k of (c.categories||[]))out.Categories.push({category:k.name,store_section:k.section,storage:k.storage,fridge_days:k.fridge,freezer_days:k.freezer,pantry_days:k.pantry,tracking_default:k.tracking,staple_default:yn(k.staple)});
   for(const s of (c.stores||[]))out.Stores.push({id:s.id,name:s.name,num_digits:(s.num.digits||[]).join(';'),num_where:s.num.where});
   for(const n of (c.nodes||[]))out.Nodes.push({id:n.id,name:n.name,parent:n.parent||'',level:n.level});
@@ -198,7 +219,8 @@ function toRows(c){const yn=b=>b?'Y':'N',semi=a=>(a||[]).join('; ');
     for(const o of (it.offers||[]))out.Offers.push({item:it.id,store:o.store,price:o.price,pack:o.pack,unit:o.unit,pkg:o.pkg,numbers:semi(o.nums),price_date:o.priceDate||'',price_source:o.src||''});}
   for(const n in (c.favorites||{}))out.Favorites.push({node:n,item:c.favorites[n]});
   for(const r of c.recipes){out.Recipes.push({recipe_id:r.id,meal:r.meal,name:r.name,tags:(r.tags||[]).join(', '),servings:r.serv,total_min:r.total,hands_on_min:r.hands,keeps_days:r.keeps,reheats:yn(r.reheats),freezes:yn(r.freezes),link:r.link||'',source:[r.source,r.rating].filter(Boolean).join(' · '),notes:r.notes||'',active:'Y',
-      photo_url:r.photo||'',steps:r.steps&&r.steps.length?JSON.stringify(r.steps):''});
+      photo_url:r.photo||'',steps:r.steps&&r.steps.length?JSON.stringify(r.steps):'',kind:r.kind||'main',also_breakfast:!!r.alsoBreakfast,sides:(r.sides||[]).join(', ')});
+    for(const sid of (r.sides||[]))out.Pairings.push({main_id:r.id,main_name:r.name,side_id:sid,side_name:RN[sid]||'',note:''});
     for(const x of r.ing)out.Ingredients.push({recipe_id:r.id,item_id:x[0],qty:x[1]*(r.serv||1),as_written:x[2]||'',optional:yn(x[3])});}
   for(const a of (c.aliases||[]))out['Receipt aliases'].push({receipt_text:a.text,item_id:a.item,store:a.store||''});
   for(const id in (c.variants||{}))for(const v of c.variants[id])out.Variants.push(...variantRows(id,v));
@@ -329,6 +351,6 @@ function additions(X,wb,add,built){
     {key:'itemCells',sheet:'Items',title:'Item edits and placements',rows:cellUpd,cols:['item_id','name','brand','flavor','node','package_label','unit','package_qty','category'],list:cellUpd.map(x=>x.name),note:'Change the filled-in cells on these Items rows. Blank cells mean no change. Not for pasting as new rows.'}
   ].map(g=>({...g,tsv:tsv(g.rows,g.cols),header:g.cols.join('\t')}));
   return {groups,flags,notes,from:{exportedAt:add.exportedAt,catalogVersion:add.catalogVersion}};}
-const api={build,diff,learnedOf,validateCatalog,additions,toV1,toRows,SCHEMA,MEALS,STORAGE,TRACKING};
+const api={build,diff,learnedOf,groupPairings,validateCatalog,additions,toV1,toRows,SCHEMA,MEALS,STORAGE,TRACKING,KINDS};
 if(typeof window!=='undefined')window.CatalogLib=api;if(typeof module!=='undefined')module.exports=api;
 })();

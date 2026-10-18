@@ -142,7 +142,7 @@ test('Fetch photos and steps fills the Recipes columns and the catalog carries t
   assert.strictEqual(JSON.parse(s.cell('d_paneer', 'steps')).length, 10);
   assert.strictEqual(s.cell('d_paneer', 'photo_url'), PAGES['paneer-butter-masala.html'].photo);
   assert.strictEqual(Object.prototype.toString.call(s.cell('d_paneer', 'fetched_at')), '[object Date]');
-  assert.strictEqual(s.cell('d_reel', 'fetch_note'), 'no-recipe-data');
+  assert.strictEqual(s.cell('d_reel', 'fetch_note'), 'no-recipe-data; kind guessed: main (no recipe data)');
   assert.strictEqual(s.cell('d_reel', 'steps'), '');
   assert.strictEqual(s.asked.length, 4, 'the recipe without a link is skipped');
   assert.strictEqual(s.triggers.length, 0);
