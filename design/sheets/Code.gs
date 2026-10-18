@@ -511,11 +511,13 @@ function doGet(e) {
  * Reply:
  *   {"ok":true,"results":[{"id":"c_…","status":"applied|duplicate|conflict|rejected|error","message":"…","sheet":{…}}],
  *    "idMap":{"u_greek_yogurt_tub":"greek_yogurt_tub","edit:d_tacos":"d_tacos_mine"},"version":"…"}
+ *   {"key":"SECRET","action":"recipe.fetch","url":"https://…"}  -> see recipeFetch_
  */
 function doPost(e) {
   var body;
   try { body = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) { return json_({ ok: false, error: 'bad-json', message: 'The request was not valid JSON.' }); }
   if (!keyOk_(body.key)) return json_({ ok: false, error: 'refused', message: 'Wrong or missing key.' });
+  if (body.action === 'recipe.fetch') return json_(recipeFetch_(body.url));
   var changes = Array.isArray(body.changes) ? body.changes.slice(0, MAX_BATCH) : [];
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) return json_({ ok: false, error: 'busy', message: 'The sheet is busy. Try again in a minute.' });
@@ -527,6 +529,31 @@ function doPost(e) {
     try { var c = currentCatalog_(); version = c.catalog && c.catalog.catalogVersion; } catch (err) { }
     return json_({ ok: true, results: results, idMap: ctx.idMap, version: version });
   } finally { lock.releaseLock(); }
+}
+
+// ---------------------------------------------------------------- recipe pages (recipe.fetch)
+
+// The phone can't read another site's page (the browser blocks it), so the script fetches it and sends back the
+// page's schema.org Recipe blocks as text, or the page text when there are none. The phone reads them
+// (design/source/tools/recipe-core.js). Nothing is written to the sheet.
+//   {ok:true, url, title, blocks:["{…}"]} | {ok:true, url, title, text:"…"} | {ok:false, error, message}
+function recipeFetch_(url) {
+  url = String(url || '').trim();
+  if (!/^https?:\/\/[^\s"<>]+$/i.test(url) || url.length > 2000) return { ok: false, error: 'bad-url', message: 'That is not a web address.' };
+  var res;
+  try { res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true, headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 14) MealPrep' } }); }
+  catch (err) { return { ok: false, error: 'fetch-failed', message: 'The page could not be opened.' }; }
+  var code = res.getResponseCode();
+  if (code >= 400) return { ok: false, error: 'http-' + code, message: 'The site answered with an error (' + code + ').' };
+  var html = String(res.getContentText() || '').slice(0, 3000000);
+  var title = ((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  var blocks = [], re = /<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi, m;
+  while ((m = re.exec(html)) && blocks.length < 10) if (/Recipe/.test(m[1])) blocks.push(m[1].trim().slice(0, 300000));
+  if (blocks.length) return { ok: true, url: url, title: title, blocks: blocks };
+  var text = html.replace(/<(script|style|noscript|svg|head|nav|footer)\b[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<(br|\/p|\/li|\/h[1-6]|\/div|\/tr|\/dt|\/dd)\b[^>]*>/gi, '\n').replace(/<[^>]+>/g, ' ')
+    .replace(/[ \t\r\f]+/g, ' ').replace(/ *\n[ \n]*/g, '\n').trim();
+  return { ok: true, url: url, title: title, text: text.slice(0, 60000) };
 }
 
 // ---------------------------------------------------------------- applying phone changes

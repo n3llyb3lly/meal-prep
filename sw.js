@@ -31,13 +31,19 @@ function serveVendor(e,req,url){
   return caches.open(VENDOR).then(c=>c.match(req,{ignoreSearch:true}).then(hit=>hit||fetch(req).then(r=>{if(r.ok){const cp=r.clone();c.put(req,cp);}return r;})));}
 // Share target (manifest share_target). Android posts the shared photos here; save them in the meal-prep-share
 // cache and open the app with ?share=1, which reads that cache, loads the photos into Add receipt and empties it.
-const SHARE='meal-prep-share';
-async function receiveShare(req){const scope=self.registration.scope;
-  try{const files=(await req.formData()).getAll('receipt').filter(f=>f&&typeof f!=='string'&&f.size);
-    if(files.length){const c=await caches.open(SHARE);const t=Date.now();
+// A shared link (a recipe page from Chrome) is saved as JSON {url,title,text} in its own cache, meal-prep-share-link,
+// so a build that only knows photos never reads it, and opens the app with ?share=link, which reads it into
+// New recipe from the web. Chrome often puts the link in text, not url.
+const SHARE='meal-prep-share',SHARE_LINK='meal-prep-share-link';
+const linkIn=s=>{const m=String(s||'').match(/https?:\/\/[^\s<>"]+/i);return m?m[0]:'';};
+async function receiveShare(req){const scope=self.registration.scope;let kind='1';
+  try{const fd=await req.formData();const files=fd.getAll('receipt').filter(f=>f&&typeof f!=='string'&&f.size);const t=Date.now();
+    if(files.length){const c=await caches.open(SHARE);
       await Promise.all(files.map((f,i)=>c.put(new URL(`./shared/${t}-${i}`,scope).href,new Response(f,{headers:{'Content-Type':f.type||'image/jpeg','X-File-Name':encodeURIComponent(f.name||`receipt-${i+1}.jpg`)}}))));}
+    else{const text=String(fd.get('text')||''),title=String(fd.get('title')||'');const url=linkIn(fd.get('url'))||linkIn(text);
+      if(url){kind='link';const c=await caches.open(SHARE_LINK);await c.put(new URL(`./shared/link-${t}`,scope).href,new Response(JSON.stringify({url,title:title.slice(0,200),text:text.slice(0,2000)}),{headers:{'Content-Type':'application/json'}}));}}
   }catch(e){}
-  return Response.redirect(new URL('./?share=1',scope).href,303);}
+  return Response.redirect(new URL('./?share='+kind,scope).href,303);}
 self.addEventListener('fetch',e=>{
   const req=e.request;const url=new URL(req.url);const same=url.origin===location.origin;
   if(!same)return; // the Google Sheet script and anything else off-site always go straight to the network
