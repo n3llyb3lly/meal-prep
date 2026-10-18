@@ -25,7 +25,7 @@ test('ingredient lines split into amount, unit, item and notes', () => {
   assert.deepStrictEqual(p('1 ½ cups sour cream'), [1.5, 'cup', null, 'sour cream', '']);
   assert.deepStrictEqual(p('1½ cups milk'), [1.5, 'cup', null, 'milk', '']);
   assert.deepStrictEqual(p('1 1/2 to 2 cups milk'), [1.75, 'cup', null, 'milk', '']);
-  assert.deepStrictEqual(p('6-8 garlic cloves'), [7, null, null, 'garlic cloves', '']);
+  assert.deepStrictEqual(p('6-8 garlic cloves'), [7, 'clove', null, 'garlic', '']);
   assert.deepStrictEqual(p('3 cloves garlic, minced'), [3, 'clove', null, 'garlic', 'minced']);
   assert.deepStrictEqual(p('2 15-oz cans chickpeas'), [2, 'can', [15, 'oz'], 'chickpeas', '']);
   assert.deepStrictEqual(p('1 large onion, diced'), [1, null, null, 'onion', 'large, diced']);
@@ -35,6 +35,30 @@ test('ingredient lines split into amount, unit, item and notes', () => {
   assert.deepStrictEqual([opt.optional, opt.item, opt.q], [true, 'turmeric', 0.5]);
   const alt = RC.parseLine('½ kg (1.1 lbs) boneless chicken thighs');
   assert.deepStrictEqual([alt.unit, plain(alt.alts)], ['kg', [{ q: 1.1, unit: 'lb' }]]);
+});
+
+test('doubled and nested parentheses come out whole, with alternatives kept out of the name and amount', () => {
+  const p = l => { const x = plain(RC.parseLine(l)); return [x.q, x.unit, x.item, x.notes, x.optional, x.alts]; };
+  assert.deepStrictEqual(p('1 small bay leaf ((tej patta, optional))'), [1, null, 'bay leaf', 'tej patta, small', true, []]);
+  assert.deepStrictEqual(p('3 cloves ((laung, optional))'), [3, null, 'cloves', 'laung', true, []]);
+  assert.deepStrictEqual(p('2 green cardamoms ( (or ¼ to ⅓ tsp ground cardamom, elaichi))'), [2, null, 'green cardamoms', 'or ¼ to ⅓ tsp ground cardamom, elaichi', false, []]);
+  assert.deepStrictEqual(p('1 inch (10 grams) ginger ((peeled & sliced or use 1½ to 2 teaspoon ginger garlic paste, read notes))'),
+    [1, 'inch', 'ginger', 'peeled & sliced or use 1½ to 2 teaspoon ginger garlic paste, read notes', false, [{ q: 10, unit: 'g' }]]);
+  assert.deepStrictEqual(p('250 to 300 grams (9 to 10 oz) paneer ((I cut mine to ¾ inch))'), [275, 'g', 'paneer', 'I cut mine to ¾ inch', false, [{ q: 9.5, unit: 'oz' }]]);
+  assert.deepStrictEqual(p('15 cashews ((whole, 30 grams, or up to 18, or use almonds))'), [15, null, 'cashews', 'whole, or up to 18, or use almonds', false, [{ q: 30, unit: 'g' }]]);
+  assert.deepStrictEqual(p('2 inch Ceylon cinnamon piece ((or 1 inch dalchini, optional))').slice(0, 3), [2, 'inch', 'Ceylon cinnamon piece']);
+  assert.deepStrictEqual(p('1 teaspoon jaggery or sugar ((optional))').slice(0, 3), [1, 'tsp', 'jaggery or sugar']);
+  assert.strictEqual(RC.parseLine('1 small bay leaf ((tej patta, optional))').text, '1 small bay leaf (tej patta, optional)');
+});
+
+test('amounts are shown the way a person measures them', () => {
+  const d = (q, unit) => plain(RC.display(q, { unit }));
+  assert.deepStrictEqual(d(0.287, 'lb'), { q: '4.5', u: 'oz' });
+  assert.deepStrictEqual(d(0.772, 'lb'), { q: '12', u: 'oz' });
+  assert.deepStrictEqual(d(2.4, 'lb'), { q: '2.4', u: 'lb' });
+  assert.deepStrictEqual(d(0.219, 'cup'), { q: '3.5', u: 'tbsp' });
+  assert.deepStrictEqual(d(0.875, 'tsp'), { q: '1', u: 'tsp' });
+  assert.deepStrictEqual(d(5.5, 'clove'), { q: '5.5', u: 'clove' });
 });
 
 test('salt, pepper and water are pantry basics, not items', () => {
