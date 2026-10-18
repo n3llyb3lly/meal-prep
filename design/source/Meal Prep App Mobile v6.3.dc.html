@@ -13,6 +13,7 @@
 <script src="./tools/meal-core.js"></script>
 <script src="./tools/house-core.js"></script>
 <script src="./tools/receipt-core.js"></script>
+<script src="./tools/learn-core.js"></script>
 <script src="./tools/recipe-core.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Meal Prep"><meta name="theme-color" content="#EDF1F3" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0F151A" media="(prefers-color-scheme: dark)"><title>Meal Prep</title><style>html,body{overscroll-behavior:none}:root{color-scheme:light;--page:#EDF1F3;--surface:#FFFFFF;--tint:#E3EAF0;--ink:#15202B;--muted:#586878;--faint:#647381;--line:#D9E1E6;--line-strong:#B9C6CF;--primary:#17375E;--primary-ink:#17375E;--on-accent:#FFFFFF;--on-accent-muted:#DDE6EE;--good:#16734C;--good-ink:#16734C;--good-tint:#DCF1E7;--good-line:#BFE3D0;--warn-ink:#8F5200;--warn-tint:#FCEBCB;--warn-line:#F2D49B;--warn-soft:#FDF4E3;--bad:#A9231B;--bad-ink:#A9231B;--bad-tint:#FADFDC;--bad-line:#F2BDB7;--alert:#C24A0A;--spoil:#B42318;--ess:#A64B00;--ribbon:#9DB6D3;--range-fill:#C9D8E8}@media (prefers-color-scheme:dark){:root{color-scheme:dark;--page:#0F151A;--surface:#1A2229;--tint:#24313B;--ink:#E6ECF0;--muted:#A3B1BD;--faint:#93A1AD;--line:#2C3943;--line-strong:#4A5A66;--primary:#2F6299;--primary-ink:#9CC0E8;--on-accent:#FFFFFF;--on-accent-muted:#DDE6EE;--good:#237A52;--good-ink:#7FD3A8;--good-tint:#17352A;--good-line:#23523D;--warn-ink:#F0B65A;--warn-tint:#3A2C12;--warn-line:#6A5020;--warn-soft:#2E2614;--bad:#B53A31;--bad-ink:#FF9A90;--bad-tint:#3D1C1A;--bad-line:#6B2E29;--alert:#F08A4B;--spoil:#C93B32;--ess:#B35500;--ribbon:#3C6694;--range-fill:#2E4A66}}body{margin:0;background:var(--page);font-family:'Figtree',system-ui,sans-serif;color:var(--ink)}a{color:var(--primary-ink)}a:hover{color:var(--ink)}*{box-sizing:border-box}input[type=number]{-moz-appearance:textfield;appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}button:disabled{cursor:default}</style>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#17375E"/><text x="50" y="62" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="34" fill="#fff">MP</text></svg></template></helmet>
@@ -746,6 +747,12 @@
           </sc-if>
         </div>
       </sc-for>
+          <sc-if value="{{ hasStockIdeas }}" hint-placeholder-val="{{ false }}">
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 12px">
+              <div style="font:700 16px 'Bricolage Grotesque',sans-serif;padding:8px 0 2px">From your receipts</div>
+              <sc-for list="{{ stockIdeas }}" as="x" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)"><span style="flex:1;min-width:0;font-size:14.5px;line-height:1.4">{{ x.text }}</span><button onClick="{{ x.yes }}" style="flex:none;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--primary);background:var(--primary);color:var(--on-accent);font-weight:600;font-size:13.5px">Keep stocked</button><button onClick="{{ x.no }}" style="flex:none;min-height:40px;padding:0 8px;border:0;background:transparent;color:var(--muted);font-weight:600;font-size:13.5px">No</button></div></sc-for>
+            </div>
+          </sc-if>
           <button onClick="{{ addStock }}" style="height:46px;border-radius:12px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:14.5px">+ Keep something else stocked</button>
           <sc-if value="{{ hasHabits }}" hint-placeholder-val="{{ false }}">
             <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 12px">
@@ -1299,7 +1306,7 @@
         <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 14px">
           <button onClick="{{ toggleDiag }}" style="display:flex;align-items:center;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:0;min-height:52px"><span style="flex:1;font-weight:600;font-size:15px">Diagnostics <span style="color:var(--muted);font-weight:400">· {{ diagSum }}</span></span><span style="color:var(--muted)">{{ diagChev }}</span></button>
           <sc-if value="{{ diagOpen }}" hint-placeholder-val="{{ false }}">
-            <div style="font-size:12.5px;color:var(--muted);line-height:1.4;padding-bottom:6px">Errors, recent actions and budget inputs. Nothing leaves the phone unless you copy it.</div>
+            <div style="font-size:12.5px;color:var(--muted);line-height:1.4;padding-bottom:6px">Errors, recent actions, budget inputs and how the receipt reader is learning. Nothing leaves the phone unless you copy it.</div>
             <pre style="margin:0 0 8px;max-height:220px;overflow:auto;background:var(--page);border-radius:10px;padding:8px 10px;font:11.5px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:var(--ink)">{{ diagText }}</pre>
             <div style="display:flex;gap:8px;padding-bottom:10px"><button onClick="{{ copyDiag }}" style="height:42px;padding:0 14px;border-radius:10px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:13.5px">Copy</button><button onClick="{{ clearDiag }}" style="height:42px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:13.5px">Clear errors</button></div>
           </sc-if>
@@ -2140,7 +2147,7 @@
                             </div>
                           </sc-if>
                           <div style="font-size:12px;color:var(--muted)">{{ r.printedLine }}</div>
-                          <sc-if value="{{ r.hasFix }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:var(--good-ink)">{{ r.fixLine }}</div></sc-if>
+                          <sc-if value="{{ r.hasFix }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--good-ink)"><span style="flex:1">{{ r.fixLine }}</span><sc-if value="{{ r.canFixKeep }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.fixKeep }}" style="min-height:36px;border:0;background:transparent;color:var(--primary-ink);font-weight:600;font-size:13px;text-decoration:underline">Keep as printed</button></sc-if></div></sc-if>
                           <sc-if value="{{ r.isNaming }}" hint-placeholder-val="{{ false }}">
                             <sc-if value="{{ r.isNamed }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--good-ink)"><span style="flex:1">{{ r.namedText }}</span><button onClick="{{ r.nUndo }}" style="min-height:36px;border:0;background:transparent;color:var(--primary-ink);font-weight:600;font-size:13px;text-decoration:underline">Change</button></div></sc-if>
                             <label style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--muted)">What is it?<input type="text" value="{{ r.nName }}" onChange="{{ r.onNName }}" style="height:46px;border:1px solid var(--primary-ink);border-radius:12px;padding:0 12px;background:var(--surface);color:var(--ink);outline:none;font-size:16px;font-weight:600"></input></label>
@@ -2379,6 +2386,7 @@
           <button onClick="{{ icClose }}" aria-label="Close" style="width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px">×</button>
         </div>
         <div style="overflow-y:auto;padding:0 20px 12px;display:flex;flex-direction:column;gap:12px">
+          <sc-if value="{{ icHasUsual }}" hint-placeholder-val="{{ false }}"><div style="background:var(--good-tint);color:var(--good-ink);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4">{{ icUsual }}</div></sc-if>
           <label style="display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px">Name<input value="{{ icName }}" onChange="{{ onIcName }}" style="height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;font-weight:400;background:var(--surface);color:var(--ink);outline:none"></input></label>
           <label style="display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px">Brand<input value="{{ icBrand }}" onChange="{{ onIcBrand }}" placeholder="For example, Great Value" style="height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;font-weight:400;background:var(--surface);color:var(--ink);outline:none"></input></label>
           <div style="display:flex;flex-direction:column;gap:5px"><span style="font-weight:600;font-size:14px">Group</span>
@@ -2767,7 +2775,7 @@ const SHELF={Produce:6,Meat:3,'Dairy & eggs':14,'Bakery & frozen':30,Pantry:180}
 const KEY='aldi-meal-prep:user',V3KEY='aldi-meal-prep:v3',PREMIG='aldi-meal-prep:v3-premigration',SCHEMA=2,APP_VERSION='6.3',REMIND=15,DAY=864e5;
 const TARGET_MEALS=['breakfast','lunch','dinner'];
 const EMPTY_MENU={sugGroups:[],activeChips:[],cookedRows:[],sugRows:[],libRows:[],menuGroups:[],viewTabs:[],coverCells:[],mealChips:[],timeChips:[],onlyChips:[],tagChips:[],sortChips:[]};
-const LAYER_KEYS=['brandDict','variants','numVar','nameDict','mainStore','ownStores','storeNames','storeGone','itemStore','members','dayOverrides','essentials','wasteLog','hh','people','budget','shopDay','horizon','extra','menu','tripStart','slots','dayTime','inv','staples','leftovers','bought','snoozeUntil','priceEdits','recipeEdits','ownRecipes','catImport','optOn','staplesAnswered','quickCheckTrip','lastCatalogVersion','aliases','receipts','priceHistory','ownItems','history','dayGuests','dayPattern','tripEnd','tripBudget','calSeq','lastExportAt','changeCount','itemSettings','usageLog','itemMerges','receiptDraft','cookedSnapshots','trips','setupDone','shopMode','tripStocked','stockedNote','tripCarry','skipTrip','nextChip','numLinks','redo','stapleNote','mig51','outbox','sheetLink','syncLog','idSwaps','itemEdits','offerEdits','ownNodes','favorites','placeSkip','lastStore','recipeAliases'];
+const LAYER_KEYS=['learn','brandDict','variants','numVar','nameDict','mainStore','ownStores','storeNames','storeGone','itemStore','members','dayOverrides','essentials','wasteLog','hh','people','budget','shopDay','horizon','extra','menu','tripStart','slots','dayTime','inv','staples','leftovers','bought','snoozeUntil','priceEdits','recipeEdits','ownRecipes','catImport','optOn','staplesAnswered','quickCheckTrip','lastCatalogVersion','aliases','receipts','priceHistory','ownItems','history','dayGuests','dayPattern','tripEnd','tripBudget','calSeq','lastExportAt','changeCount','itemSettings','usageLog','itemMerges','receiptDraft','cookedSnapshots','trips','setupDone','shopMode','tripStocked','stockedNote','tripCarry','skipTrip','nextChip','numLinks','redo','stapleNote','mig51','outbox','sheetLink','syncLog','idSwaps','itemEdits','offerEdits','ownNodes','favorites','placeSkip','lastStore','recipeAliases'];
 const DB='aldi-meal-prep',CAT_SCHEMA=2;
 function idb(){return new Promise((res,rej)=>{if(!window.indexedDB)return rej(new Error('no indexedDB'));const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('kv'))r.result.createObjectStore('kv');};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
 async function idbGet(k){const d=await idb();return new Promise((res,rej)=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
@@ -2886,6 +2894,8 @@ class Component extends DCLogic {
     prices=[...prices,...(L.ownItems||[])].map(p=>!p.own&&pe[p.id]&&(!p.priceDate||String(pe[p.id].at).slice(0,10)>=p.priceDate)?{...p,price:pe[p.id].price,src:pe[p.id].via||'edited',editedAt:pe[p.id].at,catPrice:p.price,catSrc:p.src}:p);
     const ie=L.itemEdits||{},oe=L.offerEdits||{};prices=prices.map(p=>effItem(p,ie[p.id],oe[p.id]));
     {const ms=L.mainStore||'aldi',is=L.itemStore||{};prices=prices.map(p=>{const want=is[p.id]||ms;if(!p.offers||p.store===want)return p;const o=p.offers.find(x=>x.store===want);if(!o||!(o.price>0))return p;const f=unitF(o.unit,p.unit)||1;const pkg=Math.round((o.pkg||p.pkg)*f*1000)/1000;return {...p,store:want,price:o.price,pkg,pack:o.pack||p.pack,priceDate:o.priceDate||p.priceDate,unitCost:pkg>0?o.price/pkg:p.unitCost};});}
+    {const LC=window.LearnCore;if(LC&&L.learn)prices=prices.map(p=>{const u=LC.usual(L.learn,p.id,p.store||'aldi');if(!u||p.soldBy==='weight'&&!(p.pkg===1))return p;const e=pe[p.id];if(e&&e.via!=='receipt'&&String(e.at).slice(0,10)>u.last)return p;
+      return {...p,price:u.price,src:'receipt',usual:u.n,editedAt:u.last+'T12:00:00.000Z',catPrice:p.catPrice??p.price,unitCost:p.pkg>0?u.price/p.pkg:p.unitCost};});}
     const nodes=[...(C.nodes||[]),...(L.ownNodes||[])];const favs={...(C.favorites||{}),...(L.favorites||{})};
     const kids={},byNode={},Pm={},Nm={};for(const n of nodes){Nm[n.id]=n;(kids[n.parent||'']=kids[n.parent||'']||[]).push(n.id);}for(const p of prices){Pm[p.id]=p;if(p.node&&!p.retired)(byNode[p.node]=byNode[p.node]||[]).push(p);}
     const under=nid=>{const out=[],st=[nid],seen=new Set();while(st.length){const x=st.pop();if(seen.has(x))continue;seen.add(x);out.push(...(byNode[x]||[]));st.push(...(kids[x]||[]));}return out;};
@@ -2925,7 +2935,7 @@ class Component extends DCLogic {
     {const {pool,counts,moodFor,...rest}=L;L={...rest,menu,tripStart:tripStart||(hasData?t:null)};}
     return {...L,...cat,tripBudgetText:L.tripBudget!=null?String(L.tripBudget):'',staples,slots,dayTime,dayGuests,dayPattern:L.dayPattern||{},budget,budgetText:String(budget),people:L.people??2,...this.hhFromLayer(L),inv:L.inv||{},
       leftovers:L.leftovers||[],bought:L.bought||{},priceEdits:L.priceEdits||{},recipeEdits:L.recipeEdits||{},ownRecipes:L.ownRecipes||[],catImport:L.catImport||null,
-      optOn:L.optOn||{},itemSettings:L.itemSettings||{},usageLog:L.usageLog||{},itemMerges:L.itemMerges||{},receiptDraft:L.receiptDraft||null,cookedSnapshots:L.cookedSnapshots||{},trips:L.trips||[],receipts:L.receipts||[],priceHistory:L.priceHistory||{},ownItems:L.ownItems||[],history:L.history||[],aliases:L.aliases||[],staplesAnswered:L.staplesAnswered||null,quickCheckTrip:L.quickCheckTrip||null,tripCarry:L.tripCarry||0,setupDone:L.setupDone??hasData,shopMode:L.shopMode||null,tripStocked:L.tripStocked||null,stockedNote:L.stockedNote||null,skipTrip:L.skipTrip||{},nextChip:!!L.nextChip,numLinks:L.numLinks||{},redo:L.redo||[],stapleNote:L.stapleNote??null,mig51:!!L.mig51,outbox:L.outbox||[],sheetLink:L.sheetLink||null,syncLog:L.syncLog||[],idSwaps:L.idSwaps||{},itemEdits:L.itemEdits||{},offerEdits:L.offerEdits||{},ownNodes:L.ownNodes||[],favorites:L.favorites||{},placeSkip:L.placeSkip||{},lastStore:L.lastStore||'aldi',pantryOpen:null,pantryDraft:{}};
+      optOn:L.optOn||{},itemSettings:L.itemSettings||{},usageLog:L.usageLog||{},itemMerges:L.itemMerges||{},receiptDraft:L.receiptDraft||null,cookedSnapshots:L.cookedSnapshots||{},trips:L.trips||[],receipts:L.receipts||[],priceHistory:L.priceHistory||{},ownItems:L.ownItems||[],history:L.history||[],aliases:L.aliases||[],staplesAnswered:L.staplesAnswered||null,quickCheckTrip:L.quickCheckTrip||null,tripCarry:L.tripCarry||0,setupDone:L.setupDone??hasData,shopMode:L.shopMode||null,tripStocked:L.tripStocked||null,stockedNote:L.stockedNote||null,skipTrip:L.skipTrip||{},nextChip:!!L.nextChip,numLinks:L.numLinks||{},redo:L.redo||[],stapleNote:L.stapleNote??null,mig51:!!L.mig51,outbox:L.outbox||[],sheetLink:L.sheetLink||null,syncLog:L.syncLog||[],idSwaps:L.idSwaps||{},itemEdits:L.itemEdits||{},offerEdits:L.offerEdits||{},ownNodes:L.ownNodes||[],favorites:L.favorites||{},placeSkip:L.placeSkip||{},lastStore:L.lastStore||'aldi',learn:window.LearnCore?window.LearnCore.migrate(L.learn,L):(L.learn||null),pantryOpen:null,pantryDraft:{}};
   }
   componentDidMount(){window.__mp=this;setTimeout(()=>this.checkShared(),1500);window.addEventListener('error',e=>this.logErr(e.message||e));window.addEventListener('unhandledrejection',e=>this.logErr('Promise: '+((e.reason&&e.reason.message)||e.reason)));window.addEventListener('popstate',()=>{if(this._skipPop>0){this._skipPop--;return;}if((this._pushed||0)>0){this._pushed--;this.closeTop();}});
     const boot=async()=>{let link0=null;try{const w=JSON.parse(localStorage.getItem(KEY)||'null');link0=w&&w.user&&w.user.sheetLink;}catch(e){}
@@ -3150,7 +3160,7 @@ class Component extends DCLogic {
     const rows=d.rows.map(r=>{const c=this.rowCalc(r,P);const p=c&&c.p;const ign=r.iid==='__ignore';
       const set=k=>e=>this.setRow(r.rid,{[k]:e.target.value});
       const sizes=p&&!c.w?[{v:p.pkg,l:p.pack||fmtQ(p.pkg,p.unit)},...((p.altSizes||[]).filter(s=>s!==p.pkg).map(s=>({v:s,l:fmtQ(s,p.unit)}))),{v:'other',l:'Other size'}]:[];
-      const how={alias:'matched before',number:'matched by number',guess:'best guess, check it',cart:'',picked:'',none:''}[r.how]||'';
+      const how={alias:'matched before',learned:'matched from your earlier receipts',number:'matched by number',guess:'best guess, check it',cart:'',picked:'',none:''}[r.how]||'';
       const name=ign?'Not food, ignored':p?p.name:'Choose the item';
       const usual=p&&!p.own&&p.price>0?`usual ${money(p.price)}${c.w?'/lb':p.pack&&p.pack!=='each'?` for ${p.pack}`:''}`:'';
       const MC=window.MealCore;const known=sizes.filter(x=>x.v!=='other');const sz=r.size==='other'?'other':(known.some(x=>String(x.v)===String(r.size))?r.size:(p?p.pkg:r.size));
@@ -3168,7 +3178,7 @@ class Component extends DCLogic {
         hasAmount:!!p,isWeight:!!(c&&c.w),isPack:!!(c&&!c.w),wt:r.wt,onWt:set('wt'),
         wtUnits:['lb','oz'].map(u=>({label:u,...sel(r.wtUnit===u),pick:()=>this.setRow(r.rid,{wtUnit:u})})),
         countText:String(Math.max(1,+r.count||1)),cDec:()=>this.setRow(r.rid,{count:Math.max(1,(+r.count||1)-1)}),cInc:()=>this.setRow(r.rid,{count:(+r.count||1)+1}),
-        sizes:sizes.map(x=>({label:x.l,...sel(String(sz)===String(x.v)),pick:()=>this.setRow(r.rid,{size:x.v})})),hasSizes:sizes.length>1,
+        sizes:sizes.map(x=>({label:x.l,...sel(String(sz)===String(x.v)),pick:()=>this.setRow(r.rid,{size:x.v})})),hasSizes:sizes.length>1&&!r.sizeSettled,
         showOther:r.size==='other',other:r.other,onOther:set('other'),otherUnit:p?p.unit:'',
         ...(()=>{const n0=Math.max(1,+r.count||1);const wq=v=>{const x=parseFloat(v)||0;return r.wtUnit==='oz'?x/16:x;};const q0=c?(c.w?wq(r.wt):n0):1;
           const up=r.unitP!=null&&r.unitP!==''?r.unitP:(r.total!==''&&r.total!=null&&q0>0?r2((parseFloat(r.total)||0)/q0).toFixed(2):'');const upn=parseFloat(up);
@@ -3643,10 +3653,10 @@ class Component extends DCLogic {
     if(e.mode==='web'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
       const d=e.d,RC=window.RecipeCore;const nr={...r,id,source:'From the web',created:at,editedAt:at,...(d.basics&&d.basics.length?{basics:d.basics}:{})};
       // Items the person picked for unmatched or wrong lines are used first next time.
-      const ra={...(S.recipeAliases||{})};for(const x of d.ings)if(x.web&&x.web.picked&&x.iid){const k=RC.learnKey(x.web.item);if(!k)continue;ra[k]=x.iid;try{if(window.LearnCore&&window.LearnCore.record)window.LearnCore.record('name','recipe:'+k,x.iid,'user-edit');}catch(err){}}
+      const LC=window.LearnCore,lc=LC&&LC.clone?LC.clone(S.learn):null;const ra={...(S.recipeAliases||{})};for(const x of d.ings)if(x.web&&x.web.picked&&x.iid){const k=RC.learnKey(x.web.item);if(!k)continue;ra[k]=x.iid;if(lc)LC.record(lc,'name','recipe:'+k,'@'+x.iid,'user-edit');}
       const obp=nr.keeper&&this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
       const mp=andTrip?{menu:[...S.menu,{pid:uid(),rid:id,mult:1,status:'open',addedOn:this.today()}]}:{};
-      this.commit(`Added recipe ${r.name}${andTrip?' to this trip':''}`,{ownRecipes:[...(S.ownRecipes||[]),nr],recipeAliases:ra,recEd:null,sheet:andTrip?null:reopen(id),...obp,...mp});
+      this.commit(`Added recipe ${r.name}${andTrip?' to this trip':''}`,{ownRecipes:[...(S.ownRecipes||[]),nr],recipeAliases:ra,...(lc?{learn:lc}:{}),recEd:null,sheet:andTrip?null:reopen(id),...obp,...mp});
       this.flash(andTrip?`Saved ${r.name} and added it to this trip.`:`Saved ${r.name}. It's in your recipes.`);return;}
     if(e.mode==='new'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
       const nr={...r,id,source:'My recipe',created:at,editedAt:at};const obp=this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
@@ -3854,7 +3864,10 @@ class Component extends DCLogic {
         remText:'Remove',remBg:'var(--surface)',remColor:'var(--bad-ink)',
         remove:()=>{this.commit(`Removed ${p.name} from always stocked`,{itemSettings:{...(S.itemSettings||{}),[id]:{...s,on:false,listed:false}},isArm:null});}};});
     const on=rows.filter(r=>r.on);const inHouse=ids.filter(id=>S.itemSettings[id].on&&this.qty(id)>1e-6).length;
-    return {stockRows:rows,stockCoverText:`Always stocked: ${inHouse} of ${on.length} in the house`,
+    const LC=window.LearnCore;const ideas=LC?LC.stockIdeas(S.priceHistory||{},this.today(),id=>{const x=(S.itemSettings||{})[id];return !P[id]||P[id].retired||!!(x&&(x.listed||x.noSug));}).slice(0,3):[];
+    const stockIdeas=ideas.map(h=>{const nm=shortName(P[h.iid].name).toLowerCase();return {text:`Keep ${nm} stocked? You buy ${/s$/.test(nm)?'them':'it'} every ${h.every} day${h.every===1?'':'s'}.`,
+      yes:()=>this.setStock(h.iid,{on:true,listed:true,par:1,rate:h.every}),no:()=>this.setStock(h.iid,{on:false,listed:false,noSug:true})};});
+    return {stockIdeas,hasStockIdeas:stockIdeas.length>0,stockRows:rows,stockCoverText:`Always stocked: ${inHouse} of ${on.length} in the house`,
       addStock:()=>this.openItemSheet('stock',p=>this.setStock(p.id,{on:true,listed:true,par:1,rate:this.isStaple(p)?30:4}))};}
   extrasVals(P,R,t0){const S=this.state;const ids=Object.keys(S.itemSettings||{}).filter(id=>S.itemSettings[id]&&S.itemSettings[id].on&&P[id]);
     const low=[],chips=[],outN=[];for(const id of ids){const p=P[id];const pk=this.qty(id)/(p.pkg||1);const cover=pk*this.rateOf(id);
@@ -3907,6 +3920,8 @@ class Component extends DCLogic {
     const diag=['Errors ('+errs.length+')',...(errs.length?errs.map(e=>`${e.at.slice(0,16).replace('T',' ')} · ${e.screen} · ${e.msg}`):['none']),'',
       'Recent actions',...((S.history||[]).slice(0,20).map(h=>`${String(h.at).slice(5,16).replace('T',' ')} · ${h.label}`)),'',
       'Budget inputs',`weekly ${S.budget} · days ${days} · carry ${S.tripCarry||0} · override ${S.tripBudget==null?'none':S.tripBudget} · trip ${S.tripStart||'none'} to ${this.tripEnd()}`,'',
+      ...(()=>{const LC=window.LearnCore;if(!LC)return [];const ls=this.lsGet('learnstats',[]);const c=LC.counts(S.learn);
+        return ['Receipt learning (on this phone)',LC.trend(ls),...ls.slice(-10).reverse().map(x=>LC.statsLine(x)),`Learned: ${Object.keys(c).sort().map(k=>`${c[k]} ${k}`).join(', ')||'nothing yet'}`,''];})(),
       'Google Sheet',this.linked()?(()=>{const st=S.sheetStatus||{};const ls=S.lastSend;return `${String(S.sheetLink.url).split('?')[0]} · read ${st.at?st.at.slice(0,16).replace('T',' '):'never'} · version ${st.version||'?'}${st.error?' · '+st.error:''} · outbox ${(S.outbox||[]).length} · last send ${ls?ls.at.slice(5,16).replace('T',' ')+' '+ls.text:'none'}`;})():'not connected','',
       `App ${APP_VERSION} · build ${S.build||'?'} · catalog ${this.cat?this.cat.catalogVersion:'?'} · data ${SCHEMA}`].join('\n');
     return {moreMain:!sub||!['household','cost','calendar','backup','items','prices','sheet','sort','help'].includes(sub),subHousehold:sub==='household',subCalendar:sub==='calendar',subBackup:sub==='backup',subItems:sub==='items',subPrices:sub==='prices',subHelp:sub==='help',
@@ -4027,7 +4042,8 @@ class Component extends DCLogic {
     const setD=patch=>{const x=this.state.itemCard;this.setState({itemCard:{...x,arm:false,d:{...x.d,...patch}}});};const setO=(i,patch)=>{const x=this.state.itemCard;setD({offers:x.d.offers.map((o,j)=>j===i?{...o,...patch}:o)});};
     const stores=(this.cat&&this.cat.stores)||DEFAULT_STORES;const path=this.nodePath(d.node).map(n=>n.name).join(' › ');const nd=this.nodeById(d.node);
     const fu=u=>u==='each'||u==='ct'?'each':u;
-    return {icOpen:true,icTitle:p.name,icName:d.name,onIcName:e=>setD({name:e.target.value}),icBrand:d.brand,onIcBrand:e=>setD({brand:e.target.value}),
+    const icUsual=p.usual?`Your price: ${money(p.price)}, the middle of your last ${p.usual} receipts at ${this.storeName(p.store||'aldi')}${p.catPrice!=null?` (catalog ${money(p.catPrice)})`:''}.`:'';
+    return {icOpen:true,icUsual,icHasUsual:!!icUsual,icTitle:p.name,icName:d.name,onIcName:e=>setD({name:e.target.value}),icBrand:d.brand,onIcBrand:e=>setD({brand:e.target.value}),
       icPath:path||'Not in a group yet',icPathColor:path?'var(--ink)':'var(--muted)',icChangePath:()=>this.openTree('card',c.id,nd?(nd.parent||null):null),
       icCanFav:!!nd,icFavText:nd?`My favorite for ${nd.name.toLowerCase()}`:'',icFavTrack:d.fav?'var(--good)':'var(--line)',icFavKnob:d.fav?20:0,icToggleFav:()=>setD({fav:!d.fav}),
       icOffers:d.offers.map((o,i)=>{const pu=perUnit({price:parseFloat(o.price),pkg:parseFloat(o.amt),unit:o.unit},o.unit,1);return {store:this.storeName(o.store),price:o.price,onPrice:e=>setO(i,{price:e.target.value}),amt:o.amt,onAmt:e=>setO(i,{amt:e.target.value}),
@@ -4062,7 +4078,7 @@ class Component extends DCLogic {
   chg(type,data,base){return {id:'c_'+Date.now().toString(36)+'_'+uid(),type,at:new Date().toISOString(),data,base:base||{}};}
   priceBase(id,store){const c=this.cat&&this.cat.items.find(x=>x.id===id);if(!c)return {};if(!store||store==='aldi')return {price:c.price,priceDate:c.priceDate||null};const o=(c.offers||[]).find(x=>x.store===store);return o?{price:o.price,priceDate:o.priceDate||null}:{};}
   recBase(id){const c=this.cat&&this.cat.recipes.find(x=>x.id===id);return c?{changed:c.changed||null}:{};}
-  itemData(u,nl){const o={};for(const k of ['id','name','cat','pack','unit','pkg','price','src','priceDate','staple','storage','fridge','freezer','pantry','soldBy','family','tracking','aldi'])o[k]=u[k]??null;o.nums=Object.keys(nl||{}).filter(n=>!n.includes(':')&&nl[n]===u.id);o.brand=u.brand||'';o.node=u.node||null;o.store=u.store0||'aldi';
+  itemData(u,nl){const o={};for(const k of ['id','name','cat','pack','unit','pkg','price','src','priceDate','staple','storage','fridge','freezer','pantry','soldBy','family','tracking','aldi'])o[k]=u[k]??null;o.nums=Object.keys(nl||{}).filter(n=>!n.includes(':')&&nl[n]===u.id);o.brand=u.brand||'';o.flavor=u.flavor||'';o.unsorted=!!u.unsorted;o.node=u.node||null;o.store=u.store0||'aldi';
     const oe=(this.state.offerEdits||{})[u.id]||{};o.offers=Object.keys(oe).filter(s=>!oe[s].removed).map(s=>({store:s,price:oe[s].price,pack:oe[s].pack||null,unit:oe[s].unit||u.unit,pkg:oe[s].pkg||u.pkg,nums:Object.keys(nl||{}).filter(k=>k.startsWith(s+':')&&nl[k]===u.id).map(k=>splitKey(k)[1]),priceDate:oe[s].priceDate||null,src:oe[s].src||'edited'}));return o;}
   recData(r,id){const o={id:id||null};for(const k of ['meal','name','tags','serv','ing','total','hands','keeps','reheats','link','notes'])o[k]=r[k]??null;if(!id)delete o.id;return o;}
   recEditChg(orig,r){if(/^my (recipe|version)$/i.test(orig.source||''))return this.chg('recipe.update',this.recData({...orig,...r},orig.id),{changed:orig.changed||null});
@@ -4539,34 +4555,41 @@ class Component extends DCLogic {
     const al={};for(const a of S.aliases||[])(al[a.item]=al[a.item]||[]).push(a.text);
     for(const k in (S.numLinks||{})){const [s,n]=splitKey(k);if(s!==store)continue;const id=S.numLinks[k];add(n,P[id]&&P[id].name);for(const t of al[id]||[])add(n,t);}
     for(const r of S.receipts||[])if((r.store||'aldi')===store)for(const x of r.rows||[])if(x.num)add(x.num,x.text||(P[x.item]&&P[x.item].name));
+    if(window.LearnCore&&S.learn)for(const [n,nm] of window.LearnCore.knownNums(S.learn,store,id=>P[id]&&P[id].name))add(n,nm[0]);
     return K;}
+  numLearn(store){return window.LearnCore&&this.state.learn?window.LearnCore.numLearn(this.state.learn,store||'aldi',this.today()):null;}
   variantsOf(id){const S=this.state;const v=(S.variants||{})[id];if(v&&v.length)return v;const p=this.P()[id];return p&&p.brand?[{vid:'b_'+id,brand:p.brand,flavor:'',auto:true}]:[];}
   varLabel(id,vid){if(!vid)return '';const v=this.variantsOf(id).find(x=>x.vid===vid);return v?[v.brand,v.flavor].filter(Boolean).join(' · '):'';}
   brandGuess(text){const t=String(text||'');const m=t.match(/ben\s*&\s*jerry'?s|la\s*croix|belle\s*vie|kraft|heinz|barilla|tillamook|chobani|oikos|starbucks|coca[\s-]?cola|pepsi/i);if(!m)return '';const s=m[0].toLowerCase();
     return {"ben & jerry's":"Ben & Jerry's",'la croix':'La Croix','belle vie':'Belle Vie'}[s.replace(/\s+/g,' ').replace(/jerrys/,"jerry's")]||m[0].replace(/\b\w/g,c=>c.toUpperCase());}
-  vocab(){if(this._vocabFor===this.state.prices&&this._vocab)return this._vocab;const V=new Set();const add=s=>String(s||'').toLowerCase().split(/[^a-z]+/).forEach(w=>{if(w.length>=3)V.add(w);});
-    for(const p of this.state.prices||[])add(p.name);for(const a of this.state.aliases||[])add(a.text);for(const v of Object.values(this.state.nameDict||{}))add(v);this._vocab=V;this._vocabFor=this.state.prices;return V;}
-  rowFrom(x,store,P,items){const S=this.state,RC=window.ReceiptCore;const sg=RC.suggest(x.text,{vocab:this.vocab(),learned:S.nameDict,learnedBrand:S.brandDict,store,known:(S.prices||[]).filter(q=>q.own).map(q=>({name:q.name,cat:q.cat}))});
+  vocab(){const S=this.state;if(this._vocabFor===S.prices&&this._vocabL===S.learn&&this._vocab)return this._vocab;const V=new Set();const add=s=>String(s||'').toLowerCase().split(/[^a-z]+/).forEach(w=>{if(w.length>=3)V.add(w);});
+    for(const p of S.prices||[])add(p.name);for(const a of S.aliases||[])add(a.text);for(const v of Object.values(S.nameDict||{}))add(v);for(const r of S.recipes||[])for(const x of r.ing||[])add(x[2]);
+    if(window.LearnCore&&S.learn)for(const w of window.LearnCore.words(S.learn,this.today()))V.add(w);this._vocab=V;this._vocabFor=S.prices;this._vocabL=S.learn;return V;}
+  rowFrom(x,store,P,items){const S=this.state,RC=window.ReceiptCore,LC=window.LearnCore;const t0=this.today();const lk=LC&&S.learn?LC.lookup(S.learn,t0):null;const sg=RC.suggest(x.text,{lookup:lk,vocab:this.vocab(),learned:S.nameDict,learnedBrand:S.brandDict,store,known:(S.prices||[]).filter(q=>q.own).map(q=>({name:q.name,cat:q.cat}))});
     const a=this.aliasOf(x.text)||(sg.changes.length?this.aliasOf(sg.fixedText):null);let iid=null,how='none';const bn=x.num?this.itemByNum(x.num,store):null;
-    if(bn&&P[bn]){iid=bn;how='number';}else if(a&&(a==='__ignore'||P[a])){iid=a;how='alias';}else{const fz=fuzzy(sg.fixedText,items);if(fz[0]&&fz[0].sc>=.7&&(!fz[1]||fz[0].sc-fz[1].sc>=.08)){iid=fz[0].p.id;how='guess';}}
+    const li=!bn&&!a&&LC&&S.learn?LC.itemFor(S.learn,{text:x.text,fixedText:sg.fixedText},store,t0):null;
+    if(bn&&P[bn]){iid=bn;how='number';}else if(a&&(a==='__ignore'||P[a])){iid=a;how='alias';}else if(li&&(li.iid==='__ignore'||P[li.iid])){iid=li.iid;how='learned';}
+    else{const ac=this._aliasN&&this._aliasNFor===S.learn?this._aliasN:(this._aliasNFor=S.learn,this._aliasN=LC&&S.learn?LC.aliasCount(S.learn,t0):{});
+      const fz=fuzzy(sg.fixedText,items).map(f=>({...f,sc:f.sc+Math.min(.3,.1*(ac[f.p.id]||0))})).sort((a,b)=>b.sc-a.sc);if(fz[0]&&fz[0].sc>=.7&&(!fz[1]||fz[0].sc-fz[1].sc>=.08)){iid=fz[0].p.id;how='guess';}}
     const p=iid&&iid!=='__ignore'?this.atStore(P[iid],store):null;const w=!!x.weighed||(!!p&&this.isWeighed(p));const qn=w?(x.wt||(p?p.pkg:1)):Math.max(1,Math.round(x.qty||1));
     const name0=sg.name;const sz=RC.parseSize(sg.fixedText);const g={cat:sg.cat,sub:sg.sub};
     const vid=iid&&x.num?((S.numVar||{})[nkey(store,x.num)]||null):null;
-    return {rid:uid(),iid,text:x.text,num:x.num||'',how,count:!w?qn:1,size:p?p.pkg:1,other:'',wt:w?String(qn):'',wtUnit:x.wtUnit||'lb',total:r2(x.amount).toFixed(2),unitP:(w&&x.unitP?r2(x.unitP):r2(x.amount/(qn||1))).toFixed(2),
+    const ss=LC&&S.learn&&p&&!w?LC.sizeSeen(S.learn,iid,store):null;const size=ss!=null&&+ss>0?+ss:(p?p.pkg:1);
+    return {rid:uid(),iid,iid0:iid,text:x.text,fixedText:sg.fixedText,num:x.num||'',num0:x.num||'',total0:r2(x.amount).toFixed(2),how,count:!w?qn:1,size,size0:size,sizeSettled:ss!=null,other:'',wt:w?String(qn):'',wtUnit:x.wtUnit||'lb',total:r2(x.amount).toFixed(2),unitP:(w&&x.unitP?r2(x.unitP):r2(x.amount/(qn||1))).toFixed(2),
       sale:x.disc?true:null,discAuto:!!x.disc,disc:x.disc?String(x.disc):'',showDisc:false,name0,nCat0:g.cat,nSub:g.sub,nSize:sz?{label:sz.label,amt:sz.base.amt,unit:sz.base.unit}:null,
-      vid,brand0:sg.brand,brandFrom:sg.brandFrom,flavor0:sg.flavor,variety0:sg.variety,fixes:sg.changes,sugConf:sg.conf,priceDoubt:(()=>{if(!p||!(p.price>0)||w)return false;const a=r2(x.amount/(qn||1)).toFixed(2),b=r2(p.price).toFixed(2);if(a===b||a.length!==b.length)return false;let d=0,ok=true;for(let i=0;i<a.length;i++)if(a[i]!==b[i]){d++;if(!RC.confusable(a[i],b[i]))ok=false;}return d===1&&ok&&(x.conf?x.conf.price<92:false);})(),conf:x.conf||null,corrected:!!x.corrected,from:x.from||'',unclear:!!x.unclear,rawNum:x.raw||'',crop:x.crop||null,tax:x.tax||'',printed:x.printed||null};}
+      vid,brand0:sg.brand,brandFrom:sg.brandFrom,sugLearned:sg.learned||[],flavor0:sg.flavor,variety0:sg.variety,fixes:sg.changes,sugConf:sg.conf,priceDoubt:(()=>{if(!p||!(p.price>0)||w)return false;const a=r2(x.amount/(qn||1)).toFixed(2),b=r2(p.price).toFixed(2);if(a===b||a.length!==b.length)return false;let d=0,ok=true;const pp=LC&&S.learn?LC.pairs(S.learn,'price',t0):null;for(let i=0;i<a.length;i++)if(a[i]!==b[i]){d++;if(!RC.confusable(a[i],b[i],pp))ok=false;}return d===1&&ok&&(x.conf?x.conf.price<92:false);})(),conf:x.conf||null,corrected:!!x.corrected,from:x.from||'',unclear:!!x.unclear,rawNum:x.raw||'',crop:x.crop||null,tax:x.tax||'',printed:x.printed||null};}
   facts(d,pr,store){const u=d.userSet||{};const o={};const set=(k,v)=>{if(v!=null&&v!==''&&!u[k])o[k]=String(v);};
     set('date',pr.date);set('tax',pr.tax!=null?pr.tax.toFixed(2):null);set('printed',pr.total!=null?pr.total.toFixed(2):null);set('count',pr.count);if(!u.store&&store)o.store=store;
     o.subtotal=pr.subtotal;o.taxes=pr.taxes||[];o.time=pr.time||null;return o;}
   rcFromParsed(pr,store,extra){const S=this.state,d=S.receiptDraft,RC=window.ReceiptCore;const P=this.P();const items=S.prices.filter(p=>!p.retired);
     const g=RC.groupItems(pr.items);const rows=g.map(x=>this.rowFrom(x,store,P,items));
     for(const gp of (extra&&extra.gaps)||[]){const at=rows.findIndex(r=>r.lineIdx===gp.after);rows.splice(Math.min(rows.length,(gp.row??rows.length)),0,{rid:uid(),gap:true,missing:gp.missing,crop:gp.crop||null,text:gp.text||'',iid:'__gap',count:1,total:'0.00'});}
-    const am=pr.items.map(x=>x.amount);const fix=pr.subtotal!=null?RC.solveTotal(am,pr.subtotal,pr.items.map(x=>x.conf?x.conf.price:100)):null;
+    const am=pr.items.map(x=>x.amount);const fix=pr.subtotal!=null?RC.solveTotal(am,pr.subtotal,pr.items.map(x=>x.conf?x.conf.price:100),window.LearnCore&&S.learn?window.LearnCore.pairs(S.learn,'price',this.today()):null):null;
     let solve=null;if(fix){const it=pr.items[fix.i];const row=rows.find(r=>r.num===it.num&&!r.gap);solve={rid:row&&row.rid,from:fix.from,to:fix.to,line:fix.i+1};}
-    this.saveDraft({...d,...this.facts(d,pr,store),tab:'table',rows,solve,countRead:RC.itemCount(g),photoNote:extra&&extra.note||''});
+    this.saveDraft({...d,...this.facts(d,pr,store),tab:'table',rows,solve,countRead:RC.itemCount(g),photoNote:extra&&extra.note||'',readAt:new Date().toISOString()});
     const n=rows.filter(r=>!r.gap&&r.iid&&r.how!=='guess').length;this.flash(`${this.storeName(store)} receipt: ${RC.itemCount(g)} items read${n?`, ${n} matched`:''}.`);}
   readText63(txt){const RC=window.ReceiptCore;if(!RC)return false;const S=this.state,d=S.receiptDraft;const det=detectStoreLocal(txt);const store=d.store||det||S.lastStore||this.mainStore();if(store!=='aldi'&&det!=='aldi')return false;
-    const pr=RC.parseLines(String(txt||'').split(/\r?\n/),{known:this.knownNums('aldi')});if(!pr.items.length)return false;this.rcFromParsed(pr,pr.store||store);return true;}
+    const pr=RC.parseLines(String(txt||'').split(/\r?\n/),{known:this.knownNums('aldi'),learn:this.numLearn('aldi')});if(!pr.items.length)return false;this.rcFromParsed(pr,pr.store||store);return true;}
   // OCR (WP48): prepare, cut strips, read lines, re-read the number and price columns with tight character sets.
   async prep63(file){const url=URL.createObjectURL(file);try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
     let sc=Math.max(1,Math.min(3,1600/img.width));if(img.height*sc>12000)sc=12000/img.height;const W=Math.round(img.width*sc),H=Math.round(img.height*sc);
@@ -4608,7 +4631,7 @@ class Component extends DCLogic {
       const known=this.knownNums('aldi');let all=null,overlapWarn=false,head=null,foot=null,gaps=[];
       for(let i=0;i<fs.length;i++){step(0,fs.length>1?` (${i+1} of ${fs.length})`:'');const cv=await this.prep63(fs[i]);const ls=await this.ocrPhoto(w,cv,k=>step(k,fs.length>1?` (${i+1} of ${fs.length})`:''));
         const pre=RC.parseLines(ls,{});const kn=new Map(known);for(const x of pre.items)if(x.num&&x.num.length===6&&(x.conf.num>=85)){const v=kn.get(x.num)||[];if(!v.includes(x.text))v.push(x.text);kn.set(x.num,v);}
-        const pr=RC.parseLines(ls,{known:kn});const raw=pr.items.map(x=>({...x,crop:x.meta&&x.meta.crop}));
+        const pr=RC.parseLines(ls,{known:kn,learn:this.numLearn('aldi')});const raw=pr.items.map(x=>({...x,crop:x.meta&&x.meta.crop}));
         const ys=raw.filter(x=>x.meta).map(x=>({i:x.lines[0],y0:x.meta.y0,y1:x.meta.y1}));for(const gp of RC.findGaps(ys)){const yc=this.cropOf(cv,0,gp.y0,cv.width,gp.y1,80);gaps.push({...gp,crop:yc?this.keepCrop(yc):null,photo:i});}
         if(!head||pr.store)head=head||pr;if(pr.total!=null||pr.subtotal!=null||pr.count!=null)foot=pr;
         if(!all)all=raw;else{const s=RC.stitch(all,raw);if(!s.overlap)overlapWarn=true;all=s.items;}}
@@ -4646,8 +4669,9 @@ class Component extends DCLogic {
       const vl=p?this.varLabel(r.iid,r.vid):'';const vn=r.vNew?[r.vNew.brand,r.vNew.flavor].filter(Boolean).join(' · '):'';
       const title=r.gap?'A line may be missing here':r.iid==='__ignore'?'Not food':p?p.name+(vl||vn?` · ${vl||vn}`:''):(r.nName??r.name0??r.text);
       const crop=r.crop&&this._crops?this._crops[r.crop]:null;const cat=r.nCat??r.nCat0??'Other';const nv=r.nv||{brand:r.brand0||'',flavor:r.flavor0||''};
-      const sugLine=!r.iid&&!r.gap?[`${cat}${r.nSub?` › ${r.nSub}`:''}`,nv.brand,nv.flavor,r.variety0,r.nSize&&r.nSize.label].filter(Boolean).join(' · '):'';const fixLine=(r.fixes||[]).length?`Read as “${r.fixes.map(x=>x[0]).join(', ')}”, corrected to “${r.fixes.map(x=>x[1]).join(', ')}”.`:'';
-      return {...b,rid:r.rid,title,mini:sugLine&&!r.named?`Suggested: ${sugLine}`:[r.num?`#${r.num}`:r.unclear?'number unclear':'',r.text?`“${r.text}”`:''].filter(Boolean).join(' · '),printedLine:[r.num?`#${r.num}`:'',r.text?`Printed “${r.text}”`:''].filter(Boolean).join(' · '),hasFix:!!fixLine,fixLine,
+      const sugLine=!r.iid&&!r.gap?[`${cat}${r.nSub?` › ${r.nSub}`:''}`,nv.brand,nv.flavor,r.variety0,r.nSize&&r.nSize.label].filter(Boolean).join(' · '):'';const kept=(r.fixUndo||[]).length>0;const fixLine=(r.fixes||[]).length?(kept?`Kept “${r.fixes.map(x=>x[0]).join(', ')}” as printed.`:`Read as “${r.fixes.map(x=>x[0]).join(', ')}”, corrected to “${r.fixes.map(x=>x[1]).join(', ')}”.`):'';
+      const fromLearn=(r.sugLearned||[]).length>0;
+      return {...b,rid:r.rid,title,mini:sugLine&&!r.named?`${fromLearn?'From your earlier receipts':'Suggested'}: ${sugLine}`:[r.num?`#${r.num}`:r.unclear?'number unclear':'',r.text?`“${r.text}”`:''].filter(Boolean).join(' · '),printedLine:[r.num?`#${r.num}`:'',r.text?`Printed “${r.text}”`:''].filter(Boolean).join(' · '),hasFix:!!fixLine,fixLine,canFixKeep:!!fixLine&&!kept&&!r.iid&&!r.gap,fixKeep:()=>{const raw=(r.fixes||[]).map(x=>x[0]);let nm=r.nName??r.name0??'';for(const [w,f] of r.fixes||[])nm=nm.replace(new RegExp('\\b'+f+'\\b','i'),m=>m[0]===m[0].toUpperCase()?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():w.toLowerCase());set(r,{fixUndo:raw,nName:nm});},
         canAccept:!r.iid&&!r.gap&&!r.named,accept:()=>{set(r,{named:true,nv});},acceptAria:`Use the suggestion for ${r.nName??r.name0??r.text}`,hasBadge:!w&&n>1,badge:`×${n}`,dot:doubt(r)||(!r.iid&&!r.named),dotColor:!r.iid&&!r.named?'var(--line-strong)':'#E0A030',
         price:money(net(r)),open,tap:()=>this.setState({rcOpenRow:open?null:r.rid,rcEditAmt:null}),hasCrop:!!crop&&(open||doubt(r)),cropBg:crop?`#FFFFFF url('${crop}') left center/contain no-repeat`:'#FFFFFF',amountText:amt,editAmt:S.rcEditAmt===r.rid,notEditAmt:S.rcEditAmt!==r.rid,
         editAmtGo:()=>this.setState({rcEditAmt:S.rcEditAmt===r.rid?null:r.rid}),isGap:!!r.gap,notGap:!r.gap,gapText:r.missing>1?`About ${r.missing} lines may be missing here.`:'One line may be missing here.',gapAdd:()=>{this.patchDraft(dd=>({...dd,rows:dd.rows.filter(x=>x.rid!==r.rid)}));this.addRow();},
@@ -4698,19 +4722,22 @@ class Component extends DCLogic {
     for(const r of d.rows){const nv=r.vNew||r.nv;const nm=String(r.nName??r.name0??'').toLowerCase().replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();if(nv&&nv.brand&&nm&&nv.brand!==r.brand0)bdict[nm]=nv.brand;}
     const rows=d.rows.filter(r=>!r.gap).map(r=>{let x={...r};if(!x.iid){const name=(x.nName??x.name0??x.text??'Item').trim()||'Item';if(x.nName&&x.nName!==x.name0)dict={...dict,...RC.learnNames(x.text,x.nName)};
         const w=!!x.wt;const sz=x.nSize;const it=this.makeUserItem({name,cat:x.nCat??x.nCat0??'Other',price:w?(parseFloat(x.unitP)||0):(parseFloat(x.unitP)||parseFloat(x.total)||0),amt:w?0:(sz?sz.amt:0),unit:w?'lb':(sz?sz.unit:'each'),src:'receipt'});
-        if(w){it.unit='lb';it.pack='per lb';it.soldBy='weight';it.pkg=1;}if(sz&&!w)it.pack=sz.label;it.store0=st;if(x.later)it.unsorted=true;
+        if(w){it.unit='lb';it.pack='per lb';it.soldBy='weight';it.pkg=1;}if(sz&&!w)it.pack=sz.label;it.store0=st;if(x.later)it.unsorted=true;{const v=x.vNew||x.nv;if(v&&v.brand)it.brand=v.brand;if(v&&v.flavor)it.flavor=v.flavor;}
         while(own.some(o=>o.id===it.id)||P[it.id])it.id=it.id+'_'+uid().slice(0,2);own.push(it);made.push(it);if(this.linked())ob=[...ob,this.chg('item.add',this.itemData(it,S.numLinks))];x.iid=it.id;x.how='named';}
       const c=x.iid!=='__ignore'?null:null;return x;});
     const P2={...P};for(const it of made)P2[it.id]=it;
     const fin=rows.map(r=>{if(r.sale!=null||!r.iid||r.iid==='__ignore')return r;const c=this.rowCalc(r,P2);return c&&c.ask?{...r,sale:c.off<0}:r;});
     const stats={changed:0,sales:0};for(const r of fin){const c=r.iid&&r.iid!=='__ignore'?this.rowCalc(r,P2):null;if(!c)continue;if(c.sale||r.sale===true)stats.sales++;else if(c.p&&c.p.price>0&&Math.abs(c.paid-c.p.price)>.005)stats.changed++;}
-    const vars=JSON.parse(JSON.stringify(S.variants||{}));const nv={...(S.numVar||{})};const date=d.date||this.today();
+    const vars=JSON.parse(JSON.stringify(S.variants||{}));const nv={...(S.numVar||{})};const date=d.date||this.today();const newV=[],newN=[];
     for(const r of fin){if(!r.iid||r.iid==='__ignore')continue;let vid=r.vid;const nv0=r.nv||(!r.how||r.how==='named'?{brand:r.brand0||'',flavor:r.flavor0||''}:null);const nvv=r.vNew||(nv0&&(nv0.brand||nv0.flavor)?nv0:null);
-      if(!vid&&nvv){const list=vars[r.iid]||[];const ex=list.find(v=>(v.brand||'')===(nvv.brand||'')&&(v.flavor||'')===(nvv.flavor||''));vid=ex?ex.vid:'v_'+uid();if(!ex)vars[r.iid]=[...list,{vid,brand:nvv.brand||'',flavor:nvv.flavor||'',nums:{}}];}
-      if(!vid)continue;if(vid.startsWith('b_')&&!(vars[r.iid]||[]).some(v=>v.vid===vid)){const p=P2[r.iid];vars[r.iid]=[...(vars[r.iid]||[]),{vid,brand:p&&p.brand||'',flavor:'',nums:{}}];}
-      const v=(vars[r.iid]||[]).find(z=>z.vid===vid);if(v){if(r.num){v.nums[st]=[...new Set([...(v.nums[st]||[]),r.num])];nv[nkey(st,r.num)]=vid;}v.last={price:r2(parseFloat(r.unitP)||0),date,store:st};}r._vid=vid;}
+      if(!vid&&nvv){const list=vars[r.iid]||[];const ex=list.find(v=>(v.brand||'')===(nvv.brand||'')&&(v.flavor||'')===(nvv.flavor||''));vid=ex?ex.vid:'v_'+uid();if(!ex){vars[r.iid]=[...list,{vid,brand:nvv.brand||'',flavor:nvv.flavor||'',nums:{}}];newV.push({item:r.iid,vid,brand:nvv.brand||'',flavor:nvv.flavor||''});}}
+      if(!vid)continue;if(vid.startsWith('b_')&&!(vars[r.iid]||[]).some(v=>v.vid===vid)){const p=P2[r.iid];vars[r.iid]=[...(vars[r.iid]||[]),{vid,brand:p&&p.brand||'',flavor:'',nums:{}}];newV.push({item:r.iid,vid,brand:p&&p.brand||'',flavor:''});}
+      const v=(vars[r.iid]||[]).find(z=>z.vid===vid);if(v){if(r.num&&!(v.nums[st]||[]).includes(r.num))newN.push({vid,store:st,num:r.num});if(r.num){v.nums[st]=[...new Set([...(v.nums[st]||[]),r.num])];nv[nkey(st,r.num)]=vid;}v.last={price:r2(parseFloat(r.unitP)||0),date,store:st};}r._vid=vid;}
+    if(this.linked())ob=[...ob,...newV.map(v=>this.chg('variant.add',v)),...newN.map(n=>this.chg('variant.number',n))];
+    const LC=window.LearnCore;const learn=LC?LC.fromReceipt(S.learn,fin,{store:st,date,names:id=>P2[id]&&P2[id].name}):S.learn;
+    if(LC)this.lsSet('learnstats',[...this.lsGet('learnstats',[]),LC.statsOf(fin,{date,readAt:d.readAt,addAt:new Date().toISOString()})].slice(-50));
     const keepImg=this._keepImg;this._keepImg=null;
-    this.relayer({ownItems:own,outbox:ob,nameDict:dict,brandDict:bdict,variants:vars,numVar:nv,receiptDraft:{...d,rows:fin.map(r=>{const {_vid,...rest}=r;return {...rest,vid:_vid||r.vid||null};})}},()=>{
+    this.relayer({learn,ownItems:own,outbox:ob,nameDict:dict,brandDict:bdict,variants:vars,numVar:nv,receiptDraft:{...d,rows:fin.map(r=>{const {_vid,...rest}=r;return {...rest,vid:_vid||r.vid||null};})}},()=>{
       const before=new Set(Object.values(this.state.inv||{}).flat().map(b=>b.bid));this.importDraft();
       const inv=this.copyInv();let ch=false;for(const r of fin){if(!r._vid||!inv[r.iid])continue;for(const b of inv[r.iid])if(!before.has(b.bid)&&!b.vid){b.vid=r._vid;ch=true;}}
       if(ch)this.relayer({inv});
@@ -4743,7 +4770,7 @@ class Component extends DCLogic {
     if(!day)return {...settings,eveOn:false,eveChips:[],eveAmts:[]};
     const wd=kdate(t0).getDay();const ids=Object.keys(S.inv||{}).filter(id=>P[id]&&!P[id].staple&&this.qty(id)>0);
     const cands=ids.map(id=>{const log=((S.usageLog||{})[id]||[]).filter(e=>e.d&&!e.empty);const same=log.filter(e=>kdate(e.d).getDay()===wd);const bs=this.batches(id);
-      return {id,wd:log.map(e=>kdate(e.d).getDay()),lastWd:same.length?same[same.length-1].d:null,opened:bs.some(b=>b.q<(b.q0||b.q)-1e-6),dueIn:this.invDaysLeft(id)};});
+      return {id,wd:log.map(e=>kdate(e.d).getDay()),lastWd:same.length?same[same.length-1].d:null,opened:bs.some(b=>b.q<(b.q0||b.q)-1e-6),dueIn:(()=>{const a=this.invDaysLeft(id);const LC=window.LearnCore;const h=LC?LC.habit(((S.priceHistory||{})[id]||[]).map(x=>x.date),t0):null;const b=h&&h.n>=3&&h.dueIn!=null?Math.max(0,h.dueIn):null;return a==null?b:b==null?a:Math.min(a,b);})()};});
     const ranked=H.rankChips(cands,wd,t0,8);const open=S.eveOpen;const logged=S.eveLogged&&S.eveLogged.d===day?S.eveLogged.names:[];
     const done=()=>{const x=this.lsGet('eve',{});x[day]={...(x[day]||{}),done:true};this.lsSet('eve',x);this.setState({eveOpen:null,eveLogged:null});if(!logged.length)this.flash('Thanks. Nothing else logged.');};
     return {...settings,eveOn:true,eveChips:ranked.map(c=>{const on=open===c.id;return {label:shortName(P[c.id].name),open:on,pick:()=>this.setState({eveOpen:on?null:c.id}),bg:on?'var(--primary)':'var(--page)',color:on?'var(--on-accent)':'var(--ink)',border:on?'var(--primary)':'var(--line)'};}),
@@ -4924,7 +4951,7 @@ class Component extends DCLogic {
     const TB=this.tripBudget(),TD=this.tripDays(),tEnd=this.tripEnd(),tStart=S.tripStart||t0;const stockLines=this.stockPlan(P,need,shop);const hhLines=this.essLines();const hhCost=r2(hhLines.reduce((a,l)=>a+l.cost,0));const stockCost=r2(stockLines.reduce((a,l)=>a+l.cost,0)+hhCost);const spent=this.spent(),avail=Math.max(0,TB-spent),ok=shop.total+stockCost<=avail+1e-9;
     const gmap={};const ms=S.prices.some(p=>(p.offers||[]).some(o=>o.store!=='aldi'));shop.buy.forEach(l=>{(gmap[l.it.cat]=gmap[l.it.cat]||[]).push(l)});if(stockLines.length)gmap['Always stocked']=stockLines;if(hhLines.length)gmap['Household']=hhLines;
     const cats=[...CAT_ORDER,'Always stocked',...Object.keys(gmap).filter(c=>!CAT_ORDER.includes(c)&&c!=='Always stocked')];
-    const shopGroups=cats.filter(c=>gmap[c]).map(c=>({cat:c,lines:gmap[c].sort((a,b)=>a.it.name.localeCompare(b.it.name)).map(l=>({name:l.it.name,short:packLabel(l.it,l.packs)+(l.stock?' · always stocked':l.restock?' · marked out':''),store:l.it.store||'aldi',...this.cheapRow(l),estMark:l.it.src==='estimate'?' *':'',
+    const shopGroups=cats.filter(c=>gmap[c]).map(c=>({cat:c,lines:gmap[c].sort((a,b)=>(((S.priceHistory||{})[b.it.id]||[]).length-((S.priceHistory||{})[a.it.id]||[]).length)||a.it.name.localeCompare(b.it.name)).map(l=>({name:l.it.name,short:packLabel(l.it,l.packs)+(l.stock?' · always stocked':l.restock?' · marked out':''),store:l.it.store||'aldi',...this.cheapRow(l),estMark:l.it.src==='estimate'?' *':'',
       detail:(l.stock?`Buy ${packLabel(l.it,l.packs)}. Keeps you stocked for ${l.days} day${l.days===1?'':'s'}${l.have>0?`; you have ${this.shareText(l.it,l.have)}`:''}.${l.note?' '+l.note:''}`:l.restock?`Buy ${packLabel(l.it,l.packs)}. Marked out in your kitchen.`:`Buy ${packLabel(l.it,l.packs)}. Menu uses ${fmtQ(l.need,l.it.unit)}${l.have>0?`, you have ${fmtQ(l.have,l.it.unit)}`:''}.`)+(l.it.src==='edited'?` Price edited ${mdDate(dkey(new Date(l.it.editedAt)))}.`:''),
       cost:money(l.cost),unitPrice:l.packs>1?`${money(l.it.price)} each`:'',buy:()=>l.hh?this.buyEss(l):this.buyLine(l),
       editing:S.editPrice===l.id,notEditing:S.editPrice!==l.id,edit:()=>l.hh?this.setState({essSheet:{key:l.key}}):this.setState({editPrice:l.id,priceDraft:String(l.it.price)})}))}));
@@ -5085,7 +5112,7 @@ class Component extends DCLogic {
       copyAliasCsv:()=>this.copyText(this.csv([['receipt_text','item_id'],...(S.aliases||[]).filter(a=>!String(a.item).startsWith('u_')).map(a=>[a.text,a.item==='__ignore'?'ignore':a.item])]),'Receipt aliases'),
       hasMsg:!!S.msg,msgText:S.msg?S.msg.text:'',msgBg:S.msg&&S.msg.ok?'var(--good-tint)':'var(--bad-tint)',msgColor:S.msg&&S.msg.ok?'var(--good-ink)':'var(--bad-ink)',
       search:S.search,onSearch:e=>this.setState({search:e.target.value}),
-      priceRows:plist.slice(0,40).map(p=>{const ed=p.src==='edited'||p.src==='receipt';const [b,c,l]=srcStyle(p.src);const hl=((S.priceHistory||{})[p.id]||[]).slice(-1)[0];return {hasSrc:['edited','receipt','estimate'].includes(p.src),name:p.name,pack:`${p.pack||''}${p.staple?' · staple':''}${ed&&p.catPrice!=null?` · catalog ${money(p.catPrice)}`:''}${hl?` · last paid ${money(hl.paid)} ${mdDate(hl.date)}${hl.sale?' (sale)':''}`:''}`,price:money(p.price),
+      priceRows:plist.slice(0,40).map(p=>{const ed=p.src==='edited'||p.src==='receipt';const [b,c,l]=p.usual?['var(--good-tint)','var(--good-ink)','your price']:srcStyle(p.src);const hl=((S.priceHistory||{})[p.id]||[]).slice(-1)[0];return {hasSrc:['edited','receipt','estimate'].includes(p.src),name:p.name,pack:`${p.pack||''}${p.staple?' · staple':''}${ed&&p.catPrice!=null?` · catalog ${money(p.catPrice)}`:''}${hl?` · last paid ${money(hl.paid)} ${mdDate(hl.date)}${hl.sale?' (sale)':''}`:''}`,price:money(p.price),
         src:ed?`${l} ${mdDate(dkey(new Date(p.editedAt)))}`:l,srcBg:b,srcColor:c,canRevert:ed,revert:()=>this.revertPrice(p.id)};}),
       priceMore:plist.length>40?`Showing 40 of ${plist.length}. Search to find more.`:`${plist.length} item${plist.length===1?'':'s'}`,
       sheetOpen,sh,closeSheet:()=>this.setState({sheet:null}),...this.recEdVals(),...this.myRecVals(),...this.webRecVals(),

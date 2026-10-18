@@ -2,8 +2,10 @@
 (function(){
 const r2=x=>Math.round((+x||0)*100)/100;
 const CONF=[['8','3'],['8','6'],['8','5'],['8','2'],['8','0'],['1','7'],['5','6'],['9','4']];
-const confusable=(a,b)=>CONF.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a));
+// extra: a Set of learned pairs like '3~8' (tools/learn-core.js).
+const confusable=(a,b,extra)=>CONF.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a))||!!(extra&&extra.has([a,b].sort().join('~')));
 const norm=s=>String(s||'').toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+const two=s=>norm(s).split(' ').slice(0,2).join(' ');
 function bigrams(s){s=norm(s).replace(/ /g,'');const o=[];for(let i=0;i<s.length-1;i++)o.push(s.slice(i,i+2));return o;}
 function sim(a,b){const A=bigrams(a),B=bigrams(b);if(!A.length||!B.length)return 0;const m={};for(const x of B)m[x]=(m[x]||0)+1;let n=0;for(const x of A)if(m[x]){n++;m[x]--;}return 2*n/(A.length+B.length);}
 
@@ -12,16 +14,17 @@ const DICT={chkn:'chicken',ckn:'chicken',amer:'american',sngles:'singles',sngls:
   sauc:'sauce',bnls:'boneless',sknls:'skinless',wht:'white',whl:'whole',grnd:'ground',chs:'cheese',shrd:'shredded',shreds:'shreds',frz:'frozen',veg:'vegetable',
   btr:'butter',crm:'cream',pnt:'pint',ontheg:'on the go',onthego:'on the go',fp:'',lrw:'',hp:'halves and pieces','h&p':'halves & pieces',bev:'beverage',bkd:'baked',
   pck:'pack',asst:'assorted',choc:'chocolate',strwb:'strawberry',van:'vanilla',mozz:'mozzarella',parm:'parmesan',tom:'tomato',tomatoe:'tomato',pot:'potato'};
-const SIZE_RE=/(\d+(?:\.\d+)?)\s*(fl\.?\s*oz|oz|lbs?|kg|g|ml|l|ltr|ct|count|pk|pack)\.?(?=\s|$|[^a-z])/i;
+const SIZE_RE=/(\d+(?:\.\d+)?)(?:\s*|-)(fl\.?\s*oz|oz|lbs?|kg|g|ml|l|ltr|ct|count|pk|pack)\.?(?=\s|$|[^a-z])/i;
 function parseSize(text){const s=String(text||'');let m=s.match(SIZE_RE);let out=null;
   if(m){const v=+m[1];const u=m[2].toLowerCase().replace(/[\s.]/g,'');
     const U={floz:['fl oz',v,'fl oz'],oz:['oz',v,'oz'],lb:['lb',v,'lb'],lbs:['lb',v,'lb'],kg:['kg',v*35.274,'oz'],g:['g',v/28.35,'oz'],ml:['ml',v/29.574,'fl oz'],l:['L',v*33.814,'fl oz'],ltr:['L',v*33.814,'fl oz'],ct:['ct',v,'ct'],count:['ct',v,'ct'],pk:['ct',v,'ct'],pack:['ct',v,'ct']}[u];
     if(U)out={amt:v,unit:U[0],label:U[0]==='ct'?`${v}-count`:`${v} ${U[0]}`,base:{amt:Math.round(U[1]*100)/100,unit:U[2]},rest:(s.slice(0,m.index)+' '+s.slice(m.index+m[0].length)).replace(/\s+/g,' ').trim()};}
   if(!out&&/\bpint\b/i.test(s))out={amt:1,unit:'pint',label:'1 pint',base:{amt:16,unit:'fl oz'},rest:s.replace(/\bpint\b/i,'').replace(/\s+/g,' ').trim()};
   return out;}
-function cleanName(text,learned){const L={...DICT,...(learned||{})};const sz=parseSize(text);let s=sz?sz.rest:String(text||'');
+// lk: learned lookup (kind, key) → value or null.
+function cleanName(text,learned,lk){const L={...DICT,...(learned||{})};const sz=parseSize(text);let s=sz?sz.rest:String(text||'');
   const toks=s.replace(/\s+/g,' ').trim().split(' ').filter(Boolean);const out=[];
-  for(const t of toks){const k=t.toLowerCase().replace(/[.,]+$/,'');if(k in L){if(L[k])out.push(L[k]);continue;}
+  for(const t of toks){const k=t.toLowerCase().replace(/[.,]+$/,'');const lw=lk&&lk('word','abbr:'+k);if(lw){out.push(lw);continue;}if(k in L){if(L[k])out.push(L[k]);continue;}
     if(/^[A-Z][a-z]*'[a-z]+$/.test(t)||/^&$/.test(t)){out.push(t);continue;}out.push(/[a-z]/.test(t)||t.length<=2?t.toLowerCase():t.toLowerCase());}
   let n=out.join(' ').replace(/\s+/g,' ').trim();
   n=n.replace(/\bben and jerry's\b/i,"Ben & Jerry's").replace(/\bla croix\b/i,'La Croix').replace(/\bbelle vie\b/i,'Belle Vie');
@@ -42,10 +45,12 @@ function guessGroup(name,known){const n=norm(name);let best=null;for(const k of 
   if(best)return {cat:best.cat,sub:'',from:'similar item'};for(const [cat,sub,re] of KW)if(re.test(n))return {cat,sub,from:'words'};return {cat:'Other',sub:'',from:'none'};}
 
 // Item-number correction against numbers the app already knows. known: Map num → [names].
-function fixNum(raw,known,text){const d=String(raw||'').replace(/[^0-9]/g,'');const K=known||new Map();
+// learn: {fix: raw → number the person corrected it to before, pairs: Set of learned digit pairs like '3~8'}.
+function fixNum(raw,known,text,learn){const d=String(raw||'').replace(/[^0-9]/g,'');const K=known||new Map();
   if(d.length===6&&K.has(d))return {num:d,ok:true};
+  if(learn&&learn.fix){const f=learn.fix(d);if(f&&f!==d&&K.has(f))return {num:f,ok:true,corrected:true,from:d,learned:true};}
   const nameSim=n=>Math.max(0,...(K.get(n)||[]).map(x=>sim(x,text)));const cands=[];
-  const oneDiff=s=>{for(const k of K.keys()){if(k.length!==6)continue;let diff=-1,cnt=0;for(let i=0;i<6;i++)if(k[i]!==s[i]){cnt++;diff=i;if(cnt>1)break;}if(cnt===1)cands.push({n:k,conf:confusable(k[diff],s[diff])});}};
+  const oneDiff=s=>{for(const k of K.keys()){if(k.length!==6)continue;let diff=-1,cnt=0;for(let i=0;i<6;i++)if(k[i]!==s[i]){cnt++;diff=i;if(cnt>1)break;}if(cnt===1)cands.push({n:k,conf:confusable(k[diff],s[diff],learn&&learn.pairs)});}};
   if(d.length===6)oneDiff(d);
   else if(d.length===7){for(let i=0;i<7;i++){const s=d.slice(0,i)+d.slice(i+1);if(K.has(s))cands.push({n:s,conf:true});else oneDiff(s);}}
   else if(d.length===5){for(const k of K.keys())for(let i=0;i<6;i++)if(k.slice(0,i)+k.slice(i+1)===d){cands.push({n:k,conf:true});break;}}
@@ -54,9 +59,9 @@ function fixNum(raw,known,text){const d=String(raw||'').replace(/[^0-9]/g,'');co
   return {num:d.length===6?d:'',ok:d.length===6,unclear:d.length!==6,raw:d};}
 
 // Find the single price-digit change that makes the lines add up. amounts: printed line totals.
-function solveTotal(amounts,target,conf){const sum=r2(amounts.reduce((a,b)=>a+b,0));if(target==null||Math.abs(sum-target)<.005)return null;const hits=[];
+function solveTotal(amounts,target,conf,pairs){const sum=r2(amounts.reduce((a,b)=>a+b,0));if(target==null||Math.abs(sum-target)<.005)return null;const hits=[];
   amounts.forEach((a,i)=>{const s=Math.abs(a).toFixed(2);for(let p=0;p<s.length;p++){if(s[p]==='.')continue;for(let dg=0;dg<10;dg++){const c=String(dg);if(c===s[p])continue;
-    const ns=s.slice(0,p)+c+s.slice(p+1);const nv=(a<0?-1:1)*+ns;if(Math.abs(r2(sum-a+nv)-target)<.005)hits.push({i,from:a,to:r2(nv),conf:confusable(c,s[p])});}}});
+    const ns=s.slice(0,p)+c+s.slice(p+1);const nv=(a<0?-1:1)*+ns;if(Math.abs(r2(sum-a+nv)-target)<.005)hits.push({i,from:a,to:r2(nv),conf:confusable(c,s[p],pairs)});}}});
   let list=hits;if(conf){const low=list.filter(h=>(conf[h.i]??100)<70);if(low.length)list=low;}const pick=list.filter(h=>h.conf);if(pick.length)list=pick;return list.length===1?list[0]:null;}
 
 // Line parsing (pasted text or OCR lines). lines: strings or {text, ...meta}.
@@ -78,7 +83,7 @@ function parseLines(lines,opts){opts=opts||{};const L=(lines||[]).map((x,i)=>typ
     if(/^\((G|T)\)/i.test(t))continue;
     if((m=t.match(DISC))){const p=out.items[out.items.length-1];if(p){p.disc=r2((p.disc||0)+(+m[2].replace(',','.')));p.lines.push(l.i);}continue;}
     if((m=t.match(ITEM))){const amt=(m[4]?-1:1)*+m[3].replace(',','.');const it={num:m[1],text:m[2].trim(),amount:r2(amt),qty:1,tax:m[5]||'',lines:[l.i],conf:{num:l.numConf??100,name:l.nameConf??100,price:l.priceConf??100},meta:l.meta||null};
-      if(opts.known){const f=fixNum(it.num,opts.known,it.text);if(f.corrected){it.from=it.num;it.num=f.num;it.corrected=true;}else if(!f.ok){it.unclear=true;it.raw=it.num;it.num='';}}
+      if(opts.known){const f=fixNum(it.num,opts.known,it.text,opts.learn);if(f.corrected){it.from=it.num;it.num=f.num;it.corrected=true;}else if(!f.ok){it.unclear=true;it.raw=it.num;it.num='';}}
       out.items.push(it);continue;}}
   out.tax=out.taxes.length?r2(out.taxes.reduce((a,x)=>a+x.amount,0)):null;if(out.total!=null&&out.subtotal!=null&&(out.tax==null||Math.abs(out.subtotal+out.tax-out.total)>.005)&&out.total>=out.subtotal)out.tax=r2(out.total-out.subtotal);
   return out;}
@@ -130,8 +135,9 @@ function fixWord(w,V){const lw=w.toLowerCase();if(lw.length<3||/\d/.test(lw)||V.
   if(lw.length<5)return null;const hits=[...edits1(lw)].filter(x=>V.has(x));return hits.length===1?hits[0]:null;}
 function matchCase(src,fix){return src===src.toUpperCase()?fix.toUpperCase():src[0]===src[0].toUpperCase()?fix[0].toUpperCase()+fix.slice(1):fix;}
 // Repair OCR words against the vocabulary. Returns the repaired text and what changed.
-function ocrFix(text,extra){const V=extra&&extra.size?new Set([...VOCAB,...extra]):VOCAB;const ch=[];
-  const out=String(text||'').replace(/[A-Za-z]{3,}/g,w=>{const f=fixWord(w,V);if(!f)return w;ch.push([w,f]);return matchCase(w,f);});return {text:out,changes:ch};}
+// lk: learned repairs first. A word the person put back as printed stays as printed.
+function ocrFix(text,extra,lk){const V=extra&&extra.size?new Set([...VOCAB,...extra]):VOCAB;const ch=[];
+  const out=String(text||'').replace(/[A-Za-z]{3,}/g,w=>{const lw=w.toLowerCase();const l=lk&&lk('word','ocr:'+lw);if(l===lw)return w;const f=l||fixWord(w,V);if(!f)return w;ch.push([w,f]);return matchCase(w,f);});return {text:out,changes:ch};}
 // Aldi store brands by kind of item. Suggestions only; the person confirms.
 const ALDI_BRANDS=[[/broth|stock/,'Simply Nature'],[/chicken|turkey breast|ground turkey/,'Kirkwood'],[/summer sausage|ham\b|bacon|salami|pepperoni/,'Appleton Farms'],[/ground beef|steak/,'Simply Nature'],
   [/clubhouse|saltine|crackers/,'Savoritz'],[/gummies/,'Sweet Rewards'],[/fruit bars/,'Sundae Shoppe'],[/spaghetti|penne|rotini|pasta(?! sauc)/,'Reggano'],[/pasta sauc|marinara|alfredo/,'Specially Selected'],
@@ -148,16 +154,22 @@ const SUBS=[[/broth|crushed tomato|diced tomato|tuna|beans\b/,'Canned & jarred']
   [/bagel|sourdough|bread|tortilla/,'Bread & wraps'],[/crackers|trail mix|cashew|fruit bars|nuts/,'Snacks'],[/spaghetti|pasta(?! sauc)|rice/,'Pasta & grains'],[/sauc|syrup|seasoning|blends/,'Sauces & seasonings'],[/oatmeal|oats|cereal/,'Breakfast'],
   [/carrots|onion|potato|avocado|pepper|tomato|harvest/,'Vegetables'],[/apple|banana|berr|lemon|lime|grape/,'Fruit'],[/cold foam|coffee/,'Coffee'],[/la croix|belle vie|water|seltzer|beverage/,'Sparkling & water']];
 // One suggestion per printed line: repaired text, clean name, group, brand, flavor, variety, size.
-function suggest(text,opts){opts=opts||{};const fx=ocrFix(text,opts.vocab);const sz=parseSize(fx.text);let name=cleanName(fx.text,opts.learned);const nf=norm(fx.text);
-  const g0=guessGroup(name,opts.known);const g=g0.cat==='Other'?guessGroup(fx.text,opts.known):g0;const sub=(SUBS.find(([re])=>re.test(nf))||[])[1]||g.sub||'';
+// opts.lookup(kind,key): what was learned from earlier receipts (tools/learn-core.js). It is checked first.
+function suggest(text,opts){opts=opts||{};const lk=opts.lookup||null;const fx=ocrFix(text,opts.vocab,lk);const sz=parseSize(fx.text);let name=cleanName(fx.text,opts.learned,lk);const nf=norm(fx.text);
+  const learned=[];const ln=lk&&lk('name','as:'+norm(text));if(ln){name=ln;learned.push('name');}
+  const keys=[...new Set(['t:'+norm(text),'t:'+nf,'n:'+norm(name),'w2:'+two(name)])];const L1=kind=>{if(!lk)return null;for(const k of keys){const v=lk(kind,k);if(v!=null)return v;}return null;};
+  const g0=guessGroup(name,opts.known);let g=g0.cat==='Other'?guessGroup(fx.text,opts.known):g0;let sub=(SUBS.find(([re])=>re.test(nf))||[])[1]||g.sub||'';
+  const lg=L1('group');if(lg){const [c,sb]=lg.split('›');g={cat:c,sub:sb||'',from:'learned'};if(sb)sub=sb;learned.push('group');}
   const KIND={'Ice cream':'Ice cream','Sparkling & water':'Sparkling water'};const bOnly=NAME_BRANDS.find(([re])=>re.test(fx.text));if(bOnly&&norm(name)===norm(bOnly[1])&&KIND[sub])name=KIND[sub];const n=norm(name);
   let brand='',bFrom='';for(const [re,b] of NAME_BRANDS)if(re.test(fx.text)){brand=b;bFrom='printed';break;}
   if(!brand&&(opts.store||'aldi')==='aldi'){for(const [re,b] of ALDI_BRANDS)if(re.test(n)){brand=b;bFrom=b?'store brand':'';break;}}
   if(opts.learnedBrand&&opts.learnedBrand[n]){brand=opts.learnedBrand[n];bFrom='learned';}
-  const w=n.split(' ');const flavor=FLAVORS.filter(f=>w.includes(f)).map(f=>f[0].toUpperCase()+f.slice(1)).join(' ');
+  const lb=L1('brand');if(lb){brand=lb==='-'?'':lb;bFrom='learned';learned.push('brand');}
+  const w=n.split(' ');let flavor=FLAVORS.filter(f=>w.includes(f)).map(f=>f[0].toUpperCase()+f.slice(1)).join(' ');
+  const lf=L1('flavor');if(lf){flavor=lf==='-'?'':lf;learned.push('flavor');}
   const variety=VARIETY.filter(v=>n.includes(v)).map(v=>v[0].toUpperCase()+v.slice(1)).join(', ');
-  let conf=.4;if(g.from==='similar item')conf+=.3;else if(g.from==='words')conf+=.2;if(brand)conf+=.1;if(!fx.changes.length)conf+=.1;
-  return {fixedText:fx.text,changes:fx.changes,name,cat:g.cat,sub,brand,brandFrom:bFrom,flavor,variety,size:sz?{label:sz.label,amt:sz.base.amt,unit:sz.base.unit}:null,conf:Math.min(1,conf)};}
+  let conf=.4;if(g.from==='learned'||g.from==='similar item')conf+=.3;else if(g.from==='words')conf+=.2;if(brand)conf+=.1;if(!fx.changes.length)conf+=.1;
+  return {fixedText:fx.text,changes:fx.changes,name,cat:g.cat,sub,brand,brandFrom:bFrom,flavor,variety,size:sz?{label:sz.label,amt:sz.base.amt,unit:sz.base.unit}:null,learned,conf:Math.min(1,conf)};}
 
 window.ReceiptCore={ocrFix,suggest,VOCAB,sim,cleanName,learnNames,parseSize,guessGroup,fixNum,solveTotal,parseLines,groupItems,itemCount,stitch,findGaps,classifyPrice,confusable,F1010,fixtureText,r2};
 })();
