@@ -192,9 +192,12 @@ function guessMeta(n){const cat=norm(txt(n.recipeCategory)),cui=norm(txt(n.recip
 // ---------- photo and steps ----------
 // The photo is kept as a link (https only); steps are kept as the site wrote them. The app scales amounts in steps
 // when it shows them, so nothing is rewritten here. Code.gs (recipeSteps_) has the same rules for the catalog fetch.
+// The app puts the photo in an inline style, which is split on ";" (support.js), so characters that would end the
+// declaration or the url('…') are percent-encoded. Hearst sites (Delish) use "?crop=…;center,top" in image links.
+function cssSafeUrl(s){return String(s||'').trim().replace(/[;'"()\\\s]/g,c=>'%'+('0'+c.charCodeAt(0).toString(16).toUpperCase()).slice(-2));}
 function photoOf(n,url){let v=n&&n.image;for(let i=0;i<3&&v&&typeof v==='object';i++)v=Array.isArray(v)?v[0]:(v.url||v.contentUrl||v['@id']||'');
   let s=String(v||'').trim();if(/^\/\//.test(s))s='https:'+s;else if(/^\/[^/]/.test(s)){const h=String(url||'').match(/^https:\/\/[^/]+/i);s=h?h[0]+s:'';}
-  return /^https:\/\/[^\s"<>]+$/i.test(s)&&s.length<=2000?s:'';}
+  s=cssSafeUrl(s);return /^https:\/\/[^\s"<>]+$/i.test(s)&&s.length<=2000?s:'';}
 const STEP_AD=/jump to (?:the )?recipe|print (?:the )?recipe|pin (?:it|this|for later)|advertisement|sponsored|subscribe|newsletter|sign up|click here|affiliate|watch the video|rate this recipe|leave a (?:comment|review|rating)|tag @|follow (?:me|us) on|tried this recipe|share (?:a|your) photo|this post may contain|as an amazon associate/i;
 const STEP_HEAD=/^(?:for (?:the )?.{1,40}|to (?:make|serve|assemble|finish) .{1,40}|instructions|directions|method|steps|preparation|notes?|assembly|garnish|to serve)$/i;
 function cleanStep(raw){let s=decode(decode(raw)).replace(/\s+([.,;:!?)])/g,'$1').replace(/\(\s+/g,'(').trim();
@@ -239,6 +242,6 @@ function build(lines,opts){opts=opts||{};const P=opts.P||{};const rows=[],basics
 function cost(rows,P,serv,people){serv=Math.max(1,+serv||1);let whole=0;for(const r of rows||[]){const p=r.iid&&P[r.iid];if(!p||!(r.q>0)||p.staple||r.optional)continue;whole+=r.q*(+p.price||0)/(+p.pkg||1);}
   const portions=Math.max(1,Math.round(+people||serv));return {whole:Math.round(whole*100)/100,household:Math.round(whole*portions/serv*100)/100,portions};}
 
-const api={display,learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,photoOf,stepsOf,cleanStep,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
+const api={display,learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,photoOf,cssSafeUrl,stepsOf,cleanStep,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
 if(typeof window!=='undefined')window.RecipeCore=api;if(typeof module!=='undefined')module.exports=api;
 })();

@@ -308,7 +308,7 @@ function buildCatalog_(prev) {
       changed: iso_(r.last_changed), active: active
     };
     // Optional (Fetch photos and steps): left out when empty, so older phones and the catalog fingerprint don't change.
-    var photo = str_(r.photo_url), steps = stepsCell_(r.steps);
+    var photo = cssSafeUrl_(r.photo_url), steps = stepsCell_(r.steps);
     if (/^https:\/\/\S+$/i.test(photo)) rec.photo = photo;
     if (steps.length) rec.steps = steps;
     R[id] = rec; recipes.push(rec);
@@ -613,12 +613,16 @@ function stepsOf_(n) {
   walk(n && n.recipeInstructions, 0);
   return out.slice(0, 80);
 }
+// The app puts the photo in an inline style that is split on ";", so ; ' " ( ) \ and spaces are percent-encoded.
+// Hearst sites (Delish) use "?crop=…;center,top" in image links.
+function cssSafeUrl_(s) { return String(s == null ? '' : s).trim().replace(/[;'"()\\\s]/g, function (c) { return '%' + ('0' + c.charCodeAt(0).toString(16).toUpperCase()).slice(-2); }); }
 function photoOf_(n, url) {
   var v = n && n.image;
   for (var i = 0; i < 3 && v && typeof v === 'object'; i++) v = Array.isArray(v) ? v[0] : (v.url || v.contentUrl || v['@id'] || '');
   var s = String(v || '').trim();
   if (/^\/\//.test(s)) s = 'https:' + s;
   else if (/^\/[^/]/.test(s)) { var h = String(url || '').match(/^https:\/\/[^/]+/i); s = h ? h[0] + s : ''; }
+  s = cssSafeUrl_(s);
   return /^https:\/\/[^\s"<>]+$/i.test(s) && s.length <= 2000 ? s : '';
 }
 function isRecipeLd_(n) {
@@ -1192,7 +1196,7 @@ function writeRecipe_(ctx, id, d, extra, existing) {
     freezes: d.freezes == null ? '' : (d.freezes ? 'Y' : 'N'), link: d.link || '', active: 'Y', last_changed: new Date(), changed_by: 'phone'
   };
   // Photo and steps from "+ From the web". A new link without them is fetched again by Fetch photos and steps.
-  var steps = (Array.isArray(d.steps) ? d.steps : []).map(cleanStep_).filter(String).slice(0, 80), photo = /^https:\/\/\S+$/i.test(str_(d.photo)) ? str_(d.photo) : '';
+  var steps = (Array.isArray(d.steps) ? d.steps : []).map(cleanStep_).filter(String).slice(0, 80), photo = /^https:\/\/\S+$/i.test(cssSafeUrl_(d.photo)) ? cssSafeUrl_(d.photo) : '';
   if (steps.length) { fields.photo_url = photo; fields.steps = JSON.stringify(steps); fields.fetched_at = new Date(); fields.fetch_note = ''; }
   else if (existing && str_(existing.link) !== fields.link) { fields.photo_url = ''; fields.steps = ''; fields.fetched_at = ''; fields.fetch_note = ''; }
   else if (photo && !(existing && str_(existing.photo_url))) fields.photo_url = photo;

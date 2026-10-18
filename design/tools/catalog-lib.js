@@ -119,7 +119,7 @@ function build(X,wb,prev,today){
     const rec={id,meal,name:str(r.name)||id,tags,serv:serv||1,link:str(r.link),source:src.split(' · ')[0],rating:src.split(' · ').slice(1).join(' · '),ing:[],notes:str(r.notes),
       hands:hands??total,total,keeps:num(r.keeps_days)??1,reheats:yn(r.reheats)==='Y',freezes:yn(r.freezes)==='Y',active};
     // Optional, from Meal Prep > Fetch photos and steps: photo_url and steps (a JSON array). Left out when empty.
-    const photo=str(r.photo_url),steps=stepsCell(r.steps);if(/^https:\/\/\S+$/i.test(photo))rec.photo=photo;if(steps.length)rec.steps=steps;
+    const photo=str(r.photo_url).replace(/[;'"()\\\s]/g,c=>'%'+('0'+c.charCodeAt(0).toString(16).toUpperCase()).slice(-2)),steps=stepsCell(r.steps);if(/^https:\/\/\S+$/i.test(photo))rec.photo=photo;if(steps.length)rec.steps=steps;
     R[id]=rec;recipes.push(rec);});
   // ingredients
   const seenLine=new Set();

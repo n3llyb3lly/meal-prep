@@ -242,3 +242,21 @@ test('the catalog builder reads photo_url and steps into recipe.photo and recipe
   const rows = L.toRows(b.catalog).Recipes;
   assert.strictEqual(rows.find(r => r.recipe_id === 'd_a').steps, '["Heat the oil.","Add 2 cups broth."]');
 });
+
+test('a Delish photo link with ";" in it is made safe for the inline style', () => {
+  const raw = 'https://hips.hearstapps.com/hmg-prod/images/tuna-melt-1.jpg?crop=1xw:0.843xh;center,top&resize=1200:*';
+  const safe = 'https://hips.hearstapps.com/hmg-prod/images/tuna-melt-1.jpg?crop=1xw:0.843xh%3Bcenter,top&resize=1200:*';
+  const n = { '@type': 'Recipe', image: [{ '@type': 'ImageObject', url: raw }] };
+  assert.strictEqual(RC.photoOf(n), safe);
+  const { g: G } = loadCodeGs({});
+  assert.strictEqual(G.photoOf_(n), safe);
+  assert.strictEqual(RC.cssSafeUrl("https://x.example/a (1)'s.jpg"), 'https://x.example/a%20%281%29%27s.jpg');
+  // A link already in the sheet from the first fetch is cleaned when the catalog is built.
+  const s = sheetWith([recRow('l_tunamelt', 'https://www.delish.com/x')], {});
+  const sh = s.sheet('Recipes');
+  s.g.ensureColumns_('Recipes', ['photo_url', 'steps'], []);
+  sh._data[1][s.col('photo_url')] = raw; sh._data[1][s.col('steps')] = '["Toast the bread."]';
+  assert.strictEqual(s.g.currentCatalog_().catalog.recipes[0].photo, safe);
+  const wb = { Sheets: { Items: [item], Recipes: [rec('d_t', { photo_url: raw })], Ingredients: [{ recipe_id: 'd_t', item_id: 'paneer', qty: 8 }] } };
+  assert.strictEqual(L.build(X, wb, null, '2026-10-18').catalog.recipes[0].photo, safe);
+});
