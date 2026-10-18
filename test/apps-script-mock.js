@@ -17,7 +17,7 @@ function makeSheet(name, rows) {
     _data: data, getName: () => name,
     getDataRange: () => { pad(); return range(1, 1, data.length, width()); },
     getRange: range, getLastColumn: () => width(), getLastRow: () => data.length, getMaxRows: () => Math.max(1000, data.length),
-    appendRow: row => { data.push(row.slice()); pad(); }, setFrozenRows: () => {}, hideSheet: () => {},
+    appendRow: row => { data.push(row.slice()); pad(); }, clear: () => { data.length = 0; }, deleteRow: r => { data.splice(r - 1, 1); }, setFrozenRows: () => {}, hideSheet: () => {},
     getProtections: () => [1], protect: () => ({ setWarningOnly: () => ({ setDescription: () => {} }) })
   };
 }
@@ -31,7 +31,7 @@ function loadCodeGs(tabs) {
   const props = {};
   const g = {
     SpreadsheetApp: { getActive: () => ss, flush: () => {}, ProtectionType: { SHEET: 'SHEET' } },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] ?? null, setProperty: (k, v) => { props[k] = v; } }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: k => props[k] ?? null, setProperty: (k, v) => { props[k] = v; }, deleteProperty: k => { delete props[k]; } }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) },
     Utilities: {
       formatDate: (d, tz, f) => f === 'yyyy-MM-dd' ? d.toISOString().slice(0, 10) : d.toISOString(),

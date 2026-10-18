@@ -7,6 +7,8 @@ const TRACKING=['quantity','staple','stocked'];const SOLD_BY=['pack','weight'];
 const SCHEMA=2;
 const DEFAULT_STORES=[['aldi','Aldi','6','before'],['sams',"Sam's Club",'9;10','before'],['walmart','Walmart','12','after'],['cub','Cub','11;12','after'],['target','Target','9','before']];
 const numList=v=>str(v).split(/[;,\s]+/).map(x=>x.trim()).filter(Boolean);
+// The steps cell: JSON text of an array of strings. Anything that doesn't parse is no steps.
+function stepsCell(v){const t=str(v);if(!t)return [];try{const a=JSON.parse(t);return Array.isArray(a)?a.map(x=>str(x)).filter(Boolean):[];}catch(e){return [];}}
 const norm=s=>String(s==null?'':s).trim().toLowerCase().replace(/\s+/g,'_');
 function rowsOf(X,wb,name){const key=Object.keys(wb.Sheets).find(n=>norm(n)===norm(name));if(!key)return null;
   return X.utils.sheet_to_json(wb.Sheets[key],{defval:null}).map(r=>{const o={};for(const k in r)o[norm(k)]=r[k];return o;});}
@@ -116,6 +118,8 @@ function build(X,wb,prev,today){
     const src=str(r.source);
     const rec={id,meal,name:str(r.name)||id,tags,serv:serv||1,link:str(r.link),source:src.split(' · ')[0],rating:src.split(' · ').slice(1).join(' · '),ing:[],notes:str(r.notes),
       hands:hands??total,total,keeps:num(r.keeps_days)??1,reheats:yn(r.reheats)==='Y',freezes:yn(r.freezes)==='Y',active};
+    // Optional, from Meal Prep > Fetch photos and steps: photo_url and steps (a JSON array). Left out when empty.
+    const photo=str(r.photo_url),steps=stepsCell(r.steps);if(/^https:\/\/\S+$/i.test(photo))rec.photo=photo;if(steps.length)rec.steps=steps;
     R[id]=rec;recipes.push(rec);});
   // ingredients
   const seenLine=new Set();
@@ -193,7 +197,8 @@ function toRows(c){const yn=b=>b?'Y':'N',semi=a=>(a||[]).join('; ');
       food_types:it.flags?it.flags.split(';').join('; '):'',group:it.group||'',unit_label:it.group?it.unit_label:'',units_per_package:it.group?it.units_per_package:'',typical_days:it.group?it.typical_days:'',scales_with_people:it.group?it.scales_with_people:''});
     for(const o of (it.offers||[]))out.Offers.push({item:it.id,store:o.store,price:o.price,pack:o.pack,unit:o.unit,pkg:o.pkg,numbers:semi(o.nums),price_date:o.priceDate||'',price_source:o.src||''});}
   for(const n in (c.favorites||{}))out.Favorites.push({node:n,item:c.favorites[n]});
-  for(const r of c.recipes){out.Recipes.push({recipe_id:r.id,meal:r.meal,name:r.name,tags:(r.tags||[]).join(', '),servings:r.serv,total_min:r.total,hands_on_min:r.hands,keeps_days:r.keeps,reheats:yn(r.reheats),freezes:yn(r.freezes),link:r.link||'',source:[r.source,r.rating].filter(Boolean).join(' · '),notes:r.notes||'',active:'Y'});
+  for(const r of c.recipes){out.Recipes.push({recipe_id:r.id,meal:r.meal,name:r.name,tags:(r.tags||[]).join(', '),servings:r.serv,total_min:r.total,hands_on_min:r.hands,keeps_days:r.keeps,reheats:yn(r.reheats),freezes:yn(r.freezes),link:r.link||'',source:[r.source,r.rating].filter(Boolean).join(' · '),notes:r.notes||'',active:'Y',
+      photo_url:r.photo||'',steps:r.steps&&r.steps.length?JSON.stringify(r.steps):''});
     for(const x of r.ing)out.Ingredients.push({recipe_id:r.id,item_id:x[0],qty:x[1]*(r.serv||1),as_written:x[2]||'',optional:yn(x[3])});}
   for(const a of (c.aliases||[]))out['Receipt aliases'].push({receipt_text:a.text,item_id:a.item,store:a.store||''});
   for(const id in (c.variants||{}))for(const v of c.variants[id])out.Variants.push(...variantRows(id,v));
@@ -222,7 +227,7 @@ const slug=s=>nname(s).replace(/ /g,'_').slice(0,40);
 const DEF_H={items:['item_id','name','brand','flavor','node','category','package_label','unit','package_qty','price','price_source','price_date','staple','storage','fridge_days','freezer_days','pantry_days','family','sold_by','alt_sizes','tracking_default','aldi_product','aldi_numbers','retired','replaced_by','notes','food_types','group','unit_label','units_per_package','typical_days','scales_with_people'],
   offers:['item','store','price','pack','unit','pkg','numbers','price_date','price_source','last_changed','changed_by'],nodes:['id','name','parent','level','last_changed','changed_by'],favorites:['node','item','last_changed'],
   variants:['item_id','variant_id','brand','flavor','store','numbers','last_price','last_date','last_changed','changed_by'],
-  recipes:['recipe_id','meal','name','tags','servings','total_min','hands_on_min','keeps_days','reheats','freezes','link','source','notes','active'],ingredients:['recipe_id','item_id','qty','as_written','optional'],aliases:['receipt_text','item_id','store']};
+  recipes:['recipe_id','meal','name','tags','servings','total_min','hands_on_min','keeps_days','reheats','freezes','link','source','notes','active','photo_url','steps','fetched_at','fetch_note'],ingredients:['recipe_id','item_id','qty','as_written','optional'],aliases:['receipt_text','item_id','store']};
 // Accepts arrays or objects keyed by id for the version 6 export sections.
 const asList=(v,key,val)=>Array.isArray(v)?v:v&&typeof v==='object'?Object.entries(v).map(([k,x])=>x&&typeof x==='object'&&!Array.isArray(x)?{[key]:k,...x}:{[key]:k,[val]:x}):[];
 const rsig=r=>{const m={};for(const x of (r.ing||[])){const k=x[0]+'|'+(x[3]?1:0);m[k]=Math.round(((m[k]||0)+x[1])*1e4)/1e4;}return JSON.stringify([r.meal,r.name,(r.tags||[]).slice().sort(),r.serv,Object.entries(m).sort()]);};
@@ -264,7 +269,8 @@ function additions(X,wb,add,built){
     for(const x of (r.ing||[])){const iid=mapId(x[0]);if(!known.has(iid)){F(`Unknown item: "${name}" uses ${x[0]}, which isn't in the spreadsheet or your added items. That ingredient was left out.`);bad=true;continue;}
       const q=wholeQty?Math.round(x[1]*(r.serv||1)*1000)/1000:Math.round(x[1]*1e4)/1e4;lines.push({recipe_id:id,item_id:iid,qty:q,qty_per_serving:Math.round(x[1]*1e4)/1e4,as_written:x[2]||'',optional:x[3]?'Y':'N'});}
     rTaken.add(id);recNames.add(nname(name));
-    recipes.push({recipe_id:id,meal:r.meal,name,tags:(r.tags||[]).join(', '),servings:r.serv,total_min:r.total,hands_on_min:r.hands,keeps_days:r.keeps,reheats:r.reheats===false?'N':'Y',freezes:'',link:r.link||'',source,notes:note,active:'Y'});ings.push(...lines);return bad;};
+    recipes.push({recipe_id:id,meal:r.meal,name,tags:(r.tags||[]).join(', '),servings:r.serv,total_min:r.total,hands_on_min:r.hands,keeps_days:r.keeps,reheats:r.reheats===false?'N':'Y',freezes:'',link:r.link||'',source,notes:note,active:'Y',
+      photo_url:/^https:\/\//i.test(r.photo||'')?r.photo:'',steps:Array.isArray(r.steps)&&r.steps.length?JSON.stringify(r.steps):''});ings.push(...lines);return bad;};
   for(const r of (add.ownRecipes||[])){if(recNames.has(nname(r.name))){notes.push(`${r.name} is already in the spreadsheet.`);continue;}
     let id=(r.meal||'x')[0]+'_'+(r.id.replace(/^u_/,'')||slug(r.name));let base=id,n=2;while(rTaken.has(id))id=base+'_'+(n++);pushRecipe(r,id,r.name,'My recipe','Written on the phone');}
   for(const [oid,e] of Object.entries(add.recipeEdits||{})){const orig=RC[oid];const name=`${e.name} (my version)`;
