@@ -20,7 +20,7 @@ function build(X,wb,prev,today){
   today=today||new Date().toISOString().slice(0,10);
   const errors=[],warnings=[];const E=(m)=>errors.push(m),W=(m)=>warnings.push(m);
   const itemsR=rowsOf(X,wb,'Items'),recR=rowsOf(X,wb,'Recipes'),ingR=rowsOf(X,wb,'Ingredients'),aliasR=rowsOf(X,wb,'Receipt aliases')||[],listR=rowsOf(X,wb,'Lists'),catR=rowsOf(X,wb,'Categories');
-  const offR=rowsOf(X,wb,'Offers')||[],nodeR=rowsOf(X,wb,'Nodes')||[],storeR=rowsOf(X,wb,'Stores'),favR=rowsOf(X,wb,'Favorites')||[];
+  const offR=rowsOf(X,wb,'Offers')||[],nodeR=rowsOf(X,wb,'Nodes')||[],storeR=rowsOf(X,wb,'Stores'),favR=rowsOf(X,wb,'Favorites')||[],varR=rowsOf(X,wb,'Variants')||[];
   if(!itemsR)E('No "Items" sheet found.');if(!recR)E('No "Recipes" sheet found.');if(!ingR)E('No "Ingredients" sheet found.');
   if(errors.length)return {errors,warnings};
   let TAGS=null;if(listR){const t=listR.map(r=>str(r.tags).toLowerCase()).filter(Boolean);if(t.length)TAGS=new Set(t);}
@@ -68,6 +68,7 @@ function build(X,wb,prev,today){
     const tr=str(r.tracking_default).toLowerCase();if(tr&&!TRACKING.includes(tr))E(`${line} (${id}): tracking_default "${r.tracking_default}" isn't one of ${TRACKING.join(', ')}.`);
     const it={id,name:str(r.name)||id,cat:catName,family:str(r.family).toLowerCase()||null,soldBy:sb||null,altSizes:str(r.alt_sizes).split(/[;,]/).map(s=>+s.trim()).filter(n=>n>0),tracking:tr||null,pack:str(r.package_label),unit:str(r.unit)||'each',pkg:pkg||1,price:price||0,src:str(r.price_source),priceDate:dateStr(r.price_date),
       staple:yn(r.staple)==='Y',storage,fridge:num(r.fridge_days),freezer:num(r.freezer_days),pantry:num(r.pantry_days),aldi:str(r.aldi_product),nums:numList(r.aldi_numbers),retired,replacedBy:str(r.replaced_by)||null,brand:str(r.brand)||null,node:str(r.node)||null,offers:[]};
+    if(str(r.flavor))it.flavor=str(r.flavor);
     // 6.1: food types and household fields (same rules as the sheet script)
     const ft=str(r.food_types!=null?r.food_types:r.flags).toLowerCase().split(/[;,]/).map(x=>x.trim().replace(/[\s-]+/g,'_')).filter(Boolean);
     for(const f of ft)if(!FOOD_TYPES.includes(f))E(`${line} (${id}): food type "${f}" isn't one of ${FOOD_TYPES.join(', ')}.`);
@@ -138,12 +139,30 @@ function build(X,wb,prev,today){
   favR.forEach((r,i)=>{const node=str(r.node),item=str(r.item);if(!node)return;if(!ND[node]){W(`Favorites row ${i+2}: node "${node}" isn't on the Nodes sheet.`);return;}if(!item)return;
     if(!I[item]){W(`Favorites row ${i+2}: item "${item}" isn't on the Items sheet.`);return;}
     if(!I[item].node||!under(I[item].node,node))W(`Favorites row ${i+2}: ${item} isn't placed under ${node} (its node is ${I[item].node||'blank'}).`);favorites[node]=item;});
+  const variants=variantsOf(varR,I,ST,W);
   const d=new Date();const pad=n=>String(n).padStart(2,'0');
   const catalog={schemaVersion:SCHEMA,catalogVersion:`${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`,builtAt:d.toISOString(),
-    categories,stores,nodes,items,recipes:recipes.filter(r=>r.active).map(({active,...r})=>r),aliases,favorites};
+    categories,stores,nodes,items,recipes:recipes.filter(r=>r.active).map(({active,...r})=>r),aliases,favorites,variants};
   const offers=items.reduce((n,it)=>n+it.offers.length,0);
   return {catalog,catalogV1:toV1(catalog),errors,warnings,diff:diff(prev&&prev.schemaVersion===1?prev:prev?toV1(prev):null,toV1(catalog)),counts:{items:items.length,offers,stores:stores.length,nodes:nodes.length,recipes:recipes.length,active:catalog.recipes.length,ingredients:ingR.length,aliases:aliases.length}};
 }
+// 6.3: Variants rows (one per variant and store) -> the phone's layer shape {itemId:[{vid,brand,flavor,nums:{store:[num]},last:{price,date,store}}]}.
+// Same rule as the sheet script's variantsOf_.
+function variantsOf(rows,I,ST,W){const out={},byVid={};
+  rows.forEach((r,i)=>{const vid=str(r.variant_id),item=str(r.item_id),line=`Variants row ${i+2}`;if(!vid&&!item)return;
+    if(!vid){W(`${line}: no variant_id.`);return;}if(!I[item]){W(`${line} (${vid}): item "${item}" isn't on the Items sheet.`);return;}
+    let v=byVid[vid];if(v&&v._item!==item){W(`${line}: ${vid} is under ${v._item} on an earlier row, not ${item}. This row was skipped.`);return;}
+    if(!v){v=byVid[vid]={_item:item,vid,brand:str(r.brand)||null,flavor:str(r.flavor)||null,nums:{},last:null};(out[item]=out[item]||[]).push(v);}
+    if(!v.brand&&str(r.brand))v.brand=str(r.brand);if(!v.flavor&&str(r.flavor))v.flavor=str(r.flavor);
+    const store=str(r.store).toLowerCase();
+    if(store){if(!ST[store])W(`${line} (${vid}): store "${store}" isn't on the Stores sheet.`);const ns=numList(r.numbers);if(ns.length)v.nums[store]=[...new Set([...(v.nums[store]||[]),...ns])];}
+    const lp=num(r.last_price),ld=dateStr(r.last_date);if(lp!=null&&(!v.last||(ld||'')>(v.last.date||'')))v.last={price:lp,date:ld,store:store||null};});
+  for(const k in out)out[k].forEach(v=>{delete v._item;});return out;}
+// Variant -> Variants rows: one per store with numbers, or one with a blank store when it has none.
+function variantRows(item,v,extra){const stores=Object.keys(v.nums||{}).filter(s=>(v.nums[s]||[]).length);const last=v.last||{};
+  const base={item_id:item,variant_id:v.vid,brand:v.brand||'',flavor:v.flavor||'',...extra};
+  const lastFor=s=>last.price!=null&&(!last.store||last.store===s||stores.length<2)?{last_price:last.price,last_date:last.date||''}:{last_price:'',last_date:''};
+  return stores.length?stores.map(s=>({...base,store:s,numbers:v.nums[s].join('; '),...lastFor(s)})):[{...base,store:'',numbers:'',...lastFor('')}];}
 // The version 1 shape for version 5.3 phones (catalog-v1.json): no stores, nodes, offers or favorites; a recipe
 // ingredient that points to a node becomes the favorite product under it, else the cheapest per unit among
 // products in the unit most products under that node use. Same rule as the Apps Script.
@@ -164,12 +183,12 @@ function toV1(c){if(!c)return c;if(c.schemaVersion===1&&!c.nodes)return c;
 // A schema 2 catalog back to sheet rows (column name -> value), one array per sheet. Used to check the
 // round trip and to rebuild a sheet from a catalog.
 function toRows(c){const yn=b=>b?'Y':'N',semi=a=>(a||[]).join('; ');
-  const out={Stores:[],Nodes:[],Items:[],Offers:[],Favorites:[],Recipes:[],Ingredients:[],'Receipt aliases':[],Categories:[]};
+  const out={Stores:[],Nodes:[],Items:[],Offers:[],Favorites:[],Recipes:[],Ingredients:[],'Receipt aliases':[],Categories:[],Variants:[]};
   for(const k of (c.categories||[]))out.Categories.push({category:k.name,store_section:k.section,storage:k.storage,fridge_days:k.fridge,freezer_days:k.freezer,pantry_days:k.pantry,tracking_default:k.tracking,staple_default:yn(k.staple)});
   for(const s of (c.stores||[]))out.Stores.push({id:s.id,name:s.name,num_digits:(s.num.digits||[]).join(';'),num_where:s.num.where});
   for(const n of (c.nodes||[]))out.Nodes.push({id:n.id,name:n.name,parent:n.parent||'',level:n.level});
   for(const it of c.items){const a=(it.offers||[]).find(o=>o.store==='aldi');
-    out.Items.push({item_id:it.id,name:it.name,brand:it.brand||'',node:it.node||'',category:it.cat,package_label:a?a.pack:it.pack,unit:a?a.unit:it.unit,package_qty:a?a.pkg:it.pkg,price:a?a.price:'',price_source:a?a.src:'',price_date:a?a.priceDate:'',
+    out.Items.push({item_id:it.id,name:it.name,brand:it.brand||'',flavor:it.flavor||'',node:it.node||'',category:it.cat,package_label:a?a.pack:it.pack,unit:a?a.unit:it.unit,package_qty:a?a.pkg:it.pkg,price:a?a.price:'',price_source:a?a.src:'',price_date:a?a.priceDate:'',
       staple:yn(it.staple),storage:it.storage||'',fridge_days:it.fridge,freezer_days:it.freezer,pantry_days:it.pantry,family:it.family||'',sold_by:it.soldBy||'',alt_sizes:semi(it.altSizes),tracking_default:it.tracking||'',aldi_product:it.aldi||'',aldi_numbers:'',retired:yn(it.retired),replaced_by:it.replacedBy||'',notes:'',
       food_types:it.flags?it.flags.split(';').join('; '):'',group:it.group||'',unit_label:it.group?it.unit_label:'',units_per_package:it.group?it.units_per_package:'',typical_days:it.group?it.typical_days:'',scales_with_people:it.group?it.scales_with_people:''});
     for(const o of (it.offers||[]))out.Offers.push({item:it.id,store:o.store,price:o.price,pack:o.pack,unit:o.unit,pkg:o.pkg,numbers:semi(o.nums),price_date:o.priceDate||'',price_source:o.src||''});}
@@ -177,6 +196,7 @@ function toRows(c){const yn=b=>b?'Y':'N',semi=a=>(a||[]).join('; ');
   for(const r of c.recipes){out.Recipes.push({recipe_id:r.id,meal:r.meal,name:r.name,tags:(r.tags||[]).join(', '),servings:r.serv,total_min:r.total,hands_on_min:r.hands,keeps_days:r.keeps,reheats:yn(r.reheats),freezes:yn(r.freezes),link:r.link||'',source:[r.source,r.rating].filter(Boolean).join(' · '),notes:r.notes||'',active:'Y'});
     for(const x of r.ing)out.Ingredients.push({recipe_id:r.id,item_id:x[0],qty:x[1]*(r.serv||1),as_written:x[2]||'',optional:yn(x[3])});}
   for(const a of (c.aliases||[]))out['Receipt aliases'].push({receipt_text:a.text,item_id:a.item,store:a.store||''});
+  for(const id in (c.variants||{}))for(const v of c.variants[id])out.Variants.push(...variantRows(id,v));
   return out;}
 const sig=r=>JSON.stringify([r.meal,r.name,r.tags,r.serv,r.link,r.ing,r.hands,r.total,r.keeps,r.reheats,r.freezes]);
 function diff(prev,next){if(!prev)return null;const pI=Object.fromEntries((prev.items||[]).map(x=>[x.id,x])),pR=Object.fromEntries((prev.recipes||[]).map(x=>[x.id,x]));
@@ -192,8 +212,9 @@ function validateCatalog(c,knownSchema){if(!c||typeof c!=='object')return 'Not a
 function headersOf(X,wb,name){const key=Object.keys(wb.Sheets).find(n=>norm(n)===norm(name));if(!key)return null;const h=(X.utils.sheet_to_json(wb.Sheets[key],{header:1})[0]||[]).map(norm).filter(Boolean);return h.length?h:null;}
 const nname=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const slug=s=>nname(s).replace(/ /g,'_').slice(0,40);
-const DEF_H={items:['item_id','name','brand','node','category','package_label','unit','package_qty','price','price_source','price_date','staple','storage','fridge_days','freezer_days','pantry_days','family','sold_by','alt_sizes','tracking_default','aldi_product','aldi_numbers','retired','replaced_by','notes','food_types','group','unit_label','units_per_package','typical_days','scales_with_people'],
+const DEF_H={items:['item_id','name','brand','flavor','node','category','package_label','unit','package_qty','price','price_source','price_date','staple','storage','fridge_days','freezer_days','pantry_days','family','sold_by','alt_sizes','tracking_default','aldi_product','aldi_numbers','retired','replaced_by','notes','food_types','group','unit_label','units_per_package','typical_days','scales_with_people'],
   offers:['item','store','price','pack','unit','pkg','numbers','price_date','price_source','last_changed','changed_by'],nodes:['id','name','parent','level','last_changed','changed_by'],favorites:['node','item','last_changed'],
+  variants:['item_id','variant_id','brand','flavor','store','numbers','last_price','last_date','last_changed','changed_by'],
   recipes:['recipe_id','meal','name','tags','servings','total_min','hands_on_min','keeps_days','reheats','freezes','link','source','notes','active'],ingredients:['recipe_id','item_id','qty','as_written','optional'],aliases:['receipt_text','item_id','store']};
 // Accepts arrays or objects keyed by id for the version 6 export sections.
 const asList=(v,key,val)=>Array.isArray(v)?v:v&&typeof v==='object'?Object.entries(v).map(([k,x])=>x&&typeof x==='object'&&!Array.isArray(x)?{[key]:k,...x}:{[key]:k,[val]:x}):[];
@@ -203,7 +224,7 @@ function additions(X,wb,add,built){
   const cat=built&&built.catalog;if(!cat)return {error:'Fix the spreadsheet errors first. The additions are checked against it.'};
   const flags=[],notes=[];const F=(m)=>flags.push(m);
   const H={items:headersOf(X,wb,'Items')||DEF_H.items,recipes:headersOf(X,wb,'Recipes')||DEF_H.recipes,ingredients:headersOf(X,wb,'Ingredients')||DEF_H.ingredients,aliases:headersOf(X,wb,'Receipt aliases')||DEF_H.aliases,
-    offers:headersOf(X,wb,'Offers')||DEF_H.offers,nodes:headersOf(X,wb,'Nodes')||DEF_H.nodes,favorites:headersOf(X,wb,'Favorites')||DEF_H.favorites};
+    offers:headersOf(X,wb,'Offers')||DEF_H.offers,nodes:headersOf(X,wb,'Nodes')||DEF_H.nodes,favorites:headersOf(X,wb,'Favorites')||DEF_H.favorites,variants:headersOf(X,wb,'Variants')||DEF_H.variants};
   const ND=Object.fromEntries((cat.nodes||[]).map(n=>[n.id,n]));const today=String(add.exportedAt||'').slice(0,10);
   // nodes the phone made: u_n_x -> n_x (a node with the same name under the same parent is reused)
   const nodeMap={};const nTaken=new Set(Object.keys(ND));const nodes=[];
@@ -225,8 +246,8 @@ function additions(X,wb,add,built){
   for(const u of (add.ownItems||[])){const hit=byName[nname(u.name)];
     if(hit){idMap[u.id]=hit.id;if(hit.id!==u.id.replace(/^u_/,''))F(`Name collision: your item "${u.name}" matches catalog item "${hit.name}" (${hit.id}). Not added again; your recipes and aliases use ${hit.id}.`);else notes.push(`${u.name} is already in the spreadsheet.`);continue;}
     let id=u.id.replace(/^u_/,'')||slug(u.name);if(!/^[a-z0-9_]+$/.test(id))id=slug(u.name)||'item';let base=id,n=2;while(taken.has(id))id=base+'_'+(n++);taken.add(id);idMap[u.id]=id;
-    items.push({item_id:id,name:u.name,brand:u.brand||'',node:mapNode(u.node),category:u.cat||'Other',package_label:u.pack||'',unit:u.unit||'each',package_qty:u.pkg||1,price:u.price,price_source:u.src==='estimate'?'estimate':'phone',price_date:u.priceDate||String(add.exportedAt||'').slice(0,10),
-      staple:u.staple?'Y':'N',storage:u.storage||'',fridge_days:u.fridge??'',freezer_days:u.freezer??'',pantry_days:u.pantry??'',family:u.family||'',sold_by:u.soldBy||'pack',alt_sizes:'',tracking_default:u.tracking||'',aldi_product:'',aldi_numbers:MIG6?'':aldiNums(u),retired:'N',replaced_by:'',notes:'Added on the phone'});
+    items.push({item_id:id,name:u.name,brand:u.brand||'',flavor:u.flavor||'',node:mapNode(u.node),category:u.cat||'Other',package_label:u.pack||'',unit:u.unit||'each',package_qty:u.pkg||1,price:u.price,price_source:u.src==='estimate'?'estimate':u.src==='receipt'?'receipt':'phone',price_date:u.priceDate||String(add.exportedAt||'').slice(0,10),
+      staple:u.staple?'Y':'N',storage:u.storage||'',fridge_days:u.fridge??'',freezer_days:u.freezer??'',pantry_days:u.pantry??'',family:u.family||'',sold_by:u.soldBy||'pack',alt_sizes:'',tracking_default:u.tracking||'',aldi_product:'',aldi_numbers:MIG6?'':aldiNums(u),retired:'N',replaced_by:'',notes:u.src==='receipt'?(u.unsorted?'Added from a receipt; not placed in the tree yet':'Added from a receipt'):'Added on the phone'});
     if(MIG6&&+u.price>0&&!(u.offers||[]).some(o=>(o.store||'aldi')==='aldi'))newOffers.push({item:id,store:'aldi',price:u.price,pack:u.pack||'',unit:u.unit||'each',pkg:u.pkg||1,numbers:aldiNums(u).replace(/;/g,'; '),price_date:u.priceDate||today,price_source:u.src==='estimate'?'estimate':'phone',last_changed:today,changed_by:'phone'});
     for(const o of (u.offers||[]))if((o.store||'aldi')!=='aldi'||MIG6)newOffers.push({...offerRow(o,u,id),store:o.store||'aldi'});}
   const known=new Set([...Object.keys(I),...items.map(x=>x.item_id)]);
@@ -266,10 +287,19 @@ function additions(X,wb,add,built){
   const cellUpd=[];
   for(const p of asList(add.placements,'item','node')){const id=mapId(p.item),node=mapNode(p.node);if(!known.has(id))continue;if(I[id]&&I[id].node===node)continue;
     if(I[id]&&I[id].node&&I[id].node!==node)F(`Placement: ${id} is under ${I[id].node} in the spreadsheet; the phone put it under ${node}.`);cellUpd.push({item_id:id,name:(I[id]||{}).name||id,node});}
-  const F6={name:'name',brand:'brand',pack:'package_label',unit:'unit',pkg:'package_qty',cat:'category',node:'node'};
+  const F6={name:'name',brand:'brand',flavor:'flavor',pack:'package_label',unit:'unit',pkg:'package_qty',cat:'category',node:'node'};
   for(const u of asList(add.itemUpdates,'id','fields')){const id=mapId(u.id||u.item);if(!known.has(id))continue;const f=u.fields||{};const row={item_id:id,name:(I[id]||{}).name||id};
     for(const k in f)if(F6[k])row[F6[k]]=k==='node'?mapNode(f[k]):f[k];if(Object.keys(row).length>2)cellUpd.push(row);}
   const favRows=[];for(const f of asList(add.favorites,'node','item')){const node=mapNode(f.node);const item=f.item?mapId(f.item):'';if(!node)continue;if((cat.favorites||{})[node]===item)continue;favRows.push({node,item,last_changed:today});}
+  // 6.3 variants {itemId:[{vid,brand,flavor,nums:{store:[num]},last}]} plus numVar {"store:num" or bare Aldi num: vid}
+  const catVid=new Set();for(const id in (cat.variants||{}))for(const v of cat.variants[id])catVid.add(v.vid);
+  const varNum={};for(const [k,vid] of Object.entries(add.numVar||{})){const m=/^([a-z_]+):(.+)$/.exec(k);const store=m?m[1]:'aldi',n=m?m[2]:k;(varNum[vid]=varNum[vid]||{});(varNum[vid][store]=varNum[vid][store]||new Set()).add(String(n));}
+  const varRows=[];const varList=[];
+  for(const [pid,list] of Object.entries(add.variants||{})){const id=mapId(pid);if(!known.has(id)){F(`Unknown item: variants point to ${pid}, which isn't in the spreadsheet. Left out.`);continue;}
+    for(const v of (list||[])){if(!v||!v.vid)continue;if(catVid.has(v.vid)){notes.push(`${[v.brand,v.flavor].filter(Boolean).join(' ')||v.vid} is already in the spreadsheet.`);continue;}
+      const nums={};for(const [s,ns] of Object.entries(v.nums||{}))nums[s]=new Set((ns||[]).map(String));for(const [s,ns] of Object.entries(varNum[v.vid]||{}))for(const n of ns)(nums[s]=nums[s]||new Set()).add(n);
+      varRows.push(...variantRows(id,{...v,nums:Object.fromEntries(Object.entries(nums).map(([s,ns])=>[s,[...ns]]))},{last_changed:today,changed_by:'phone'}));
+      varList.push(`${(I[id]||{}).name||id}: ${[v.brand,v.flavor].filter(Boolean).join(' ')||v.vid}`);}}
   const tsv=(rows,cols)=>rows.map(r=>cols.map(c=>{const v=r[c];return v==null?'':String(v).replace(/[\t\n]/g,' ');}).join('\t')).join('\n');
   const groups=[
     {key:'items',sheet:'Items',title:'Items you added',rows:items,cols:H.items,list:items.map(x=>x.name)},
@@ -278,11 +308,12 @@ function additions(X,wb,add,built){
     {key:'aliases',sheet:'Receipt aliases',title:'Receipt names',rows:aliases,cols:H.aliases,list:aliases.map(x=>x.receipt_text)},
     {key:'nodes',sheet:'Nodes',title:'New places in the item tree',rows:nodes,cols:H.nodes,list:nodes.map(x=>`${x.name} (${x.id})`)},
     {key:'offers',sheet:'Offers',title:'New store offers',rows:newOffers,cols:H.offers,list:newOffers.map(x=>`${x.item} at ${x.store}`)},
+    {key:'variants',sheet:'Variants',title:'Brands and flavors',rows:varRows,cols:H.variants,list:varList,note:'One row per variant and store. If the sheet has no Variants tab yet, run Meal Prep › Set up sheets and dropdowns first.'},
     {key:'favorites',sheet:'Favorites',title:'Favorites',rows:favRows,cols:H.favorites,list:favRows.map(x=>`${x.node}: ${x.item||'(cleared)'}`),note:'A node already on the Favorites sheet: change its item instead of adding a row. A blank item means the favorite was cleared.'},
     {key:'numbers',sheet:'Offers',title:'Store item numbers',rows:numRows,cols:['item','store','name','numbers'],list:numRows.map(x=>`${x.name} at ${x.store}: ${x.numbers}`),note:'Set numbers on these Offers rows (item and store) to the value shown; it keeps the numbers already there. Where an item has no row for that store yet, add one. Not for pasting as new rows.'},
     {key:'prices',sheet:'Offers',title:'Price corrections',rows:prices,cols:['item','store','name','price','price_date'],list:prices.map(x=>`${x.name} at ${x.store} ${x.from!=null?'$'+(+x.from).toFixed(2)+' → ':''}$${(+x.price).toFixed(2)}`),note:'Update price and price_date on these Offers rows. Not for pasting as new rows.'},
     {key:'offerUpdates',sheet:'Offers',title:'Changed store offers',rows:offerUpd,cols:['item','store','name','price','pack','unit','pkg','price_date'],list:offerUpd.map(x=>`${x.name} at ${x.store}`),note:'Update these Offers rows. Not for pasting as new rows.'},
-    {key:'itemCells',sheet:'Items',title:'Item edits and placements',rows:cellUpd,cols:['item_id','name','brand','node','package_label','unit','package_qty','category'],list:cellUpd.map(x=>x.name),note:'Change the filled-in cells on these Items rows. Blank cells mean no change. Not for pasting as new rows.'}
+    {key:'itemCells',sheet:'Items',title:'Item edits and placements',rows:cellUpd,cols:['item_id','name','brand','flavor','node','package_label','unit','package_qty','category'],list:cellUpd.map(x=>x.name),note:'Change the filled-in cells on these Items rows. Blank cells mean no change. Not for pasting as new rows.'}
   ].map(g=>({...g,tsv:tsv(g.rows,g.cols),header:g.cols.join('\t')}));
   return {groups,flags,notes,from:{exportedAt:add.exportedAt,catalogVersion:add.catalogVersion}};}
 const api={build,diff,validateCatalog,additions,toV1,toRows,SCHEMA,MEALS,STORAGE,TRACKING};

@@ -12,6 +12,8 @@
 <script src="./tools/meal-core.js"></script>
 <script src="./tools/house-core.js"></script>
 <script src="./tools/receipt-core.js"></script>
+<script src="./tools/learn-core.js"></script>
+<script src="./tools/learn-checks.js"></script>
 <title>Meal Prep self-test</title>
 <style>body{margin:0;background:#EDF1F3;font-family:'Figtree',system-ui,sans-serif;color:#15202B}a{color:#17375E}a:hover{color:#15202B}*{box-sizing:border-box}</style>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#16734C"/><text x="50" y="64" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="40" fill="#fff">✓</text></svg></template>
@@ -186,6 +188,7 @@ class Component extends DCLogic {
     const ic=H.ics([{uid:'spoil-20261012@meal-prep',date:'2026-10-12',summary:'3 things spoil'}],'20261009T000000Z');eq('Calendar event has a stable UID',ic.includes('UID:spoil-20261012@meal-prep'),true);
     const sp=H.costSplit([A,J,M],[{cost:10,shares:{a:1,j:1,m:.5}}],0,{});eq('Split a $10 dinner by appetite',[sp.byMember.a,sp.byMember.m],[4,2]);
     }}
+    if(window.LearnCore&&window.LearnChecks){let last=null;for(const [gn,name,got,want] of window.LearnChecks()){if(gn!==last){grp(gn);last=gn;}eq(name,got,want);}}
     grp('Colour contrast (WP27)');
     for(const th of ['light','dark'])for(const [a,b] of M.PAIRS){const c=M.contrast(M.TOKENS[th][a],M.TOKENS[th][b]);cur.rows.push({name:`${th}: ${a} on ${b}`,ok:c>=4.5,detail:`${c.toFixed(2)}:1 (needs 4.5)`});}
     const all=G.flatMap(g=>g.rows);const bad=all.filter(r=>!r.ok).length;

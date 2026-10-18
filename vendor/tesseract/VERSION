@@ -1,0 +1,6 @@
+tesseract.js        5.1.1   dist/tesseract.min.js, dist/worker.min.js
+tesseract.js-core   5.1.1   tesseract-core-lstm.wasm.js, tesseract-core-simd-lstm.wasm.js (wasm inlined)
+@tesseract.js-data/eng 1.0.0   4.0.0_best_int/eng.traineddata.gz
+
+All files are byte-identical to the npm packages above (checked by SHA-1 on 2026-10-10).
+The app asks for the LSTM-only engine (createWorker('eng', 1)), so only the two *-lstm cores are needed.
