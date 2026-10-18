@@ -14,6 +14,7 @@
 <script src="./tools/house-core.js"></script>
 <script src="./tools/receipt-core.js"></script>
 <script src="./tools/learn-core.js"></script>
+<script src="./tools/recipe-core.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Meal Prep"><meta name="theme-color" content="#EDF1F3" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0F151A" media="(prefers-color-scheme: dark)"><title>Meal Prep</title><style>html,body{overscroll-behavior:none}:root{color-scheme:light;--page:#EDF1F3;--surface:#FFFFFF;--tint:#E3EAF0;--ink:#15202B;--muted:#586878;--faint:#647381;--line:#D9E1E6;--line-strong:#B9C6CF;--primary:#17375E;--primary-ink:#17375E;--on-accent:#FFFFFF;--on-accent-muted:#DDE6EE;--good:#16734C;--good-ink:#16734C;--good-tint:#DCF1E7;--good-line:#BFE3D0;--warn-ink:#8F5200;--warn-tint:#FCEBCB;--warn-line:#F2D49B;--warn-soft:#FDF4E3;--bad:#A9231B;--bad-ink:#A9231B;--bad-tint:#FADFDC;--bad-line:#F2BDB7;--alert:#C24A0A;--spoil:#B42318;--ess:#A64B00;--ribbon:#9DB6D3;--range-fill:#C9D8E8}@media (prefers-color-scheme:dark){:root{color-scheme:dark;--page:#0F151A;--surface:#1A2229;--tint:#24313B;--ink:#E6ECF0;--muted:#A3B1BD;--faint:#93A1AD;--line:#2C3943;--line-strong:#4A5A66;--primary:#2F6299;--primary-ink:#9CC0E8;--on-accent:#FFFFFF;--on-accent-muted:#DDE6EE;--good:#237A52;--good-ink:#7FD3A8;--good-tint:#17352A;--good-line:#23523D;--warn-ink:#F0B65A;--warn-tint:#3A2C12;--warn-line:#6A5020;--warn-soft:#2E2614;--bad:#B53A31;--bad-ink:#FF9A90;--bad-tint:#3D1C1A;--bad-line:#6B2E29;--alert:#F08A4B;--spoil:#C93B32;--ess:#B35500;--ribbon:#3C6694;--range-fill:#2E4A66}}body{margin:0;background:var(--page);font-family:'Figtree',system-ui,sans-serif;color:var(--ink)}a{color:var(--primary-ink)}a:hover{color:var(--ink)}*{box-sizing:border-box}input[type=number]{-moz-appearance:textfield;appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}button:disabled{cursor:default}</style>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#17375E"/><text x="50" y="62" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="34" fill="#fff">MP</text></svg></template></helmet>
 <div style="height:100dvh;display:flex;justify-content:center;background:var(--page)">
@@ -872,7 +873,7 @@
             </button>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
               <span style="color:var(--muted);font-size:12.5px;white-space:nowrap">{{ libCountText }}</span>
-              <button onClick="{{ newRecipe }}" style="flex:none;height:38px;padding:0 10px;border:0;background:transparent;color:var(--primary-ink);font-weight:600;font-size:13.5px;white-space:nowrap">+ New recipe</button>
+              <span style="display:flex;gap:2px;flex:none"><button onClick="{{ webRecipe }}" style="flex:none;height:38px;padding:0 8px;border:0;background:transparent;color:var(--primary-ink);font-weight:600;font-size:13.5px;white-space:nowrap">+ From the web</button><button onClick="{{ newRecipe }}" style="flex:none;height:38px;padding:0 8px;border:0;background:transparent;color:var(--primary-ink);font-weight:600;font-size:13.5px;white-space:nowrap">+ New recipe</button></span>
             </div>
             <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 12px">
               <sc-for list="{{ libRows }}" as="r" hint-placeholder-count="6">
@@ -1140,7 +1141,7 @@
               <button onClick="{{ m.edit }}" style="height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13px;flex:none">Edit</button>
             </div>
           </sc-for>
-          <button onClick="{{ newRecipe }}" style="height:44px;border-radius:12px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:13.5px">New recipe</button>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"><button onClick="{{ webRecipe }}" style="height:44px;border-radius:12px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:13.5px">From the web</button><button onClick="{{ newRecipe }}" style="height:44px;border-radius:12px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:13.5px">New recipe</button></div>
         </div>
         </sc-if>
         <sc-if value="{{ subPrices }}" hint-placeholder-val="{{ false }}">
@@ -1783,6 +1784,10 @@
         </div>
         <div style="flex:1;overflow-y:auto;padding:14px 20px 16px;display:flex;flex-direction:column;gap:16px">
           <sc-if value="{{ hasReNote }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;border-radius:12px;background:var(--tint);color:var(--ink);font-size:13.5px;line-height:1.45">{{ reNote }}</div></sc-if>
+          <sc-if value="{{ reCanKeep }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleKeep }}" role="switch" aria-checked="{{ reKeep }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:0;border:0;background:transparent;color:var(--ink);text-align:left;min-height:44px">
+            <div><div style="font-weight:600;font-size:15px">Keeper</div><div style="color:var(--muted);font-size:13px">Also add it to the shared spreadsheet. Off keeps it on this phone.</div></div>
+            <span style="width:48px;height:28px;border-radius:99px;background:{{ reKeepTrack }};position:relative;flex:none"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.3);transform:translateX({{ reKeepKnob }}px)"></span></span>
+          </button></sc-if>
           <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Name</span><input value="{{ reName }}" onChange="{{ onReName }}" placeholder="For example, sheet pan chicken fajitas" style="height:48px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;outline:none"></input></label>
           <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Meal</span>
             <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px"><sc-for list="{{ reMeals }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.pick }}" style="height:44px;padding:0 4px;border-radius:12px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font-weight:600;font-size:13.5px">{{ c.label }}</button></sc-for></div>
@@ -1804,30 +1809,76 @@
             <span style="font:600 17px 'Bricolage Grotesque',sans-serif">Ingredients</span>
             <span style="color:var(--muted);font-size:13px;line-height:1.4">{{ reIngHint }}</span>
             <sc-for list="{{ reIngs }}" as="i" hint-placeholder-count="0">
-              <div style="border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+              <div style="border:1px solid {{ i.border }};background:{{ i.cardBg }};border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px">
                 <div style="display:flex;align-items:flex-start;gap:8px">
                   <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">{{ i.name }}</div><div style="font-size:12.5px;color:var(--muted)">{{ i.sub }}</div></div>
                   <button onClick="{{ i.remove }}" aria-label="Remove ingredient" style="width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:16px;flex:none">×</button>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px">
+                <sc-if value="{{ i.webAsk }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="font-size:13px;color:var(--warn-ink);line-height:1.4">{{ i.webNote }}</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px">
+                    <sc-if value="{{ i.hasSug }}" hint-placeholder-val="{{ false }}"><button onClick="{{ i.useSug }}" style="height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:13px">{{ i.sugText }}</button></sc-if>
+                    <button onClick="{{ i.pickItem }}" style="height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:13px">{{ i.pickText }}</button>
+                    <button onClick="{{ i.leave }}" style="height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-weight:600;font-size:13px">Leave out</button>
+                  </div>
+                </div></sc-if>
+                <sc-if value="{{ i.hasItem }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:8px">
                   <span style="display:flex;align-items:center;gap:6px;border:1px solid var(--primary-ink);border-radius:10px;height:44px;padding:0 10px;width:150px;flex:none"><input type="text" inputmode="decimal" value="{{ i.q }}" onChange="{{ i.onQ }}" aria-label="Amount" placeholder="0" style="border:0;background:transparent;width:100%;min-width:0;outline:none;font:700 16px 'Bricolage Grotesque',sans-serif"></input><sc-if value="{{ i.oneUnit }}" hint-placeholder-val="{{ true }}"><span style="color:var(--muted);font-size:13.5px;white-space:nowrap">{{ i.unit }}</span></sc-if><sc-if value="{{ i.manyUnits }}" hint-placeholder-val="{{ false }}"><select value="{{ i.u }}" onChange="{{ i.onU }}" aria-label="Unit" style="border:0;background:transparent;color:var(--ink);font-size:14px;max-width:70px"><sc-for list="{{ i.units }}" as="u" hint-placeholder-count="2"><option value="{{ u }}">{{ u }}</option></sc-for></select></sc-if></span>
                   <button onClick="{{ i.toggleOpt }}" style="height:44px;padding:0 12px;border-radius:10px;border:1px solid {{ i.optBorder }};background:{{ i.optBg }};color:{{ i.optColor }};font-weight:600;font-size:13px">{{ i.optText }}</button>
-                </div>
+                </div></sc-if>
                 <sc-if value="{{ i.hasHint }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:var(--muted)">{{ i.hint }}</div></sc-if>
-                $1
+                <sc-if value="{{ i.hasFrom }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:var(--muted);line-height:1.4">{{ i.fromText }}</div></sc-if>
               </div>
             </sc-for>
             <sc-if value="{{ noReIngs }}" hint-placeholder-val="{{ true }}"><div style="color:var(--muted);font-size:14px;padding:4px 0">No ingredients yet.</div></sc-if>
             <button onClick="{{ reAddIng }}" style="height:48px;border-radius:14px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:15px">+ Add ingredient</button>
+            <sc-if value="{{ hasReBasics }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--muted);line-height:1.4">{{ reBasics }}</div></sc-if>
             <sc-if value="{{ hasReCost }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;border-radius:12px;background:var(--tint);font-size:14px;font-weight:600">{{ reCost }}</div></sc-if>
           </div>
           <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Recipe link (optional)</span><input type="url" value="{{ reLink }}" onChange="{{ onReLink }}" placeholder="https://" style="height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:15px;outline:none"></input></label>
         </div>
-        <div style="padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:8px">
+        <div style="padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px">
+          <sc-if value="{{ reCanTrip }}" hint-placeholder-val="{{ false }}"><button onClick="{{ reSaveTrip }}" style="flex:1 1 100%;height:50px;border-radius:14px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:15px">Save and add to this trip</button></sc-if>
           <sc-if value="{{ reCanDel }}" hint-placeholder-val="{{ false }}"><button onClick="{{ reDel }}" style="flex:1;height:50px;border-radius:14px;border:1px solid var(--bad-line);background:{{ reDelBg }};color:{{ reDelColor }};font-weight:600;font-size:14px">{{ reDelText }}</button></sc-if>
           <button onClick="{{ reClose }}" style="flex:1;height:50px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-weight:600">Cancel</button>
           <button onClick="{{ reSave }}" style="flex:2;height:50px;border-radius:14px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:16px">{{ reSaveText }}</button>
         </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ wrOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:rgba(21,32,43,.55);display:flex;flex-direction:column;justify-content:flex-end;z-index:28">
+      <div onClick="{{ wrClose }}" style="flex:1;min-height:40px"></div>
+      <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-height:92%;display:flex;flex-direction:column">
+        <div style="padding:16px 20px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)">
+          <h2 style="flex:1;font:700 22px/1.2 'Bricolage Grotesque',sans-serif;margin:0">New recipe from the web</h2>
+          <button onClick="{{ wrClose }}" aria-label="Close" style="width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:18px">×</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:14px 20px 16px;display:flex;flex-direction:column;gap:12px">
+          <sc-if value="{{ wrStart }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:12px">
+            <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Recipe link</span><input type="url" value="{{ wrUrl }}" onChange="{{ onWrUrl }}" placeholder="https://" style="height:48px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;outline:none"></input></label>
+            <button onClick="{{ wrRead }}" style="height:50px;border-radius:14px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:16px">Read recipe</button>
+            <sc-if value="{{ wrHasErr }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;border-radius:12px;background:var(--warn-tint);color:var(--warn-ink);font-size:13.5px;line-height:1.45">{{ wrErr }}</div></sc-if>
+            <span style="font:600 17px 'Bricolage Grotesque',sans-serif;margin-top:6px">Paste the recipe</span>
+            <textarea placeholder="Copy the ingredient lines from the page and paste them here, one per line" value="{{ wrPaste }}" onChange="{{ onWrPaste }}" style="width:100%;height:150px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--page);color:var(--ink);font-size:14px;line-height:1.45;resize:vertical;outline:none"></textarea>
+            <button onClick="{{ wrUsePaste }}" style="height:48px;border-radius:14px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:15px">Use pasted lines</button>
+          </div></sc-if>
+          <sc-if value="{{ wrLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:24px 0;text-align:center;color:var(--muted);font-size:15px" role="status">Reading the recipe on {{ wrHost }}…</div></sc-if>
+          <sc-if value="{{ wrPick }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column">
+            <div style="padding:10px 12px;border-radius:12px;background:var(--tint);color:var(--ink);font-size:13.5px;line-height:1.45;margin-bottom:6px">{{ wrPickNote }}</div>
+            <sc-for list="{{ wrLines }}" as="x" hint-placeholder-count="6">
+              <button onClick="{{ x.tog }}" role="checkbox" aria-checked="{{ x.on }}" style="display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;border:0;border-top:{{ x.bt }};background:transparent;color:var(--ink);padding:10px 0;min-height:44px">
+                <span style="flex:none;width:24px;height:24px;margin-top:1px;border-radius:6px;border:2px solid {{ x.boxBorder }};background:{{ x.boxBg }};color:var(--on-accent);display:grid;place-items:center;font-size:14px;font-weight:700">{{ x.mark }}</span>
+                <span style="flex:1;min-width:0;font-size:14.5px;line-height:1.4;overflow-wrap:anywhere">{{ x.text }}</span>
+              </button>
+            </sc-for>
+          </div></sc-if>
+        </div>
+        <sc-if value="{{ wrPick }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:8px">
+          <button onClick="{{ wrBack }}" style="flex:1;height:50px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-weight:600">Back</button>
+          <button onClick="{{ wrUsePicked }}" style="flex:2;height:50px;border-radius:14px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:16px">{{ wrUseText }}</button>
+        </div></sc-if>
       </div>
     </div>
   </sc-if>
@@ -2683,6 +2734,8 @@ const nkey=(store,num)=>{num=String(num||'').trim();return !store||store==='aldi
 const splitKey=k=>{const i=String(k).indexOf(':');return i<0?['aldi',String(k)]:[k.slice(0,i),k.slice(i+1)];};
 function unitF(from,to){if(!from||!to||from===to)return 1;const MC=window.MealCore;const f=MC.convert(1,from,to);if(f!=null)return f;return MC.kindOf(from)==='count'&&MC.kindOf(to)==='count'?1:null;}
 function perUnit(o,unit,pkg0){const pkg=o.pkg||pkg0;if(!o||!(o.price>0)||!(pkg>0))return Infinity;const f=unitF(o.unit,unit);return f?o.price/(pkg*f):Infinity;}
+// True when two catalogs differ only in what phones learned (the Learned tab), so no "new catalog" summary is shown.
+function onlyLearned(a,b){if(!a||!b)return false;const strip=({learned,catalogVersion,builtAt,_norm,catNode,...r})=>JSON.stringify(r);try{return strip(a)===strip(b);}catch(e){return false;}}
 function normCat(c){if(!c||c._norm)return c;const cats=(c.categories&&c.categories.length)?c.categories:DEFAULT_CATS;const nodes=Array.isArray(c.nodes)?c.nodes.slice():[];const have=new Set(nodes.map(n=>n.id));const catNode={};
   for(const n of nodes)if(n.level===1)catNode[String(n.name).toLowerCase()]=n.id;
   for(const k of cats){const lk=String(k.name).toLowerCase();if(!catNode[lk]){const id='n_'+slugN(k.name);if(!have.has(id)){nodes.unshift({id,name:k.name,parent:null,level:1});have.add(id);}catNode[lk]=id;}}
@@ -2724,7 +2777,7 @@ const SHELF={Produce:6,Meat:3,'Dairy & eggs':14,'Bakery & frozen':30,Pantry:180}
 const KEY='aldi-meal-prep:user',V3KEY='aldi-meal-prep:v3',PREMIG='aldi-meal-prep:v3-premigration',SCHEMA=2,APP_VERSION='6.3',REMIND=15,DAY=864e5;
 const TARGET_MEALS=['breakfast','lunch','dinner'];
 const EMPTY_MENU={sugGroups:[],activeChips:[],cookedRows:[],sugRows:[],libRows:[],menuGroups:[],viewTabs:[],coverCells:[],mealChips:[],timeChips:[],onlyChips:[],tagChips:[],sortChips:[]};
-const LAYER_KEYS=['learn','brandDict','variants','numVar','nameDict','mainStore','ownStores','storeNames','storeGone','itemStore','members','dayOverrides','essentials','wasteLog','hh','people','budget','shopDay','horizon','extra','menu','tripStart','slots','dayTime','inv','staples','leftovers','bought','snoozeUntil','priceEdits','recipeEdits','ownRecipes','catImport','optOn','staplesAnswered','quickCheckTrip','lastCatalogVersion','aliases','receipts','priceHistory','ownItems','history','dayGuests','dayPattern','tripEnd','tripBudget','calSeq','lastExportAt','changeCount','itemSettings','usageLog','itemMerges','receiptDraft','cookedSnapshots','trips','setupDone','shopMode','tripStocked','stockedNote','tripCarry','skipTrip','nextChip','numLinks','redo','stapleNote','mig51','outbox','sheetLink','syncLog','idSwaps','itemEdits','offerEdits','ownNodes','favorites','placeSkip','lastStore'];
+const LAYER_KEYS=['learn','brandDict','variants','numVar','nameDict','mainStore','ownStores','storeNames','storeGone','itemStore','members','dayOverrides','essentials','wasteLog','hh','people','budget','shopDay','horizon','extra','menu','tripStart','slots','dayTime','inv','staples','leftovers','bought','snoozeUntil','priceEdits','recipeEdits','ownRecipes','catImport','optOn','staplesAnswered','quickCheckTrip','lastCatalogVersion','aliases','receipts','priceHistory','ownItems','history','dayGuests','dayPattern','tripEnd','tripBudget','calSeq','lastExportAt','changeCount','itemSettings','usageLog','itemMerges','receiptDraft','cookedSnapshots','trips','setupDone','shopMode','tripStocked','stockedNote','tripCarry','skipTrip','nextChip','numLinks','redo','stapleNote','mig51','outbox','sheetLink','syncLog','idSwaps','itemEdits','offerEdits','ownNodes','favorites','placeSkip','lastStore','recipeAliases'];
 const DB='aldi-meal-prep',CAT_SCHEMA=2;
 function idb(){return new Promise((res,rej)=>{if(!window.indexedDB)return rej(new Error('no indexedDB'));const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('kv'))r.result.createObjectStore('kv');};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
 async function idbGet(k){const d=await idb();return new Promise((res,rej)=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
@@ -2733,7 +2786,7 @@ function checkCat(c){if(!c||typeof c!=='object')return 'Not a catalog file.';if(
   if(!Array.isArray(c.items)||!Array.isArray(c.recipes))return 'It has no items or recipes.';const I=new Set(c.items.map(x=>x.id));
   for(const r of c.recipes)for(const x of r.ing)if(!I.has(x[0])&&!isNodeId(x[0]))return `Recipe ${r.id} uses unknown item ${x[0]}.`;return null;}
 function fromMaster(M){const d=String(M.updatedAt||'').slice(0,10);return {schemaVersion:1,catalogVersion:M.catalogVersion||'built-in',builtAt:M.updatedAt,items:M.prices.map(p=>({...p,priceDate:d})),recipes:M.recipes,aliases:[]};}
-const OVERLAYS=['dialog','conflict','hhChanged','memEd','whoSheet','essSheet','calDay','calRange','treePick','itemCard','rowSheet','histOpen','stapleSheet','budgetSheet','itemSheet','recEd','hadFor','daySheet','sheet','pantryOpen','rcOpen','askTrip','startOpen','storeOpen','sub'];
+const OVERLAYS=['dialog','conflict','hhChanged','memEd','whoSheet','essSheet','calDay','calRange','treePick','itemCard','rowSheet','histOpen','stapleSheet','budgetSheet','itemSheet','recEd','webRec','hadFor','daySheet','sheet','pantryOpen','rcOpen','askTrip','startOpen','storeOpen','sub'];
 const UNDO_KEYS_SKIP=['history','redo','changeCount','lastExportAt','snoozeUntil','receiptDraft','lastCatalogVersion','catImport','calSeq','stapleNote','mig51','sheetLink','syncLog','idSwaps','lastStore'];
 const HIST_KEYS=LAYER_KEYS.filter(k=>!UNDO_KEYS_SKIP.includes(k));
 const CLAUDE_MSG="Read this Aldi receipt photo. Reply with plain lines only, no commentary. One line per item in the form: description, quantity, line total, item number (for example: All Purpose Flour, 1, 1.95, 382147). The item number is the 6-digit number at the far left of the item line; leave it blank if there is none. Keep each description exactly as printed. For weighed items, put the net weight in lb as the quantity (the (N) line). Ignore store, card, reference and transaction numbers. Leave out tax, subtotal and payment lines. End with one line: TOTAL,,amount";
@@ -2806,6 +2859,7 @@ const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],WDI=['SU','MO','TU','WE','T
 const shortName=n=>String(n||'').split(' (')[0];
 const r2=n=>Math.round(n*100)/100,r3=n=>Math.round(n*1000)/1000;
 const money=n=>'$'+(n||0).toFixed(2);
+const hostOf=u=>{try{return new URL(String(u||'').trim()).hostname.replace(/^www\./,'');}catch(e){return '';}};
 const uid=()=>Math.random().toString(36).slice(2,9);
 const dkey=dt=>`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
 const kdate=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d);};
@@ -2898,8 +2952,9 @@ class Component extends DCLogic {
         else{const v2=js(raw('mealprep.v2'))||{},v1=js(raw('mealprep.v1'))||{};L={people:v2.people??v1.people,budget:v2.budget??v1.budget};}}
       const changed=L.lastCatalogVersion&&L.lastCatalogVersion!==this.cat.catalogVersion;
       let prevCat=lc.prev;if(changed&&!prevCat&&window.MASTER&&L.lastCatalogVersion===window.MASTER.catalogVersion)prevCat=fromMaster(window.MASTER);
-      const summary=changed&&prevCat?this.catalogSummary(prevCat,this.cat,L):null;
-      if(changed&&wrap&&wrap.user)this.takeSnap(`Before catalog ${this.cat.catalogVersion}`,JSON.stringify(wrap));
+      const quiet=changed&&prevCat&&onlyLearned(prevCat,this.cat);
+      const summary=changed&&prevCat&&!quiet?this.catalogSummary(prevCat,this.cat,L):null;
+      if(changed&&!quiet&&wrap&&wrap.user)this.takeSnap(`Before catalog ${this.cat.catalogVersion}`,JSON.stringify(wrap));
       L={...L,lastCatalogVersion:this.cat.catalogVersion};
       this.setState({...this.fromLayer(L),ready:true,pendingImport:summary,msg:lc.msg?{ok:false,text:lc.msg}:note?{ok:true,text:note}:null},()=>{this.persist();this.setupOffline();this.loadParsers();this.seedStocked();this.migrate51();this.startSync(lc);{const mc=this.mergeCandidates();if(mc.length&&!note)setTimeout(()=>this.flash(`${mc[0].u.name} is now in the catalog. Link it in Settings > My added items.`),1200);}if(note)this.flash('Updated to Meal Prep 4. Your data moved over.');else if(lc.msg)this.flash("Couldn't use the new catalog. Still on the previous one.");});
     };boot();
@@ -3013,7 +3068,7 @@ class Component extends DCLogic {
     else if(b<a){if(this._popClose){this._popClose=false;return;}if((this._pushed||0)>0){const n=Math.min(this._pushed,a-b);this._pushed-=n;this._skipPop=(this._skipPop||0)+n;try{history.go(-n);}catch(e){}}}}
   closeTop(){const k=OVERLAYS.find(k=>this.state[k]);if(!k)return;
     if(k==='recEd'){const e=this.state.recEd;if(e&&e.dirty){this.closeRecEd();return;}}
-    if(k==='itemSheet')this._itemCb=null;const v={conflict:null,hhChanged:null,memEd:null,whoSheet:null,essSheet:null,calDay:null,calRange:null,treePick:null,itemCard:null,rowSheet:null,sub:null,dialog:null,histOpen:false,stapleSheet:null,budgetSheet:false,itemSheet:null,recEd:null,hadFor:null,daySheet:null,sheet:null,pantryOpen:null,rcOpen:false,askTrip:null,startOpen:false,storeOpen:false};
+    if(k==='itemSheet')this._itemCb=null;const v={conflict:null,hhChanged:null,memEd:null,whoSheet:null,essSheet:null,calDay:null,calRange:null,treePick:null,itemCard:null,rowSheet:null,sub:null,dialog:null,histOpen:false,stapleSheet:null,budgetSheet:false,itemSheet:null,recEd:null,webRec:null,hadFor:null,daySheet:null,sheet:null,pantryOpen:null,rcOpen:false,askTrip:null,startOpen:false,storeOpen:false};
     this._popClose=true;this.setState({[k]:v[k]});}
   addCartToKitchen(){const S=this.state,P=this.P();const inv={...S.inv};const bought={};let n=0;
     for(const id in S.bought){const b={...S.bought[id]};if(b.pq>0&&P[id]){const nb=this.newBatch(P[id],b.pq,this.today(),r2(b.cost/Math.max(1,b.packs)));inv[id]=[...(inv[id]||[]),nb];b.bids=[...(b.bids||[]),nb.bid];b.pq=0;n++;}bought[id]=b;}
@@ -3579,7 +3634,7 @@ class Component extends DCLogic {
     if(d.cart&&mode==='kitchen')patch.inv={...S.inv,[it.id]:[this.newBatch(it,it.pkg,this.today(),it.price)]};
     else if(d.cart)patch.bought={...S.bought,[it.id]:{name:it.name,packs:1,cost:it.price,pq:it.pkg,bids:[],staple:false,prevStaple:null,optional:false}};
     this.commit(`Added new item ${it.name}${d.cart?(mode==='kitchen'?' to the kitchen':' to the cart'):''}`,patch);}
-  recFields(r){const mt=meta(r);const sv=r.serv||4;return {name:r.name||'',meal:r.meal||'dinner',serv:sv,total:String(mt.total),hands:String(mt.hands),keeps:mt.keeps,reheats:mt.reheats!==false,tags:[...(r.tags||[])],link:r.link||'',
+  recFields(r){const mt=meta(r);const sv=r.serv||4;return {name:r.name||'',meal:r.meal||'dinner',serv:sv,total:String(mt.total),hands:String(mt.hands),keeps:mt.keeps,reheats:mt.reheats!==false,tags:[...(r.tags||[])],link:r.link||'',fromWeb:!!r.fromWeb,keeper:!!r.keeper,
     ings:(r.ingAll||r.ing).map(([iid0,q,aw,o,nid])=>({k:uid(),iid:nid||iid0,q:String(Math.round(q*sv*1000)/1000),aw:aw||'',o:!!o}))};}
   openRecEd(mode,rid){const S=this.state;let d;
     if(mode==='new')d={name:'',meal:S.libMeal||'dinner',serv:4,total:'30',hands:'15',keeps:3,reheats:true,tags:[],link:'',ings:[]};
@@ -3591,16 +3646,27 @@ class Component extends DCLogic {
   closeRecEd(){const e=this.state.recEd;if(!e)return;if(e.dirty){this.confirm('Throw away your changes?','Your edits to this recipe are not saved.','Throw away',()=>this.setState({recEd:null,sheet:e.back||null}),true);return;}this.setState({recEd:null,sheet:e.back||null});}
   recBuild(){const d=this.state.recEd.d,P=this.P();const serv=Math.max(1,Math.round(+d.serv||1));
     if(!d.name.trim())return {err:'Give the recipe a name first'};if(!d.ings.length)return {err:'Add at least one ingredient'};
+    const miss=d.ings.find(x=>!x.iid);if(miss)return {err:`Pick an item for ${miss.web?miss.web.item:'each ingredient'}, or leave it out`};
     const bad=d.ings.find(x=>!(+x.q>0));if(bad)return {err:`Add an amount for ${(P[bad.iid]||{}).name||'each ingredient'}`};
     const total=Math.max(1,Math.round(+d.total||0)),hands=Math.min(total,Math.max(0,Math.round(+d.hands||0)));
-    return {r:{meal:d.meal,name:d.name.trim(),tags:d.tags,serv,link:d.link.trim(),hands,total,keeps:d.keeps,reheats:d.reheats,
+    return {r:{meal:d.meal,name:d.name.trim(),tags:d.tags,serv,link:d.link.trim(),hands,total,keeps:d.keeps,reheats:d.reheats,...(d.fromWeb?{fromWeb:true,keeper:!!d.keeper}:{}),
       ing:d.ings.map(x=>{const p=P[x.iid]||this.nodeItem(x.iid)||{unit:''};const MC=window.MealCore;const q0=+x.q;const qb=x.u&&x.u!==p.unit?(MC.convert(q0,x.u,p.unit)??q0):q0;const a=[x.iid,Math.round(qb/serv*1e5)/1e5,x.aw.trim()];if(x.o)a.push(1);return a;})}};}
-  saveRec(){const S=this.state,e=S.recEd;if(!e)return;const b=this.recBuild();if(b.err){this.flash(b.err);return;}const r=b.r,at=new Date().toISOString();
+  saveRec(andTrip){const S=this.state,e=S.recEd;if(!e)return;const b=this.recBuild();if(b.err){this.flash(b.err);return;}const r=b.r,at=new Date().toISOString();
     const reopen=id=>e.back&&e.back.rid===id?e.back:{rid:id,serv:S.people*this.multFor({...r,id}),kicker:`Library · ${ML[r.meal]}`};
+    if(e.mode==='web'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
+      const d=e.d,RC=window.RecipeCore;const nr={...r,id,source:'From the web',created:at,editedAt:at,...(d.basics&&d.basics.length?{basics:d.basics}:{})};
+      // Items the person picked for unmatched or wrong lines are used first next time.
+      const LC=window.LearnCore,lc=LC&&LC.clone?LC.clone(S.learn):null;const ra={...(S.recipeAliases||{})};for(const x of d.ings)if(x.web&&x.web.picked&&x.iid){const k=RC.learnKey(x.web.item);if(!k)continue;ra[k]=x.iid;if(lc)LC.record(lc,'name','recipe:'+k,'@'+x.iid,'user-edit');}
+      const obp=nr.keeper&&this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
+      const mp=andTrip?{menu:[...S.menu,{pid:uid(),rid:id,mult:1,status:'open',addedOn:this.today()}]}:{};
+      this.commit(`Added recipe ${r.name}${andTrip?' to this trip':''}`,{ownRecipes:[...(S.ownRecipes||[]),nr],recipeAliases:ra,...(lc?{learn:lc}:{}),recEd:null,sheet:andTrip?null:reopen(id),...obp,...mp});
+      this.flash(andTrip?`Saved ${r.name} and added it to this trip.`:`Saved ${r.name}. It's in your recipes.`);return;}
     if(e.mode==='new'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
       const nr={...r,id,source:'My recipe',created:at,editedAt:at};const obp=this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
       this.commit(`Added recipe ${r.name}`,{ownRecipes:[...(S.ownRecipes||[]),nr],recEd:null,sheet:reopen(id),...obp});this.flash(`Saved ${r.name}. It's in the library.`);return;}
-    if(e.mode==='own'){const ownRecipes=(S.ownRecipes||[]).map(x=>x.id===e.id?{...x,...r,editedAt:at}:x);const nr=ownRecipes.find(x=>x.id===e.id);const ob=this.linked()&&nr?this.obPatch(S.outbox,'recipe.add',e.id,()=>this.recData(nr,e.id)):null;
+    if(e.mode==='own'){const was=(S.ownRecipes||[]).find(x=>x.id===e.id)||{};const ownRecipes=(S.ownRecipes||[]).map(x=>x.id===e.id?{...x,...r,editedAt:at}:x);const nr=ownRecipes.find(x=>x.id===e.id);
+      // A web recipe that was kept on the phone goes to the sheet when it's marked as a keeper.
+      const ob=!this.linked()||!nr||(nr.fromWeb&&!nr.keeper)?null:nr.fromWeb&&!was.keeper?[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,e.id))]:this.obPatch(S.outbox,'recipe.add',e.id,()=>this.recData(nr,e.id));
       this.commit(`Edited ${r.name}`,{ownRecipes,recEd:null,sheet:reopen(e.id),...(ob?{outbox:ob}:{})});this.flash(`Saved ${r.name}`);return;}
     const orig=this.cat.recipes.find(x=>x.id===e.id);if(!orig){this.setState({recEd:null});return;}const re={...(S.recipeEdits||{})};
     if(recSig({...orig,...meta(orig)})===recSig({...orig,...r})){if(!re[e.id]){this.setState({recEd:null,sheet:reopen(e.id)});this.flash('No changes to save');return;}
@@ -3613,18 +3679,29 @@ class Component extends DCLogic {
     const why=[S.menu.some(i=>i.rid===id)?"it's on this trip's menu":'',(S.leftovers||[]).some(l=>l.rid===id)?'you have leftovers of it':'',Object.values(S.slots||{}).some(d=>Object.values(d||{}).some(v=>v&&v.rid===id))?"it's planned on the Days tab":''].filter(Boolean);
     if(why.length){this.flash(`Can't delete ${r.name} yet: ${why.join(' and ')}.`);return;}
     this.commit(`Deleted recipe ${r.name}`,{ownRecipes:S.ownRecipes.filter(x=>x.id!==id),outbox:(S.outbox||[]).filter(c=>!(c.type==='recipe.add'&&c.data&&c.data.id===id)),recEd:null,sheet:null});if((S.idSwaps||{})[id])this.sheetToo();this.flash(`Deleted ${r.name}`);}
-  recEdVals(){const S=this.state,e=S.recEd;if(!e)return {reOpen:false,reMeals:[],reTags:[],reIngs:[]};const d=e.d,P=this.P();
+  recEdVals(){const S=this.state,e=S.recEd;if(!e)return {reOpen:false,reMeals:[],reTags:[],reIngs:[],reCanTrip:false,hasReBasics:false,reCanKeep:false};const d=e.d,P=this.P();
     const sel=on=>({bg:on?'var(--primary)':'var(--surface)',color:on?'var(--on-accent)':'var(--ink)',border:on?'var(--primary)':'var(--line)'});const set=k=>ev=>this.recSet({[k]:ev.target.value});
     const serv=Math.max(1,Math.round(+d.serv||1));let cost=0;
-    const MC=window.MealCore;const ings=d.ings.map(x=>{const p=P[x.iid]||this.nodeItem(x.iid)||{name:x.iid,unit:'',price:0,pkg:1};const us=MC.unitsFor(p.unit);const u=x.u&&us.includes(x.u)?x.u:p.unit;const q0=parseFloat(x.q);const q=q0>0?(MC.convert(q0,u,p.unit)??q0):0;if(q>0&&!p.staple&&!x.o)cost+=q*p.price/p.pkg;
+    const MC=window.MealCore;const web=e.mode==='web';let nAsk=0;
+    const ings=d.ings.map(x=>{const w=x.web||null;const remove=()=>this.recSet({ings:d.ings.filter(y=>y.k!==x.k)});
+      if(!x.iid){nAsk++;const sg=w&&w.cand&&P[w.cand];const nm=w&&w.item?w.item.charAt(0).toUpperCase()+w.item.slice(1):'Pick an item';
+        return {k:x.k,name:nm,sub:'No Aldi item matched',q:'',unit:'',units:[],u:'',oneUnit:true,manyUnits:false,hasHint:false,hint:'',hasItem:false,remove,border:'var(--warn-line)',cardBg:'var(--warn-soft)',
+          webAsk:true,webNote:`The recipe says “${x.aw}”.`,pickItem:()=>this.webPickItem(x.k),pickText:'Pick item',hasSug:!!sg,sugText:sg?`Use ${sg.name}`:'',useSug:()=>{if(sg)this.webPick(x.k,sg.id);},leave:remove,
+          onU:()=>{},onQ:()=>{},onAw:()=>{},optText:'',optBg:'',optColor:'',optBorder:'',toggleOpt:()=>{}};}
+      const p=P[x.iid]||this.nodeItem(x.iid)||{name:x.iid,unit:'',price:0,pkg:1};const us=MC.unitsFor(p.unit);const u=x.u&&us.includes(x.u)?x.u:p.unit;const q0=parseFloat(x.q);const q=q0>0?(MC.convert(q0,u,p.unit)??q0):0;if(q>0&&!p.staple&&!x.o)cost+=q*p.price/p.pkg;
       return {k:x.k,name:p.name,sub:[p.pack,money(p.price)+(p.pack==='per lb'?'/lb':''),p.staple?'staple, not costed':''].filter(Boolean).join(' · '),q:x.q,unit:p.unit&&p.unit!=='each'?p.unit:'each',aw:x.aw,units:us,u,oneUnit:us.length<2,manyUnits:us.length>1,onU:ev=>this.recIng(x.k,{u:ev.target.value}),
         hasHint:(q0>0&&u!==p.unit)||MC.kindOf(p.unit)==='weight',hint:[q0>0&&u!==p.unit?`= ${fmtQ(q,p.unit)}`:'',MC.kindOf(p.unit)==='weight'?`${p.name} is sold by weight. Enter oz or lb.`:''].filter(Boolean).join(' · '),
         onQ:ev=>this.recIng(x.k,{q:ev.target.value}),onAw:ev=>this.recIng(x.k,{aw:ev.target.value}),
         optText:x.o?'Optional':'Needed',optBg:x.o?'var(--warn-tint)':'var(--surface)',optColor:x.o?'var(--warn-ink)':'var(--muted)',optBorder:x.o?'var(--warn-line)':'var(--line)',toggleOpt:()=>this.recIng(x.k,{o:!x.o}),
-        remove:()=>this.recSet({ings:d.ings.filter(y=>y.k!==x.k)})};});
+        remove,hasItem:true,...(()=>{const ask=!!w&&!(parseFloat(x.q)>0);if(ask)nAsk++;
+          return {border:ask?'var(--warn-line)':'var(--line)',cardBg:ask?'var(--warn-soft)':'var(--surface)',webAsk:ask,webNote:ask?`The recipe says “${x.aw}”. Enter it in ${p.unit||'each'}.`:'',
+            pickItem:()=>this.webPickItem(x.k),pickText:'Pick another item',hasSug:false,sugText:'',useSug:()=>{},leave:remove,hasFrom:!!w&&!ask,fromText:w?`Recipe: ${x.aw}`:''};})()};});
     const orig=e.mode==='cat'?this.cat.recipes.find(x=>x.id===e.id):null;const del=e.arm==='del';
-    return {reOpen:true,reTitle:e.mode==='new'?'New recipe':e.mode==='own'?'Edit recipe':(S.recipeEdits||{})[e.id]?'Edit my version':'Make my version',
-      hasReNote:e.mode==='cat',reNote:orig?`Changes save as your version of ${orig.name}. The original stays in the catalog and you can switch back to it. Your version goes to the spreadsheet as a second recipe.`:'',
+    return {reOpen:true,reTitle:web?'New recipe from the web':e.mode==='new'?'New recipe':e.mode==='own'?'Edit recipe':(S.recipeEdits||{})[e.id]?'Edit my version':'Make my version',
+      hasReNote:e.mode==='cat'||web,reNote:orig?`Changes save as your version of ${orig.name}. The original stays in the catalog and you can switch back to it. Your version goes to the spreadsheet as a second recipe.`
+        :web?`${hostOf(d.link)?`Read from ${hostOf(d.link)}. `:''}${ings.length-nAsk} of ${ings.length} ingredients are matched to Aldi items.${nAsk?` Check the ${nAsk} in amber.`:''} Amounts are as written; the app scales them when you plan.`:'',
+      hasReBasics:!!(d.basics&&d.basics.length),reBasics:`Pantry basics, not on your list: ${(d.basics||[]).join(' · ')}`,
+      reCanKeep:!!d.fromWeb&&this.linked(),reKeep:!!d.keeper,reKeepTrack:d.keeper?'var(--good)':'var(--line)',reKeepKnob:d.keeper?20:0,toggleKeep:()=>this.recSet({keeper:!d.keeper}),
       reName:d.name,onReName:set('name'),reMeals:MEALS.map(m=>({label:ML[m],...sel(d.meal===m),pick:()=>this.recSet({meal:m})})),
       reServ:`${serv}`,reServDec:()=>this.recSet({serv:Math.max(1,serv-1)}),reServInc:()=>this.recSet({serv:Math.min(24,serv+1)}),
       reKeeps:d.keeps===0?'Same day':`${d.keeps} day${d.keeps===1?'':'s'}`,reKeepsDec:()=>this.recSet({keeps:Math.max(0,d.keeps-1)}),reKeepsInc:()=>this.recSet({keeps:Math.min(7,d.keeps+1)}),
@@ -3632,14 +3709,56 @@ class Component extends DCLogic {
       reReheats:!!d.reheats,reTrack:d.reheats?'var(--good)':'var(--line)',reKnob:d.reheats?20:0,toggleReheats:()=>this.recSet({reheats:!d.reheats}),
       reTags:[...new Set([...TAG_ORDER,...d.tags])].map(t=>({label:tagLabel(t),...sel(d.tags.includes(t)),pick:()=>this.recSet({tags:d.tags.includes(t)?d.tags.filter(x=>x!==t):[...d.tags,t]})})),
       reIngs:ings,noReIngs:!ings.length,reIngHint:`Amounts for the whole recipe, which makes ${serv}. The app scales them to the servings you cook.`,reAddIng:()=>this.addRecIng(),
-      hasReCost:cost>0,reCost:`About ${money(cost/serv)} a serving · ${money(cost)} for the whole recipe`,
-      reLink:d.link,onReLink:set('link'),reClose:()=>this.closeRecEd(),reSave:()=>this.saveRec(),reSaveText:e.mode==='cat'?'Save my version':'Save recipe',
+      hasReCost:cost>0,reCost:web?(()=>{const n=Math.max(1,Math.round(+S.people||serv));return `Cost for your household: ${money(cost*n/serv)} · ${n} portion${n===1?'':'s'}`;})():`About ${money(cost/serv)} a serving · ${money(cost)} for the whole recipe`,
+      reLink:d.link,onReLink:set('link'),reClose:()=>this.closeRecEd(),reSave:()=>this.saveRec(),reSaveText:e.mode==='cat'?'Save my version':web?'Save to my recipes':'Save recipe',reCanTrip:web,reSaveTrip:()=>this.saveRec(true),
       reCanDel:e.mode==='own',reDel:()=>this.deleteRec(),reDelText:'Delete',reDelBg:'var(--surface)',reDelColor:'var(--bad-ink)'};}
   myRecVals(){const S=this.state,R=this.R();const ed=S.recipeEdits||{};
     const rows=[...(S.ownRecipes||[]).map(x=>R[x.id]).filter(Boolean),...Object.keys(ed).map(id=>R[id]).filter(Boolean)].map(r=>{const own=r.mine==='own';const arm=S.isArm==='rrev:'+r.id;const when=r.editedAt||r.created;
       return {name:r.name,sub:`${own?'My recipe':'My version of a catalog recipe'} · ${ML[r.meal]} · makes ${r.serv} · ${(r.ingAll||r.ing).length} ingredients${when?` · edited ${mdDate(dkey(new Date(when)))}`:''}`,
         edit:()=>this.openRecEd(own?'own':'cat',r.id),canRevert:!own,revert:()=>this.useOriginal(r.id),revText:'Use original',revBg:'var(--surface)',revColor:'var(--ink)'};});
-    return {myRecRows:rows,hasMyRec:rows.length>0,noMyRec:!rows.length,newRecipe:()=>this.openRecEd('new')};}
+    return {myRecRows:rows,hasMyRec:rows.length>0,noMyRec:!rows.length,newRecipe:()=>this.openRecEd('new'),webRecipe:()=>this.openWebRec()};}
+  // ---------- recipe import: New recipe from the web (link, page text or pasted lines; RecipeCore) ----------
+  openWebRec(seed){seed=seed||{};const go=!!seed.url&&this.linked();
+    this.setState({webRec:{phase:'start',url:seed.url||'',title:seed.title||'',paste:'',lines:null,err:seed.url&&!go?'Reading a link needs the Google Sheet (Settings › Google Sheet). Copy the ingredients from the page and paste them below instead.':''},sheet:null});
+    if(go)setTimeout(()=>this.webRecFetch(),50);}
+  webRecSet(p){this.setState(s=>s.webRec?{webRec:{...s.webRec,...p}}:null);}
+  async webRecFetch(){const w=this.state.webRec;if(!w)return;const url=String(w.url||'').trim();
+    if(!/^https?:\/\/\S+$/i.test(url)){this.webRecSet({err:'Paste the address of the recipe page, starting with https://'});return;}
+    if(!this.linked()){this.webRecSet({err:'Reading a link needs the Google Sheet (Settings › Google Sheet). Copy the ingredients from the page and paste them below instead.'});return;}
+    const L=this.state.sheetLink;this.webRecSet({phase:'loading',err:''});
+    const j=await this.fetchJson(L.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:L.key,action:'recipe.fetch',url})},30000);
+    const now=this.state.webRec;if(!now||now.phase!=='loading'||String(now.url).trim()!==url)return;
+    const RC=window.RecipeCore,paste=' Copy the ingredients from the page and paste them below instead.';
+    if(!j||!j.ok){this.webRecSet({phase:'start',err:j&&j.error==='refused'?'The Google Sheet refused the key. Check Settings › Google Sheet.':(j&&/^http-/.test(j.error||'')&&j.message?j.message:'The recipe page could not be read.')+paste});return;}
+    // A sheet script from before recipe.fetch answers like a batch of phone changes.
+    if(!j.blocks&&j.text==null){this.webRecSet({phase:'start',err:'Your Google Sheet script needs the update that reads recipe links.'+paste});return;}
+    const rec=j.blocks?RC.fromSchema(RC.findRecipe(j.blocks),j.url||url):null;
+    if(rec&&rec.ings.length){if(!rec.name)rec.name=j.title||'';this.openWebEditor(rec);return;}
+    const lines=RC.pageLines(j.text||'');if(!lines.length){this.webRecSet({phase:'start',err:'No recipe was found on that page.'+paste});return;}
+    this.webRecSet({phase:'pick',title:j.title||'',lines});}
+  webRecUsePicked(){const w=this.state.webRec;if(!w)return;const ings=(w.lines||[]).filter(l=>l.pick).map(l=>l.text);if(!ings.length){this.flash('Tap the ingredient lines first');return;}
+    this.openWebEditor({name:String(w.title||'').replace(/\s+[|–—-]\s+[^|–—-]+$/,'').trim(),ings,link:String(w.url||'').trim()});}
+  webRecUsePaste(){const w=this.state.webRec;if(!w)return;const ings=window.RecipeCore.pasteLines(w.paste);if(!ings.length){this.flash('Paste the ingredient lines first');return;}
+    const u=String(w.url||'').trim();this.openWebEditor({name:'',ings,link:/^https?:\/\//i.test(u)?u:''});}
+  // The receipt matcher (fuzzy over name and Aldi name), plus the picks learned from earlier web recipes.
+  webMatchOpts(){const P=this.P(),items=(this.state.prices||[]).filter(p=>!p.retired);
+    return {P,fuzzy:t=>fuzzy(t,items),learned:this.state.recipeAliases||{},alias:t=>{const a=this.aliasOf(t);return a&&a!=='__ignore'&&P[a]?a:null;}};}
+  openWebEditor(rec){const S=this.state,RC=window.RecipeCore,P=this.P();const b=RC.build(rec.ings,this.webMatchOpts());const total=Math.max(1,Math.round(+rec.total||30));
+    const d={name:rec.name||'',meal:MEALS.includes(rec.meal)?rec.meal:(S.libMeal||'dinner'),serv:Math.max(1,Math.min(24,Math.round(+rec.serv||4))),total:String(total),hands:String(Math.min(total,Math.round(+rec.hands||15))),
+      keeps:3,reheats:true,tags:(rec.tags||[]).filter(t=>TAG_ORDER.includes(t)),link:rec.link||'',fromWeb:true,keeper:false,basics:b.basics,
+      ings:b.rows.map(r=>({k:uid(),iid:r.iid,q:r.q!=null?String(r.q):'',aw:r.text,o:!!r.optional,web:{item:r.item,how:r.how,cand:((r.cands||[]).find(c=>c.iid&&c.iid!==r.iid&&P[c.iid]&&c.sc>=.6)||{}).iid||null}}))};
+    this.setState({webRec:null,recEd:{mode:'web',id:null,d,arm:null,dirty:true,back:null},sheet:null});}
+  webPick(k,iid){const P=this.P(),RC=window.RecipeCore;this.setState(s=>{if(!s.recEd)return null;const d=s.recEd.d;
+    return {recEd:{...s.recEd,dirty:true,arm:null,d:{...d,ings:d.ings.map(x=>{if(x.k!==k)return x;const p=P[iid];const a=p?RC.amountFor(RC.parseLine(x.aw),p):{q:null};
+      return {...x,iid,u:undefined,q:a.q!=null?String(a.q):'',web:x.web?{...x.web,picked:true}:x.web};})}}};});}
+  webPickItem(k){this.openItemSheet('recipe',p=>this.webPick(k,p.id));}
+  webRecVals(){const w=this.state.webRec;if(!w)return {wrOpen:false,wrLines:[]};const lines=w.lines||[];const n=lines.filter(l=>l.pick).length;
+    return {wrOpen:true,wrStart:w.phase==='start',wrLoading:w.phase==='loading',wrPick:w.phase==='pick',wrUrl:w.url,onWrUrl:ev=>this.webRecSet({url:ev.target.value,err:''}),wrRead:()=>this.webRecFetch(),
+      wrHasErr:!!w.err,wrErr:w.err,wrPaste:w.paste,onWrPaste:ev=>this.webRecSet({paste:ev.target.value}),wrUsePaste:()=>this.webRecUsePaste(),wrHost:hostOf(w.url)||'the page',
+      wrPickNote:`${hostOf(w.url)||'This page'} has no recipe card, so here is its text. Tap the ingredient lines. The ones that start with an amount are already picked.`,
+      wrLines:lines.map((l,i)=>({text:l.text,on:!!l.pick,mark:l.pick?'✓':'',boxBg:l.pick?'var(--primary)':'var(--surface)',boxBorder:l.pick?'var(--primary)':'var(--line-strong)',bt:i?'1px solid var(--line)':'0',
+        tog:()=>this.webRecSet({lines:lines.map((y,j)=>j===i?{...y,pick:!y.pick}:y)})})),
+      wrUseText:n?`Use ${n} line${n===1?'':'s'}`:'Use lines',wrUsePicked:()=>this.webRecUsePicked(),wrBack:()=>this.webRecSet({phase:'start'}),wrClose:()=>this.setState({webRec:null})};}
   usesOf(id){const S=this.state;const b=(S.inv[id]||[]).length;const rec=[...(S.ownRecipes||[]),...Object.values(S.recipeEdits||{})].filter(r=>(r.ing||[]).some(x=>x[0]===id)).map(r=>r.name);const al=(S.aliases||[]).filter(a=>a.item===id).length;return {b,rec,al};}
   deleteUserItem(id){const S=this.state;const u=(S.ownItems||[]).find(x=>x.id===id);if(!u)return;const x=this.usesOf(id);
     const why=[x.b?`${x.b} batch${x.b===1?'':'es'} in your kitchen`:'',x.rec.length?`recipe${x.rec.length===1?'':'s'} ${x.rec.join(', ')}`:'',x.al?`${x.al} receipt name${x.al===1?'':'s'}`:''].filter(Boolean);
@@ -3970,7 +4089,7 @@ class Component extends DCLogic {
   obPatch(ob,type,id,fn){const i=(ob||[]).findIndex(c=>c.type===type&&c.data&&c.data.id===id);if(i<0)return null;const out=[...ob];out[i]={...out[i],data:fn(out[i].data)};return out;}
   obRename(ob,from,to){const q='"'+from+'"';return (ob||[]).map(c=>{const s=JSON.stringify(c.data);return s&&s.includes(q)?{...c,data:JSON.parse(s.split(q).join('"'+to+'"'))}:c;});}
   chgLabel(c){const d=c.data||{},P=this.P();const nm=id=>(P[id]&&P[id].name)||id;
-    return ({'item.add':`new item ${d.name}`,'price.set':`price of ${nm(d.item)}`,'number.link':`Aldi number ${d.num}`,'alias.add':`receipt name ${d.text}`,'recipe.add':`recipe ${d.name}`,'recipe.update':`recipe ${d.name}`,'recipe.edit':`my version of ${d.recipe&&d.recipe.name}`,'item.merge':`link of ${nm(d.from)}`,'item.update':`details of ${nm(d.id)}`,'item.place':`group of ${nm(d.item)}`,'offer.set':`${this.storeName(d.store)} price of ${nm(d.item)}`,'node.add':`group ${d.name}`,'favorite.set':'a favorite'})[c.type]||c.type;}
+    return ({'item.add':`new item ${d.name}`,'price.set':`price of ${nm(d.item)}`,'number.link':`Aldi number ${d.num}`,'alias.add':`receipt name ${d.text}`,'recipe.add':`recipe ${d.name}`,'recipe.update':`recipe ${d.name}`,'recipe.edit':`my version of ${d.recipe&&d.recipe.name}`,'item.merge':`link of ${nm(d.from)}`,'item.update':`details of ${nm(d.id)}`,'item.place':`group of ${nm(d.item)}`,'offer.set':`${this.storeName(d.store)} price of ${nm(d.item)}`,'node.add':`group ${d.name}`,'favorite.set':'a favorite','learn.batch':`${(d.records||[]).length} learned words and names`})[c.type]||c.type;}
   startSync(lc){if(lc&&lc.sheet)this.setState({sheetStatus:lc.sheet});
     if(!this._syncWired){this._syncWired=true;
       const wake=()=>{this._retryAt=0;clearTimeout(this._retryT);};
@@ -4050,7 +4169,7 @@ class Component extends DCLogic {
     const add=(c,k)=>{ob.push({...c,init:true});if(k)cnt[k]++;};
     for(const n of (S.ownNodes||[]))add(this.chg('node.add',n));
     for(const u of (S.ownItems||[]))add(this.chg('item.add',this.itemData(u,nl)),'items');
-    for(const r of (S.ownRecipes||[]))add(this.chg('recipe.add',this.recData(r,r.id)),'recipes');
+    for(const r of (S.ownRecipes||[]))if(!(r.fromWeb&&!r.keeper))add(this.chg('recipe.add',this.recData(r,r.id)),'recipes');
     for(const id in (S.recipeEdits||{})){const orig=this.cat.recipes.find(x=>x.id===id);if(orig)add(this.recEditChg(orig,S.recipeEdits[id]),'mine');}
     for(const from in (S.itemMerges||{}))add(this.chg('item.merge',{from,to:S.itemMerges[from]}));
     for(const a of (S.aliases||[]))add(this.chg('alias.add',{text:a.text,item:a.item}),'names');
@@ -4104,7 +4223,7 @@ class Component extends DCLogic {
     if(lc.msg){this.setState({msg:{ok:false,text:lc.msg}});return;}
     if(!lc.fresh){if(quiet!==true)this.flash(lc.sheet&&lc.sheet.error?(lc.sheet.error==='refused'?'The sheet refused the key':"Couldn't reach the sheet. Using the copy saved on this phone."):'You already have the newest catalog');this.applySwaps();return;}
     const prev=lc.prev;this.cat=lc.cat;const L=this.layer();
-    await new Promise(r=>this.setState({...this.fromLayer({...L,lastCatalogVersion:lc.cat.catalogVersion}),pendingImport:prev?this.catalogSummary(prev,lc.cat,L):null},()=>{this.persist();r();}));this.applySwaps();}
+    await new Promise(r=>this.setState({...this.fromLayer({...L,lastCatalogVersion:lc.cat.catalogVersion}),pendingImport:prev&&!onlyLearned(prev,lc.cat)?this.catalogSummary(prev,lc.cat,L):null},()=>{this.persist();r();}));this.applySwaps();}
   csv(rows){return rows.map(r=>r.map(v=>{const s=v==null?'':String(v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',')).join('\n');}
   async copyText(t,label){try{await navigator.clipboard.writeText(t);this.flash(`${label} copied`);}catch(e){this.setState({importText:t});this.flash("Couldn't copy automatically. It's in the backup box below.");}}
 
@@ -4434,26 +4553,29 @@ class Component extends DCLogic {
       peopleInc:()=>{if(ms.length>=12)return;const n=ms.length+1;this.commitHH(`Added Person ${n}`,[...ms,H.newMember('m_'+uid(),'Person '+n,'adult',ms.length)],{});},
       peopleDec:()=>{if(ms.length<=1)return;const last=ms[ms.length-1];this.commitHH(`Removed ${last.name}`,ms.slice(0,-1),{});}};}
   // ---------- 6.3 receipts ----------
+  // The phone's learning plus the sheet's Learned tab (step 4). Used for reading receipts; new facts are still recorded in S.learn only.
+  learnView(){const S=this.state,LC=window.LearnCore,rows=this.cat&&this.cat.learned;if(!LC||!S.learn)return S.learn||null;if(!rows||!rows.length)return S.learn;
+    if(this._lvFor===S.learn&&this._lvRows===rows)return this._lv;this._lvFor=S.learn;this._lvRows=rows;return this._lv=LC.withCatalog(S.learn,rows,this.today());}
   knownNums(store){store=store||this.rcStore();const S=this.state,P=this.P();const K=new Map();const add=(n,nm)=>{n=String(n||'');if(!/^\d{6}$/.test(n))return;const a=K.get(n)||[];if(nm&&!a.includes(nm))a.push(nm);K.set(n,a);};
     for(const p of S.prices||[])for(const o of p.offers||[])if(o.store===store)for(const n of o.nums||[])add(n,p.name);
     const al={};for(const a of S.aliases||[])(al[a.item]=al[a.item]||[]).push(a.text);
     for(const k in (S.numLinks||{})){const [s,n]=splitKey(k);if(s!==store)continue;const id=S.numLinks[k];add(n,P[id]&&P[id].name);for(const t of al[id]||[])add(n,t);}
     for(const r of S.receipts||[])if((r.store||'aldi')===store)for(const x of r.rows||[])if(x.num)add(x.num,x.text||(P[x.item]&&P[x.item].name));
-    if(window.LearnCore&&S.learn)for(const [n,nm] of window.LearnCore.knownNums(S.learn,store,id=>P[id]&&P[id].name))add(n,nm[0]);
+    if(window.LearnCore&&S.learn)for(const [n,nm] of window.LearnCore.knownNums(this.learnView(),store,id=>P[id]&&P[id].name))add(n,nm[0]);
     return K;}
-  numLearn(store){return window.LearnCore&&this.state.learn?window.LearnCore.numLearn(this.state.learn,store||'aldi',this.today()):null;}
+  numLearn(store){return window.LearnCore&&this.state.learn?window.LearnCore.numLearn(this.learnView(),store||'aldi',this.today()):null;}
   variantsOf(id){const S=this.state;const v=(S.variants||{})[id];if(v&&v.length)return v;const p=this.P()[id];return p&&p.brand?[{vid:'b_'+id,brand:p.brand,flavor:'',auto:true}]:[];}
   varLabel(id,vid){if(!vid)return '';const v=this.variantsOf(id).find(x=>x.vid===vid);return v?[v.brand,v.flavor].filter(Boolean).join(' · '):'';}
   brandGuess(text){const t=String(text||'');const m=t.match(/ben\s*&\s*jerry'?s|la\s*croix|belle\s*vie|kraft|heinz|barilla|tillamook|chobani|oikos|starbucks|coca[\s-]?cola|pepsi/i);if(!m)return '';const s=m[0].toLowerCase();
     return {"ben & jerry's":"Ben & Jerry's",'la croix':'La Croix','belle vie':'Belle Vie'}[s.replace(/\s+/g,' ').replace(/jerrys/,"jerry's")]||m[0].replace(/\b\w/g,c=>c.toUpperCase());}
-  vocab(){const S=this.state;if(this._vocabFor===S.prices&&this._vocabL===S.learn&&this._vocab)return this._vocab;const V=new Set();const add=s=>String(s||'').toLowerCase().split(/[^a-z]+/).forEach(w=>{if(w.length>=3)V.add(w);});
+  vocab(){const S=this.state,LV=this.learnView();if(this._vocabFor===S.prices&&this._vocabL===LV&&this._vocab)return this._vocab;const V=new Set();const add=s=>String(s||'').toLowerCase().split(/[^a-z]+/).forEach(w=>{if(w.length>=3)V.add(w);});
     for(const p of S.prices||[])add(p.name);for(const a of S.aliases||[])add(a.text);for(const v of Object.values(S.nameDict||{}))add(v);for(const r of S.recipes||[])for(const x of r.ing||[])add(x[2]);
-    if(window.LearnCore&&S.learn)for(const w of window.LearnCore.words(S.learn,this.today()))V.add(w);this._vocab=V;this._vocabFor=S.prices;this._vocabL=S.learn;return V;}
-  rowFrom(x,store,P,items){const S=this.state,RC=window.ReceiptCore,LC=window.LearnCore;const t0=this.today();const lk=LC&&S.learn?LC.lookup(S.learn,t0):null;const sg=RC.suggest(x.text,{lookup:lk,vocab:this.vocab(),learned:S.nameDict,learnedBrand:S.brandDict,store,known:(S.prices||[]).filter(q=>q.own).map(q=>({name:q.name,cat:q.cat}))});
+    if(window.LearnCore&&LV)for(const w of window.LearnCore.words(LV,this.today()))V.add(w);this._vocab=V;this._vocabFor=S.prices;this._vocabL=LV;return V;}
+  rowFrom(x,store,P,items){const S=this.state,RC=window.ReceiptCore,LC=window.LearnCore;const t0=this.today();const LV=this.learnView();const lk=LC&&LV?LC.lookup(LV,t0):null;const sg=RC.suggest(x.text,{lookup:lk,vocab:this.vocab(),learned:S.nameDict,learnedBrand:S.brandDict,store,known:(S.prices||[]).filter(q=>q.own).map(q=>({name:q.name,cat:q.cat}))});
     const a=this.aliasOf(x.text)||(sg.changes.length?this.aliasOf(sg.fixedText):null);let iid=null,how='none';const bn=x.num?this.itemByNum(x.num,store):null;
-    const li=!bn&&!a&&LC&&S.learn?LC.itemFor(S.learn,{text:x.text,fixedText:sg.fixedText},store,t0):null;
+    const li=!bn&&!a&&LC&&LV?LC.itemFor(LV,{text:x.text,fixedText:sg.fixedText},store,t0):null;
     if(bn&&P[bn]){iid=bn;how='number';}else if(a&&(a==='__ignore'||P[a])){iid=a;how='alias';}else if(li&&(li.iid==='__ignore'||P[li.iid])){iid=li.iid;how='learned';}
-    else{const ac=this._aliasN&&this._aliasNFor===S.learn?this._aliasN:(this._aliasNFor=S.learn,this._aliasN=LC&&S.learn?LC.aliasCount(S.learn,t0):{});
+    else{const ac=this._aliasN&&this._aliasNFor===LV?this._aliasN:(this._aliasNFor=LV,this._aliasN=LC&&LV?LC.aliasCount(LV,t0):{});
       const fz=fuzzy(sg.fixedText,items).map(f=>({...f,sc:f.sc+Math.min(.3,.1*(ac[f.p.id]||0))})).sort((a,b)=>b.sc-a.sc);if(fz[0]&&fz[0].sc>=.7&&(!fz[1]||fz[0].sc-fz[1].sc>=.08)){iid=fz[0].p.id;how='guess';}}
     const p=iid&&iid!=='__ignore'?this.atStore(P[iid],store):null;const w=!!x.weighed||(!!p&&this.isWeighed(p));const qn=w?(x.wt||(p?p.pkg:1)):Math.max(1,Math.round(x.qty||1));
     const name0=sg.name;const sz=RC.parseSize(sg.fixedText);const g={cat:sg.cat,sub:sg.sub};
@@ -4461,14 +4583,14 @@ class Component extends DCLogic {
     const ss=LC&&S.learn&&p&&!w?LC.sizeSeen(S.learn,iid,store):null;const size=ss!=null&&+ss>0?+ss:(p?p.pkg:1);
     return {rid:uid(),iid,iid0:iid,text:x.text,fixedText:sg.fixedText,num:x.num||'',num0:x.num||'',total0:r2(x.amount).toFixed(2),how,count:!w?qn:1,size,size0:size,sizeSettled:ss!=null,other:'',wt:w?String(qn):'',wtUnit:x.wtUnit||'lb',total:r2(x.amount).toFixed(2),unitP:(w&&x.unitP?r2(x.unitP):r2(x.amount/(qn||1))).toFixed(2),
       sale:x.disc?true:null,discAuto:!!x.disc,disc:x.disc?String(x.disc):'',showDisc:false,name0,nCat0:g.cat,nSub:g.sub,nSize:sz?{label:sz.label,amt:sz.base.amt,unit:sz.base.unit}:null,
-      vid,brand0:sg.brand,brandFrom:sg.brandFrom,sugLearned:sg.learned||[],flavor0:sg.flavor,variety0:sg.variety,fixes:sg.changes,sugConf:sg.conf,priceDoubt:(()=>{if(!p||!(p.price>0)||w)return false;const a=r2(x.amount/(qn||1)).toFixed(2),b=r2(p.price).toFixed(2);if(a===b||a.length!==b.length)return false;let d=0,ok=true;const pp=LC&&S.learn?LC.pairs(S.learn,'price',t0):null;for(let i=0;i<a.length;i++)if(a[i]!==b[i]){d++;if(!RC.confusable(a[i],b[i],pp))ok=false;}return d===1&&ok&&(x.conf?x.conf.price<92:false);})(),conf:x.conf||null,corrected:!!x.corrected,from:x.from||'',unclear:!!x.unclear,rawNum:x.raw||'',crop:x.crop||null,tax:x.tax||'',printed:x.printed||null};}
+      vid,brand0:sg.brand,brandFrom:sg.brandFrom,sugLearned:sg.learned||[],flavor0:sg.flavor,variety0:sg.variety,fixes:sg.changes,sugConf:sg.conf,priceDoubt:(()=>{if(!p||!(p.price>0)||w)return false;const a=r2(x.amount/(qn||1)).toFixed(2),b=r2(p.price).toFixed(2);if(a===b||a.length!==b.length)return false;let d=0,ok=true;const pp=LC&&LV?LC.pairs(LV,'price',t0):null;for(let i=0;i<a.length;i++)if(a[i]!==b[i]){d++;if(!RC.confusable(a[i],b[i],pp))ok=false;}return d===1&&ok&&(x.conf?x.conf.price<92:false);})(),conf:x.conf||null,corrected:!!x.corrected,from:x.from||'',unclear:!!x.unclear,rawNum:x.raw||'',crop:x.crop||null,tax:x.tax||'',printed:x.printed||null};}
   facts(d,pr,store){const u=d.userSet||{};const o={};const set=(k,v)=>{if(v!=null&&v!==''&&!u[k])o[k]=String(v);};
     set('date',pr.date);set('tax',pr.tax!=null?pr.tax.toFixed(2):null);set('printed',pr.total!=null?pr.total.toFixed(2):null);set('count',pr.count);if(!u.store&&store)o.store=store;
     o.subtotal=pr.subtotal;o.taxes=pr.taxes||[];o.time=pr.time||null;return o;}
   rcFromParsed(pr,store,extra){const S=this.state,d=S.receiptDraft,RC=window.ReceiptCore;const P=this.P();const items=S.prices.filter(p=>!p.retired);
     const g=RC.groupItems(pr.items);const rows=g.map(x=>this.rowFrom(x,store,P,items));
     for(const gp of (extra&&extra.gaps)||[]){const at=rows.findIndex(r=>r.lineIdx===gp.after);rows.splice(Math.min(rows.length,(gp.row??rows.length)),0,{rid:uid(),gap:true,missing:gp.missing,crop:gp.crop||null,text:gp.text||'',iid:'__gap',count:1,total:'0.00'});}
-    const am=pr.items.map(x=>x.amount);const fix=pr.subtotal!=null?RC.solveTotal(am,pr.subtotal,pr.items.map(x=>x.conf?x.conf.price:100),window.LearnCore&&S.learn?window.LearnCore.pairs(S.learn,'price',this.today()):null):null;
+    const am=pr.items.map(x=>x.amount);const fix=pr.subtotal!=null?RC.solveTotal(am,pr.subtotal,pr.items.map(x=>x.conf?x.conf.price:100),window.LearnCore&&S.learn?window.LearnCore.pairs(this.learnView(),'price',this.today()):null):null;
     let solve=null;if(fix){const it=pr.items[fix.i];const row=rows.find(r=>r.num===it.num&&!r.gap);solve={rid:row&&row.rid,from:fix.from,to:fix.to,line:fix.i+1};}
     this.saveDraft({...d,...this.facts(d,pr,store),tab:'table',rows,solve,countRead:RC.itemCount(g),photoNote:extra&&extra.note||'',readAt:new Date().toISOString()});
     const n=rows.filter(r=>!r.gap&&r.iid&&r.how!=='guess').length;this.flash(`${this.storeName(store)} receipt: ${RC.itemCount(g)} items read${n?`, ${n} matched`:''}.`);}
@@ -4528,7 +4650,11 @@ class Component extends DCLogic {
       this.setState({rcScan:{busy:false,done:true,text:note||`Read ${fs.length} photo${fs.length===1?'':'s'}.`,err:!!note},rcPhotos:[]});this._photos=[];}
     catch(err){this.logErr('Scan: '+(err&&err.message||err));this.setState({rcScan:{busy:false,err:true,fail:true,text:"Couldn't read this. Try again flat and in good light, or paste the text."}});}
     finally{this._scanning=false;if(w)try{await w.terminate();}catch(x){}}}
-  async checkShared(){try{if(!/[?&]share/.test(location.search)||!window.caches)return;const c=await caches.open('meal-prep-share');const ks=await c.keys();const fs=[];
+  async checkShared(){try{if(!/[?&]share/.test(location.search)||!window.caches)return;
+    // A shared link (sw.js keeps it in meal-prep-share-link) opens New recipe from the web.
+    if(/[?&]share=link/.test(location.search)){const lc=await caches.open('meal-prep-share-link');let link=null;for(const k of await lc.keys()){const r=await lc.match(k);if(r){try{link=await r.json();}catch(err){}}await lc.delete(k);}
+      if(link&&link.url)this.openWebRec({url:link.url,title:link.title||''});try{history.replaceState(null,'',location.pathname);}catch(err){}return;}
+    const c=await caches.open('meal-prep-share');const ks=await c.keys();const fs=[];
     for(const k of ks){const r=await c.match(k);if(r){const b=await r.blob();fs.push(new File([b],'shared.jpg',{type:b.type||'image/jpeg'}));}await c.delete(k);}
     if(fs.length){if(!this.state.receiptDraft)this.openReceipt();else this.setState({rcOpen:true});setTimeout(()=>{this.saveDraft({...this.state.receiptDraft,tab:'paste'},true);this.addPhotoFiles(fs);},200);}
     try{history.replaceState(null,'',location.pathname);}catch(e){}}catch(e){this.logErr('Share: '+(e&&e.message||e));}}
@@ -4614,7 +4740,8 @@ class Component extends DCLogic {
       if(!vid)continue;if(vid.startsWith('b_')&&!(vars[r.iid]||[]).some(v=>v.vid===vid)){const p=P2[r.iid];vars[r.iid]=[...(vars[r.iid]||[]),{vid,brand:p&&p.brand||'',flavor:'',nums:{}}];newV.push({item:r.iid,vid,brand:p&&p.brand||'',flavor:''});}
       const v=(vars[r.iid]||[]).find(z=>z.vid===vid);if(v){if(r.num&&!(v.nums[st]||[]).includes(r.num))newN.push({vid,store:st,num:r.num});if(r.num){v.nums[st]=[...new Set([...(v.nums[st]||[]),r.num])];nv[nkey(st,r.num)]=vid;}v.last={price:r2(parseFloat(r.unitP)||0),date,store:st};}r._vid=vid;}
     if(this.linked())ob=[...ob,...newV.map(v=>this.chg('variant.add',v)),...newN.map(n=>this.chg('variant.number',n))];
-    const LC=window.LearnCore;const learn=LC?LC.fromReceipt(S.learn,fin,{store:st,date,names:id=>P2[id]&&P2[id].name}):S.learn;
+    const LC=window.LearnCore;let learn=LC?LC.fromReceipt(S.learn,fin,{store:st,date,names:id=>P2[id]&&P2[id].name}):S.learn;
+    if(LC&&learn&&this.linked()){const recs=LC.toSend(learn);if(recs.length){ob=[...ob,...LC.batches(recs,50).map(records=>this.chg('learn.batch',{records}))];learn=LC.markSent(learn,recs);}}
     if(LC)this.lsSet('learnstats',[...this.lsGet('learnstats',[]),LC.statsOf(fin,{date,readAt:d.readAt,addAt:new Date().toISOString()})].slice(-50));
     const keepImg=this._keepImg;this._keepImg=null;
     this.relayer({learn,ownItems:own,outbox:ob,nameDict:dict,brandDict:bdict,variants:vars,numVar:nv,receiptDraft:{...d,rows:fin.map(r=>{const {_vid,...rest}=r;return {...rest,vid:_vid||r.vid||null};})}},()=>{
@@ -4995,7 +5122,7 @@ class Component extends DCLogic {
       priceRows:plist.slice(0,40).map(p=>{const ed=p.src==='edited'||p.src==='receipt';const [b,c,l]=p.usual?['var(--good-tint)','var(--good-ink)','your price']:srcStyle(p.src);const hl=((S.priceHistory||{})[p.id]||[]).slice(-1)[0];return {hasSrc:['edited','receipt','estimate'].includes(p.src),name:p.name,pack:`${p.pack||''}${p.staple?' · staple':''}${ed&&p.catPrice!=null?` · catalog ${money(p.catPrice)}`:''}${hl?` · last paid ${money(hl.paid)} ${mdDate(hl.date)}${hl.sale?' (sale)':''}`:''}`,price:money(p.price),
         src:ed?`${l} ${mdDate(dkey(new Date(p.editedAt)))}`:l,srcBg:b,srcColor:c,canRevert:ed,revert:()=>this.revertPrice(p.id)};}),
       priceMore:plist.length>40?`Showing 40 of ${plist.length}. Search to find more.`:`${plist.length} item${plist.length===1?'':'s'}`,
-      sheetOpen,sh,closeSheet:()=>this.setState({sheet:null}),...this.recEdVals(),...this.myRecVals(),
+      sheetOpen,sh,closeSheet:()=>this.setState({sheet:null}),...this.recEdVals(),...this.myRecVals(),...this.webRecVals(),
       remindOpen:false,priceLate:late&&now>S.snoozeUntil,priceLateText:`Prices were last updated ${daysSince} days ago. Upload a new catalog or log a receipt.`,remindBadge:`${daysSince} days since last update`,daysSinceText:`${daysSince} days`,
       snooze:()=>this.save({snoozeUntil:now+DAY}),
       ...this.hhVals(days)};return this.v62post(this.bannerize({...OUT,...this.v62(OUT,days,{P,R,t0,tEnd,TB,spent,shop,stockCost,quickRows,dayTitle})}));

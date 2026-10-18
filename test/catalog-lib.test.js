@@ -51,3 +51,15 @@ test('additions export the phone variants as Variants rows', () => {
     ['ice_cream', 'v_mint', 'Mint chip', '', '', '']]);
   assert.strictEqual(g.header.split('\t')[0], 'item_id');
 });
+
+test('Learned from the phone: the Learned sheet becomes catalog.learned, and the builder lists what is new', () => {
+  const w = wb(); w.Sheets.Learned = [
+    { kind: 'brand', key: 'n:mild cheddar', value: 'Tillamook', count: 3, last_seen: '2026-10-17' },
+    { kind: 'price', key: 'aldi|eggs', value: '2.19', count: 5, last_seen: '2026-10-17' },
+    { kind: 'word', key: 'ocr:sov', value: 'soy', count: 1, last_seen: '2026-10-10' }];
+  const b = L.build(X, w, null, '2026-10-18');
+  assert.deepStrictEqual(plain(b.catalog.learned), [['brand', 'n:mild cheddar', 'Tillamook', 3, '2026-10-17'], ['word', 'ocr:sov', 'soy', 1, '2026-10-10']]);
+  assert.strictEqual(b.counts.learned, 2);
+  const prev = { ...b.catalog, learned: [['word', 'ocr:sov', 'soy', 1, '2026-10-10']] };
+  assert.deepStrictEqual(plain(L.build(X, w, prev, '2026-10-18').diff.learnedNew), ['brand: n:mild cheddar → Tillamook']);
+});

@@ -143,8 +143,25 @@ function habit(dates,now){const d=[...new Set((dates||[]).map(day).filter(Boolea
 function stockIdeas(hist,now,skip){const out=[];for(const iid in hist||{}){if(skip&&skip(iid))continue;const h=habit((hist[iid]||[]).map(x=>x&&x.date||x),now);if(h.n>=3&&h.every&&h.every<=21)out.push({iid,...h});}
   return out.sort((a,b)=>a.every-b.every||b.n-a.n);}
 
+// ---- Step 4: share words, names, brands, groups and numbers with the sheet (Learned tab) ----
+// Never prices, sizes, dates or quantities: only these kinds leave the phone, and only kind, key, value and a count.
+const SHARE=['word','name','brand','group','number'];
+// A run of 4+ digits outside item numbers could be card digits or a phone number from a misread line: it stays on the phone.
+const LONGNUM=/\d{4,}/;
+// What is new since the last send: [kind, key, value, count added]. L.sent remembers counts already sent.
+function toSend(L){const out=[];const sent=(L&&L.sent)||{};for(const k in (L&&L.recs)||{}){const i=k.indexOf('|'),kind=k.slice(0,i),key=k.slice(i+1);if(!SHARE.includes(kind))continue;
+  if(key.length>200||(kind!=='number'&&LONGNUM.test(key)))continue;for(const v in L.recs[k].vals){if(v.length>200||(kind!=='number'&&LONGNUM.test(v)))continue;const id=k+'|'+v,n=L.recs[k].vals[v].n-(sent[id]||0);if(n>0)out.push([kind,key,v,n]);}}return out;}
+function markSent(L,recs){L={...L,sent:{...(L.sent||{})}};for(const [kind,key,v,n] of recs){const id=kind+'|'+key+'|'+v;L.sent[id]=(L.sent[id]||0)+n;}return L;}
+// Up to 50 records per learn.batch change.
+const batches=(recs,n)=>{const out=[];for(let i=0;i<recs.length;i+=(n||50))out.push(recs.slice(i,i+(n||50)));return out;};
+// The phone's own store plus what the sheet's Learned tab knows (catalog.learned: [kind,key,value,count,last_seen]).
+// Sheet rows count as source 'catalog' and only add values this phone hasn't seen itself, so its own facts aren't counted twice.
+function withCatalog(L,rows,now){if(!rows||!rows.length)return L||empty();const V=clone(L);for(const r of rows){if(!Array.isArray(r))continue;const [kind,key,value,count,seen]=r;
+  if(!SHARE.includes(kind)||key==null||value==null)continue;const rec=V.recs[kind+'|'+key];if(rec&&rec.vals[String(value)])continue;
+  record(V,kind,key,value,'catalog',day(seen)||day(now)||today());}return V;}
+
 // How many records of each kind, for Diagnostics.
 function counts(L){const c={};for(const k in (L&&L.recs)||{}){const kind=k.slice(0,k.indexOf('|'));c[kind]=(c[kind]||0)+1;}return c;}
 
-window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two,nk,digitPairs,editsOf,fromReceipt,knownNums,pairs,numLearn,itemFor,words,aliasCount,statsOf,statsLine,trend,median,usual,sizeSeen,habit,stockIdeas};
+window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two,nk,digitPairs,editsOf,fromReceipt,knownNums,pairs,numLearn,itemFor,words,aliasCount,statsOf,statsLine,trend,median,usual,sizeSeen,habit,stockIdeas,SHARE,toSend,markSent,batches,withCatalog};
 })();

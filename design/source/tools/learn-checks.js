@@ -97,6 +97,23 @@ window.LearnChecks=function(){const LC=window.LearnCore,RC=window.ReceiptCore;co
 
   grp('Sizes printed with a hyphen (Prompt 4.3)');
   eq('12-count and 6-pk are read as counts',['Eggs 12-count','Bars 6-pk'].map(t=>(RC.parseSize(t)||{}).label),['12-count','6-count']);
+
+  grp('Sharing with the sheet (step 4)');
+  {const S=replayState();replay(S);const recs=LC.toSend(S.L);
+    eq('Only words, names, brands, groups and numbers are sent',[...new Set(recs.map(r=>r[0]))].every(k=>LC.SHARE.includes(k))&&recs.length>0,true);
+    eq('No prices, sizes, dates or quantities are sent',recs.some(r=>['price','size','flavor'].includes(r[0])||r.length!==4||/\d{4}-\d\d-\d\d/.test(r[1]+r[2])),false);
+    eq('Each record is kind, key, value and a count',recs.every(r=>typeof r[1]==='string'&&typeof r[2]==='string'&&r[3]>0),true);
+    const L2=LC.markSent(S.L,recs);eq('Nothing is sent twice',LC.toSend(L2).length,0);
+    const again=LC.toSend(S.L=LC.fromReceipt(L2,[],{date:'2026-10-17'}));eq('An empty receipt sends nothing new',again.length,0);
+    eq('Batches hold up to 50 records',LC.batches(Array(120).fill(['word','a','b',1]),50).map(b=>b.length),[50,50,20]);
+    let L3=LC.empty();LC.record(L3,'name','soy sauce','@u_1','user-edit','2026-10-10');LC.record(L3,'name','card 1234','@u_2','user-edit','2026-10-10');
+    eq('Text with 4 or more digits in a row stays on the phone',LC.toSend(L3).map(r=>r[1]),['soy sauce']);
+    // A second phone reads what the first one sent from the Learned tab.
+    const rows=recs.map(([k,key,v,n])=>[k,key,v,n,'2026-10-10']);const B=LC.withCatalog(LC.empty(),rows,'2026-10-17');
+    eq('Sheet facts count as source catalog',Object.values(B.recs).every(r=>Object.values(r.vals).every(v=>v.src==='catalog')),true);
+    const own=LC.withCatalog(S.L,rows,'2026-10-17');eq("The phone's own facts are not counted twice",JSON.stringify(own.recs),JSON.stringify(S.L.recs));
+    const S2={L:B,names:{...S.names}};const r2=replay(S2);eq('A second phone needs fewer edits with the Learned tab',r2.edits<11,true);
+    eq('Rows of other kinds from the sheet are ignored',Object.keys(LC.withCatalog(LC.empty(),[['price','eggs','2.19',1,'2026-10-10']],'2026-10-17').recs).length,0);}
   return out;};
 
 // A person logging the 10/10 receipt: the photo misreads five item numbers and two words, and they fix a few suggestions.
