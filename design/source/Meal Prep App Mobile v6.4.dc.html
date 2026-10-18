@@ -4920,7 +4920,7 @@ class Component extends DCLogic {
   recBits(r,flags){const S=this.state,C=window.CookCore;const pr=this.protOf(r);const fav=!!(S.recFav||{})[r.id];const rt=((S.recRate||{})[r.id]||{}).v||0;
     if(flags){if(rt>0)flags.push({t:'You liked it',bg:'var(--good-tint)',c:'var(--good-ink)'});else if(rt<0)flags.push({t:"You didn't like it",bg:'var(--tint)',c:'var(--muted)'});}
     const short={Chicken:'Chicken',Beef:'Beef',Pork:'Pork','Fish and seafood':'Fish'}[pr]||(r.tags[0]?tagLabel(r.tags[0]):'');
-    return {tileBg:r.photo?`${C.TILE[pr]} url('${String(r.photo).replace(/'/g,'%27')}') center/cover no-repeat`:C.TILE[pr],tileText:r.photo?'':short,prot:pr,
+    return {tileBg:r.photo?`${C.TILE[pr]} url('${String(r.photo).trim().replace(/[;'"()\\\s]/g,c=>'%'+('0'+c.charCodeAt(0).toString(16).toUpperCase()).slice(-2))}') center/cover no-repeat`:C.TILE[pr],tileText:r.photo?'':short,prot:pr,
       favMark:fav?'♥':'♡',favColor:fav?'#C2415B':'var(--muted)',favAria:fav?`Remove ${r.name} from favorites`:`Add ${r.name} to favorites`,
       fav:()=>{const F={...(this.state.recFav||{})};if(F[r.id])delete F[r.id];else F[r.id]=this.today();this.save({recFav:F});}};}
   groupRows(list,rowOf){const S=this.state,C=window.CookCore;const by=S.libGroup||'protein';if(by==='none')return [{label:'',hasLabel:false,rows:list.map(rowOf)}];
