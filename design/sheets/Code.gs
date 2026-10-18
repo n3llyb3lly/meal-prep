@@ -22,7 +22,7 @@
 var SHEETS = {
   items: 'Items', categories: 'Categories', recipes: 'Recipes', ingredients: 'Ingredients',
   aliases: 'Receipt aliases', lists: 'Lists', log: 'Change log', idmap: 'Id map', cache: '_catalog',
-  offers: 'Offers', nodes: 'Nodes', stores: 'Stores', favorites: 'Favorites', variants: 'Variants'
+  offers: 'Offers', nodes: 'Nodes', stores: 'Stores', favorites: 'Favorites', variants: 'Variants', learned: 'Learned'
 };
 var MEALS = ['breakfast', 'lunch', 'snack', 'dinner'];
 var STORAGE = ['fridge', 'freezer', 'pantry', 'counter'];
@@ -37,6 +37,11 @@ var FAVORITE_HEADERS = ['node', 'item', 'last_changed'];
 // Version 6.3: brands and flavors of one item (three ice creams under "Ice cream"). One row per variant and store;
 // numbers are that store's item numbers for the variant. A variant with no numbers yet has a row with a blank store.
 var VARIANT_HEADERS = ['item_id', 'variant_id', 'brand', 'flavor', 'store', 'numbers', 'last_price', 'last_date', 'last_changed', 'changed_by'];
+// Learning step 4: what phones learned from receipts. One row per kind, key and value; count adds up across phones.
+// Only these kinds are accepted. Never prices, dates or quantities.
+var LEARNED_HEADERS = ['kind', 'key', 'value', 'count', 'last_seen'];
+var LEARN_KINDS = ['word', 'name', 'brand', 'group', 'number'];
+var LEARN_MAX = 50;             // records in one learn.batch change
 var DEFAULT_STORES = [['aldi', 'Aldi', '6', 'before'], ['sams', "Sam's Club", '9;10', 'before'], ['walmart', 'Walmart', '12', 'after'], ['cub', 'Cub', '11;12', 'after'], ['target', 'Target', '9', 'before']];
 // Prices live in the Offers tab once "Meal Prep > Move prices to Offers" has run. Before that, the Items
 // price columns are the Aldi offer.
@@ -348,14 +353,27 @@ function buildCatalog_(prev) {
 
   // Variants, in the phone's layer shape: {itemId: [{vid, brand, flavor, nums: {store: [num]}, last: {price, date, store}}]}
   var tV = table_(SHEETS.variants), variants = variantsOf_(tV ? tV.objects() : [], I, ST, W);
+  // Learned from the phone: [kind, key, value, count, last_seen], most counted first.
+  var tL = table_(SHEETS.learned), learned = learnedOf_(tL ? tL.objects() : []);
 
   var catalog = {
     schemaVersion: SCHEMA, catalogVersion: null, builtAt: null, categories: categories, stores: stores,
     nodes: nodes.map(function (n) { return { id: n.id, name: n.name, parent: n.parent, level: n.level }; }), items: items,
     recipes: recipes.filter(function (r) { return r.active; }).map(function (r) { var o = {}; for (var k in r) if (k !== 'active') o[k] = r[k]; return o; }),
-    aliases: aliases, favorites: favorites, variants: variants
+    aliases: aliases, favorites: favorites, variants: variants, learned: learned
   };
   return { catalog: catalog, errors: errors, warnings: warnings };
+}
+
+function learnKey_(kind, key, value) { return str_(kind) + '|' + str_(key) + '|' + str_(value); }
+// Learned rows -> [[kind, key, value, count, last_seen]]. Unknown kinds are left out; at most 3000 rows, most counted first.
+function learnedOf_(rows) {
+  var out = [];
+  rows.forEach(function (r) {
+    var kind = str_(r.kind), key = str_(r.key), value = str_(r.value); if (LEARN_KINDS.indexOf(kind) < 0 || !key || !value) return;
+    out.push([kind, key, value, Math.max(1, Math.round(num_(r.count) || 1)), dateStr_(r.last_seen) || '']);
+  });
+  return out.sort(function (a, b) { return b[3] - a[3]; }).slice(0, 3000);
 }
 
 // Variants rows -> {itemId: [variant]}. Rows of one variant_id are merged; the newest last_date wins for last.
@@ -528,6 +546,8 @@ function context_() {
   ctx.storeIds = {}; ctx.storeName = {}; table_(SHEETS.stores).objects().forEach(function (r) { if (r.id) { var k = String(r.id).toLowerCase(); ctx.storeIds[k] = 1; ctx.storeName[k] = str_(r.name) || k; } });
   ensureSheet_(SHEETS.variants, VARIANT_HEADERS); ctx.variants = table_(SHEETS.variants);
   ctx.varRows = {}; ctx.variants.objects().forEach(function (r) { if (r.variant_id) (ctx.varRows[String(r.variant_id)] = ctx.varRows[String(r.variant_id)] || []).push(r); });
+  ensureSheet_(SHEETS.learned, LEARNED_HEADERS); ctx.learned = table_(SHEETS.learned);
+  ctx.learnRow = {}; ctx.learned.objects().forEach(function (r) { if (r.kind) ctx.learnRow[learnKey_(r.kind, r.key, r.value)] = r; });
   ctx.migrated = migrated_();
   return ctx;
 }
@@ -748,6 +768,24 @@ var HANDLERS = {
     var n = ctx.variants.append({ item_id: item, variant_id: vid, brand: str_(d.brand), flavor: str_(d.flavor), store: '', numbers: '', last_price: '', last_date: '', last_changed: new Date(), changed_by: 'phone' });
     ctx.varRows[vid] = [{ _row: n, variant_id: vid }];
     return { status: 'applied', target: item, message: 'Added ' + [d.brand, d.flavor].filter(Boolean).join(' ') + ' (' + vid + ') under ' + item + '.' };
+  },
+
+  // What a phone learned from receipts. data = {records: [[kind, key, value, count], ...]}, at most 50.
+  // Merged by kind + key + value: count adds up, last_seen is the day it arrived.
+  'learn.batch': function (ctx, d) {
+    var recs = Array.isArray(d.records) ? d.records : [];
+    if (!recs.length) return { status: 'rejected', target: 'learned', message: 'No records.' };
+    if (recs.length > LEARN_MAX) return { status: 'rejected', target: 'learned', message: recs.length + ' records; at most ' + LEARN_MAX + ' in one change.' };
+    var today = Utilities.formatDate(new Date(), tz_(), 'yyyy-MM-dd'), added = 0, merged = 0, skipped = 0;
+    recs.forEach(function (r) {
+      var kind = str_(r && r[0]), key = str_(r && r[1]), value = str_(r && r[2]), n = Math.max(1, Math.round(num_(r && r[3]) || 1));
+      if (LEARN_KINDS.indexOf(kind) < 0 || !key || !value || key.length > 200 || value.length > 200 || (kind !== 'number' && /\d{4,}/.test(key + ' ' + value))) { skipped++; return; }
+      var k = learnKey_(kind, key, value), row = ctx.learnRow[k];
+      if (row) { ctx.learned.set(row._row, 'count', (num_(cell_(ctx.learned, row, 'count')) || 0) + n); ctx.learned.set(row._row, 'last_seen', today); merged++; }
+      else { var nr = ctx.learned.append({ kind: kind, key: key, value: value, count: n, last_seen: today }); ctx.learnRow[k] = { _row: nr, kind: kind, key: key, value: value }; added++; }
+    });
+    if (!added && !merged) return { status: 'rejected', target: 'learned', message: 'None of the ' + recs.length + ' records could be used.' };
+    return { status: 'applied', target: 'learned', message: added + ' new, ' + merged + ' counted again' + (skipped ? ', ' + skipped + ' skipped' : '') + '.' };
   },
 
   // A store's item number for a variant. data = {vid, store, num}. Conflict if the number is on another variant at that store.
@@ -1089,6 +1127,9 @@ function menuSetup() {
   ensureColumns_(SHEETS.items, ['flavor'], notes);
   if (!sheet_(SHEETS.variants)) { ensureSheet_(SHEETS.variants, VARIANT_HEADERS); notes.push('Added the Variants tab.'); }
   var vn = colRange_(SHEETS.variants, 'numbers'); if (vn) vn.setNumberFormat('@');
+  // Learning step 4: the Learned tab
+  if (!sheet_(SHEETS.learned)) { ensureSheet_(SHEETS.learned, LEARNED_HEADERS); notes.push('Added the Learned tab.'); }
+  var lk = colRange_(SHEETS.learned, 'key'); if (lk) lk.setNumberFormat('@'); var lv = colRange_(SHEETS.learned, 'value'); if (lv) lv.setNumberFormat('@');
 
   // Each rule: [sheet, column, kind, source, help]. kind "list" = dropdown from a range ([sheet, column] of the source).
   // A rule whose column or source can't be found is skipped and named in the message, instead of stopping the setup.

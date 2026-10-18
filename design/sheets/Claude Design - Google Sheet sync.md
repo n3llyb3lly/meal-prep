@@ -82,8 +82,11 @@ Create changes in these places (only when `sheetLink.url` is set, or when buildi
 | Link an own item to a catalog item (`mergeItem`) | `item.merge` | `{from:'u_…', to:catalogId}` | `{}` |
 | Receipt saved (`import63`), each new brand or flavor (6.3.2, after the item's `item.add`) | `variant.add` | `{item, vid, brand, flavor}` | `{}` |
 | Receipt saved, each new number on a variant (6.3.2) | `variant.number` | `{vid, store, num}` | `{}` |
+| Receipt saved, what the phone learned since the last send (6.3.3) | `learn.batch` | `{records: [[kind, key, value, count], ...]}`, up to 50 records; kind is word, name, brand, group or number | `{}` |
 
 Variants go to the **Variants** tab (item_id, variant_id, brand, flavor, store, numbers, last_price, last_date), one row per variant and store. The catalog serves them back as `variants` in the phone's layer shape. Queue `variant.add` before any `variant.number` for the same `vid`, and only once the item is in the sheet (not `u_`).
+
+Learned facts go to the **Learned** tab (kind, key, value, count, last_seen), one row per kind, key and value. A record that is already there adds its count and sets last_seen to today; the phone never sends dates. Never prices, sizes, dates or quantities, and nothing with 4 or more digits in a row except item numbers. The catalog serves the tab back as `learned` (`[[kind, key, value, count, last_seen]]`, most counted first, up to 3000), and the phone uses it as source `catalog`, after its own facts. A catalog that changed only in `learned` doesn't show the "new catalog" summary.
 
 For items that are still `u_` (not yet in the sheet), do not queue `price.set` or `number.link`: update the queued `item.add` instead (its `price`, `priceDate`, `nums`).
 

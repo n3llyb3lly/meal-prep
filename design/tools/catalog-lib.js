@@ -20,7 +20,7 @@ function build(X,wb,prev,today){
   today=today||new Date().toISOString().slice(0,10);
   const errors=[],warnings=[];const E=(m)=>errors.push(m),W=(m)=>warnings.push(m);
   const itemsR=rowsOf(X,wb,'Items'),recR=rowsOf(X,wb,'Recipes'),ingR=rowsOf(X,wb,'Ingredients'),aliasR=rowsOf(X,wb,'Receipt aliases')||[],listR=rowsOf(X,wb,'Lists'),catR=rowsOf(X,wb,'Categories');
-  const offR=rowsOf(X,wb,'Offers')||[],nodeR=rowsOf(X,wb,'Nodes')||[],storeR=rowsOf(X,wb,'Stores'),favR=rowsOf(X,wb,'Favorites')||[],varR=rowsOf(X,wb,'Variants')||[];
+  const offR=rowsOf(X,wb,'Offers')||[],nodeR=rowsOf(X,wb,'Nodes')||[],storeR=rowsOf(X,wb,'Stores'),favR=rowsOf(X,wb,'Favorites')||[],varR=rowsOf(X,wb,'Variants')||[],learnR=rowsOf(X,wb,'Learned')||[];
   if(!itemsR)E('No "Items" sheet found.');if(!recR)E('No "Recipes" sheet found.');if(!ingR)E('No "Ingredients" sheet found.');
   if(errors.length)return {errors,warnings};
   let TAGS=null;if(listR){const t=listR.map(r=>str(r.tags).toLowerCase()).filter(Boolean);if(t.length)TAGS=new Set(t);}
@@ -139,12 +139,12 @@ function build(X,wb,prev,today){
   favR.forEach((r,i)=>{const node=str(r.node),item=str(r.item);if(!node)return;if(!ND[node]){W(`Favorites row ${i+2}: node "${node}" isn't on the Nodes sheet.`);return;}if(!item)return;
     if(!I[item]){W(`Favorites row ${i+2}: item "${item}" isn't on the Items sheet.`);return;}
     if(!I[item].node||!under(I[item].node,node))W(`Favorites row ${i+2}: ${item} isn't placed under ${node} (its node is ${I[item].node||'blank'}).`);favorites[node]=item;});
-  const variants=variantsOf(varR,I,ST,W);
+  const variants=variantsOf(varR,I,ST,W);const learned=learnedOf(learnR);
   const d=new Date();const pad=n=>String(n).padStart(2,'0');
   const catalog={schemaVersion:SCHEMA,catalogVersion:`${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`,builtAt:d.toISOString(),
-    categories,stores,nodes,items,recipes:recipes.filter(r=>r.active).map(({active,...r})=>r),aliases,favorites,variants};
+    categories,stores,nodes,items,recipes:recipes.filter(r=>r.active).map(({active,...r})=>r),aliases,favorites,variants,learned};
   const offers=items.reduce((n,it)=>n+it.offers.length,0);
-  return {catalog,catalogV1:toV1(catalog),errors,warnings,diff:diff(prev&&prev.schemaVersion===1?prev:prev?toV1(prev):null,toV1(catalog)),counts:{items:items.length,offers,stores:stores.length,nodes:nodes.length,recipes:recipes.length,active:catalog.recipes.length,ingredients:ingR.length,aliases:aliases.length}};
+  return {catalog,catalogV1:toV1(catalog),errors,warnings,diff:withLearned(diff(prev&&prev.schemaVersion===1?prev:prev?toV1(prev):null,toV1(catalog)),prev,learned),counts:{learned:learned.length,items:items.length,offers,stores:stores.length,nodes:nodes.length,recipes:recipes.length,active:catalog.recipes.length,ingredients:ingR.length,aliases:aliases.length}};
 }
 // 6.3: Variants rows (one per variant and store) -> the phone's layer shape {itemId:[{vid,brand,flavor,nums:{store:[num]},last:{price,date,store}}]}.
 // Same rule as the sheet script's variantsOf_.
@@ -199,6 +199,13 @@ function toRows(c){const yn=b=>b?'Y':'N',semi=a=>(a||[]).join('; ');
   for(const id in (c.variants||{}))for(const v of c.variants[id])out.Variants.push(...variantRows(id,v));
   return out;}
 const sig=r=>JSON.stringify([r.meal,r.name,r.tags,r.serv,r.link,r.ing,r.hands,r.total,r.keeps,r.reheats,r.freezes]);
+// Learning step 4: the Learned tab (what phones learned from receipts) -> [[kind,key,value,count,last_seen]], most counted first.
+// Same rule as the sheet script's learnedOf_: only these kinds, never prices, dates or quantities.
+const LEARN_KINDS=['word','name','brand','group','number'];
+function learnedOf(rows){return rows.map(r=>[str(r.kind),str(r.key),str(r.value),Math.max(1,Math.round(num(r.count)||1)),dateStr(r.last_seen)||''])
+  .filter(r=>LEARN_KINDS.includes(r[0])&&r[1]&&r[2]).sort((a,b)=>b[3]-a[3]).slice(0,3000);}
+// "Learned from the phone": facts not in the previous catalog.
+function withLearned(d,prev,learned){if(!d)return d;const had=new Set(((prev&&prev.learned)||[]).map(r=>r.slice(0,3).join('|')));return {...d,learnedNew:learned.filter(r=>!had.has(r.slice(0,3).join('|'))).map(r=>`${r[0]}: ${r[1]} → ${r[2]}`)};}
 function diff(prev,next){if(!prev)return null;const pI=Object.fromEntries((prev.items||[]).map(x=>[x.id,x])),pR=Object.fromEntries((prev.recipes||[]).map(x=>[x.id,x]));
   const nR=new Set(next.recipes.map(r=>r.id));
   return {pricesChanged:next.items.filter(x=>pI[x.id]&&Math.abs(pI[x.id].price-x.price)>.001).map(x=>({id:x.id,name:x.name,from:pI[x.id].price,to:x.price})),
@@ -316,6 +323,6 @@ function additions(X,wb,add,built){
     {key:'itemCells',sheet:'Items',title:'Item edits and placements',rows:cellUpd,cols:['item_id','name','brand','flavor','node','package_label','unit','package_qty','category'],list:cellUpd.map(x=>x.name),note:'Change the filled-in cells on these Items rows. Blank cells mean no change. Not for pasting as new rows.'}
   ].map(g=>({...g,tsv:tsv(g.rows,g.cols),header:g.cols.join('\t')}));
   return {groups,flags,notes,from:{exportedAt:add.exportedAt,catalogVersion:add.catalogVersion}};}
-const api={build,diff,validateCatalog,additions,toV1,toRows,SCHEMA,MEALS,STORAGE,TRACKING};
+const api={build,diff,learnedOf,validateCatalog,additions,toV1,toRows,SCHEMA,MEALS,STORAGE,TRACKING};
 if(typeof window!=='undefined')window.CatalogLib=api;if(typeof module!=='undefined')module.exports=api;
 })();

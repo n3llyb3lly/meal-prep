@@ -58,3 +58,22 @@ test('item.add from a receipt keeps the printed size and says where it came from
   assert.deepStrictEqual([at('item_id'), at('package_label'), at('unit'), at('package_qty'), at('price_source')], ['oat_milk', '1 L', 'fl oz', 33.81, 'receipt']);
   assert.match(at('notes'), /receipt; not placed/);
 });
+
+test('learn.batch merges learned facts into the Learned tab and the catalog serves them', () => {
+  const { g: G, sheet } = loadCodeGs(tabs());
+  const res = send(G, [
+    ['learn.batch', { records: [['brand', 'n:mild cheddar', 'Tillamook', 2], ['word', 'ocr:sov', 'soy', 1], ['number', '383412', '@u_mild_cheddar', 1]] }],
+    ['learn.batch', { records: [['brand', 'n:mild cheddar', 'Tillamook', 1], ['price', 'aldi|eggs', '2.19', 1], ['size', 'aldi|eggs', '12', 1], ['name', 'visa 4417', '@u_x', 1]] }],
+    ['learn.batch', { records: [['price', 'aldi|eggs', '2.19', 1]] }],
+    ['learn.batch', { records: Array.from({ length: 51 }, (_, i) => ['word', 'ocr:w' + i, 'w', 1]) }]
+  ]);
+  assert.deepStrictEqual(res.map(r => r.status), ['applied', 'applied', 'rejected', 'rejected']);
+  assert.match(res[1].message, /0 new, 1 counted again, 3 skipped/);
+  const rows = plain(sheet('Learned')._data);
+  assert.deepStrictEqual(rows[0], ['kind', 'key', 'value', 'count', 'last_seen']);
+  assert.deepStrictEqual(rows.slice(1).map(r => r.slice(0, 4)), [['brand', 'n:mild cheddar', 'Tillamook', 3], ['word', 'ocr:sov', 'soy', 1], ['number', '383412', '@u_mild_cheddar', 1]]);
+  assert.ok(rows.slice(1).every(r => /^\d{4}-\d\d-\d\d$/.test(r[4])), 'last_seen is the day it arrived');
+  const b = G.buildCatalog_(null);
+  assert.deepStrictEqual(plain(b.catalog.learned).map(r => r.slice(0, 4)), [['brand', 'n:mild cheddar', 'Tillamook', 3], ['word', 'ocr:sov', 'soy', 1], ['number', '383412', '@u_mild_cheddar', 1]]);
+  assert.strictEqual(G.toV1_(b.catalog).learned, undefined, 'version 5.3 phones get nothing learned');
+});

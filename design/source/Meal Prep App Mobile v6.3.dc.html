@@ -2683,6 +2683,8 @@ const nkey=(store,num)=>{num=String(num||'').trim();return !store||store==='aldi
 const splitKey=k=>{const i=String(k).indexOf(':');return i<0?['aldi',String(k)]:[k.slice(0,i),k.slice(i+1)];};
 function unitF(from,to){if(!from||!to||from===to)return 1;const MC=window.MealCore;const f=MC.convert(1,from,to);if(f!=null)return f;return MC.kindOf(from)==='count'&&MC.kindOf(to)==='count'?1:null;}
 function perUnit(o,unit,pkg0){const pkg=o.pkg||pkg0;if(!o||!(o.price>0)||!(pkg>0))return Infinity;const f=unitF(o.unit,unit);return f?o.price/(pkg*f):Infinity;}
+// True when two catalogs differ only in what phones learned (the Learned tab), so no "new catalog" summary is shown.
+function onlyLearned(a,b){if(!a||!b)return false;const strip=({learned,catalogVersion,builtAt,_norm,catNode,...r})=>JSON.stringify(r);try{return strip(a)===strip(b);}catch(e){return false;}}
 function normCat(c){if(!c||c._norm)return c;const cats=(c.categories&&c.categories.length)?c.categories:DEFAULT_CATS;const nodes=Array.isArray(c.nodes)?c.nodes.slice():[];const have=new Set(nodes.map(n=>n.id));const catNode={};
   for(const n of nodes)if(n.level===1)catNode[String(n.name).toLowerCase()]=n.id;
   for(const k of cats){const lk=String(k.name).toLowerCase();if(!catNode[lk]){const id='n_'+slugN(k.name);if(!have.has(id)){nodes.unshift({id,name:k.name,parent:null,level:1});have.add(id);}catNode[lk]=id;}}
@@ -2898,8 +2900,9 @@ class Component extends DCLogic {
         else{const v2=js(raw('mealprep.v2'))||{},v1=js(raw('mealprep.v1'))||{};L={people:v2.people??v1.people,budget:v2.budget??v1.budget};}}
       const changed=L.lastCatalogVersion&&L.lastCatalogVersion!==this.cat.catalogVersion;
       let prevCat=lc.prev;if(changed&&!prevCat&&window.MASTER&&L.lastCatalogVersion===window.MASTER.catalogVersion)prevCat=fromMaster(window.MASTER);
-      const summary=changed&&prevCat?this.catalogSummary(prevCat,this.cat,L):null;
-      if(changed&&wrap&&wrap.user)this.takeSnap(`Before catalog ${this.cat.catalogVersion}`,JSON.stringify(wrap));
+      const quiet=changed&&prevCat&&onlyLearned(prevCat,this.cat);
+      const summary=changed&&prevCat&&!quiet?this.catalogSummary(prevCat,this.cat,L):null;
+      if(changed&&!quiet&&wrap&&wrap.user)this.takeSnap(`Before catalog ${this.cat.catalogVersion}`,JSON.stringify(wrap));
       L={...L,lastCatalogVersion:this.cat.catalogVersion};
       this.setState({...this.fromLayer(L),ready:true,pendingImport:summary,msg:lc.msg?{ok:false,text:lc.msg}:note?{ok:true,text:note}:null},()=>{this.persist();this.setupOffline();this.loadParsers();this.seedStocked();this.migrate51();this.startSync(lc);{const mc=this.mergeCandidates();if(mc.length&&!note)setTimeout(()=>this.flash(`${mc[0].u.name} is now in the catalog. Link it in Settings > My added items.`),1200);}if(note)this.flash('Updated to Meal Prep 4. Your data moved over.');else if(lc.msg)this.flash("Couldn't use the new catalog. Still on the previous one.");});
     };boot();
@@ -3970,7 +3973,7 @@ class Component extends DCLogic {
   obPatch(ob,type,id,fn){const i=(ob||[]).findIndex(c=>c.type===type&&c.data&&c.data.id===id);if(i<0)return null;const out=[...ob];out[i]={...out[i],data:fn(out[i].data)};return out;}
   obRename(ob,from,to){const q='"'+from+'"';return (ob||[]).map(c=>{const s=JSON.stringify(c.data);return s&&s.includes(q)?{...c,data:JSON.parse(s.split(q).join('"'+to+'"'))}:c;});}
   chgLabel(c){const d=c.data||{},P=this.P();const nm=id=>(P[id]&&P[id].name)||id;
-    return ({'item.add':`new item ${d.name}`,'price.set':`price of ${nm(d.item)}`,'number.link':`Aldi number ${d.num}`,'alias.add':`receipt name ${d.text}`,'recipe.add':`recipe ${d.name}`,'recipe.update':`recipe ${d.name}`,'recipe.edit':`my version of ${d.recipe&&d.recipe.name}`,'item.merge':`link of ${nm(d.from)}`,'item.update':`details of ${nm(d.id)}`,'item.place':`group of ${nm(d.item)}`,'offer.set':`${this.storeName(d.store)} price of ${nm(d.item)}`,'node.add':`group ${d.name}`,'favorite.set':'a favorite'})[c.type]||c.type;}
+    return ({'item.add':`new item ${d.name}`,'price.set':`price of ${nm(d.item)}`,'number.link':`Aldi number ${d.num}`,'alias.add':`receipt name ${d.text}`,'recipe.add':`recipe ${d.name}`,'recipe.update':`recipe ${d.name}`,'recipe.edit':`my version of ${d.recipe&&d.recipe.name}`,'item.merge':`link of ${nm(d.from)}`,'item.update':`details of ${nm(d.id)}`,'item.place':`group of ${nm(d.item)}`,'offer.set':`${this.storeName(d.store)} price of ${nm(d.item)}`,'node.add':`group ${d.name}`,'favorite.set':'a favorite','learn.batch':`${(d.records||[]).length} learned words and names`})[c.type]||c.type;}
   startSync(lc){if(lc&&lc.sheet)this.setState({sheetStatus:lc.sheet});
     if(!this._syncWired){this._syncWired=true;
       const wake=()=>{this._retryAt=0;clearTimeout(this._retryT);};
@@ -4104,7 +4107,7 @@ class Component extends DCLogic {
     if(lc.msg){this.setState({msg:{ok:false,text:lc.msg}});return;}
     if(!lc.fresh){if(quiet!==true)this.flash(lc.sheet&&lc.sheet.error?(lc.sheet.error==='refused'?'The sheet refused the key':"Couldn't reach the sheet. Using the copy saved on this phone."):'You already have the newest catalog');this.applySwaps();return;}
     const prev=lc.prev;this.cat=lc.cat;const L=this.layer();
-    await new Promise(r=>this.setState({...this.fromLayer({...L,lastCatalogVersion:lc.cat.catalogVersion}),pendingImport:prev?this.catalogSummary(prev,lc.cat,L):null},()=>{this.persist();r();}));this.applySwaps();}
+    await new Promise(r=>this.setState({...this.fromLayer({...L,lastCatalogVersion:lc.cat.catalogVersion}),pendingImport:prev&&!onlyLearned(prev,lc.cat)?this.catalogSummary(prev,lc.cat,L):null},()=>{this.persist();r();}));this.applySwaps();}
   csv(rows){return rows.map(r=>r.map(v=>{const s=v==null?'':String(v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',')).join('\n');}
   async copyText(t,label){try{await navigator.clipboard.writeText(t);this.flash(`${label} copied`);}catch(e){this.setState({importText:t});this.flash("Couldn't copy automatically. It's in the backup box below.");}}
 
@@ -4434,26 +4437,29 @@ class Component extends DCLogic {
       peopleInc:()=>{if(ms.length>=12)return;const n=ms.length+1;this.commitHH(`Added Person ${n}`,[...ms,H.newMember('m_'+uid(),'Person '+n,'adult',ms.length)],{});},
       peopleDec:()=>{if(ms.length<=1)return;const last=ms[ms.length-1];this.commitHH(`Removed ${last.name}`,ms.slice(0,-1),{});}};}
   // ---------- 6.3 receipts ----------
+  // The phone's learning plus the sheet's Learned tab (step 4). Used for reading receipts; new facts are still recorded in S.learn only.
+  learnView(){const S=this.state,LC=window.LearnCore,rows=this.cat&&this.cat.learned;if(!LC||!S.learn)return S.learn||null;if(!rows||!rows.length)return S.learn;
+    if(this._lvFor===S.learn&&this._lvRows===rows)return this._lv;this._lvFor=S.learn;this._lvRows=rows;return this._lv=LC.withCatalog(S.learn,rows,this.today());}
   knownNums(store){store=store||this.rcStore();const S=this.state,P=this.P();const K=new Map();const add=(n,nm)=>{n=String(n||'');if(!/^\d{6}$/.test(n))return;const a=K.get(n)||[];if(nm&&!a.includes(nm))a.push(nm);K.set(n,a);};
     for(const p of S.prices||[])for(const o of p.offers||[])if(o.store===store)for(const n of o.nums||[])add(n,p.name);
     const al={};for(const a of S.aliases||[])(al[a.item]=al[a.item]||[]).push(a.text);
     for(const k in (S.numLinks||{})){const [s,n]=splitKey(k);if(s!==store)continue;const id=S.numLinks[k];add(n,P[id]&&P[id].name);for(const t of al[id]||[])add(n,t);}
     for(const r of S.receipts||[])if((r.store||'aldi')===store)for(const x of r.rows||[])if(x.num)add(x.num,x.text||(P[x.item]&&P[x.item].name));
-    if(window.LearnCore&&S.learn)for(const [n,nm] of window.LearnCore.knownNums(S.learn,store,id=>P[id]&&P[id].name))add(n,nm[0]);
+    if(window.LearnCore&&S.learn)for(const [n,nm] of window.LearnCore.knownNums(this.learnView(),store,id=>P[id]&&P[id].name))add(n,nm[0]);
     return K;}
-  numLearn(store){return window.LearnCore&&this.state.learn?window.LearnCore.numLearn(this.state.learn,store||'aldi',this.today()):null;}
+  numLearn(store){return window.LearnCore&&this.state.learn?window.LearnCore.numLearn(this.learnView(),store||'aldi',this.today()):null;}
   variantsOf(id){const S=this.state;const v=(S.variants||{})[id];if(v&&v.length)return v;const p=this.P()[id];return p&&p.brand?[{vid:'b_'+id,brand:p.brand,flavor:'',auto:true}]:[];}
   varLabel(id,vid){if(!vid)return '';const v=this.variantsOf(id).find(x=>x.vid===vid);return v?[v.brand,v.flavor].filter(Boolean).join(' · '):'';}
   brandGuess(text){const t=String(text||'');const m=t.match(/ben\s*&\s*jerry'?s|la\s*croix|belle\s*vie|kraft|heinz|barilla|tillamook|chobani|oikos|starbucks|coca[\s-]?cola|pepsi/i);if(!m)return '';const s=m[0].toLowerCase();
     return {"ben & jerry's":"Ben & Jerry's",'la croix':'La Croix','belle vie':'Belle Vie'}[s.replace(/\s+/g,' ').replace(/jerrys/,"jerry's")]||m[0].replace(/\b\w/g,c=>c.toUpperCase());}
-  vocab(){const S=this.state;if(this._vocabFor===S.prices&&this._vocabL===S.learn&&this._vocab)return this._vocab;const V=new Set();const add=s=>String(s||'').toLowerCase().split(/[^a-z]+/).forEach(w=>{if(w.length>=3)V.add(w);});
+  vocab(){const S=this.state,LV=this.learnView();if(this._vocabFor===S.prices&&this._vocabL===LV&&this._vocab)return this._vocab;const V=new Set();const add=s=>String(s||'').toLowerCase().split(/[^a-z]+/).forEach(w=>{if(w.length>=3)V.add(w);});
     for(const p of S.prices||[])add(p.name);for(const a of S.aliases||[])add(a.text);for(const v of Object.values(S.nameDict||{}))add(v);for(const r of S.recipes||[])for(const x of r.ing||[])add(x[2]);
-    if(window.LearnCore&&S.learn)for(const w of window.LearnCore.words(S.learn,this.today()))V.add(w);this._vocab=V;this._vocabFor=S.prices;this._vocabL=S.learn;return V;}
-  rowFrom(x,store,P,items){const S=this.state,RC=window.ReceiptCore,LC=window.LearnCore;const t0=this.today();const lk=LC&&S.learn?LC.lookup(S.learn,t0):null;const sg=RC.suggest(x.text,{lookup:lk,vocab:this.vocab(),learned:S.nameDict,learnedBrand:S.brandDict,store,known:(S.prices||[]).filter(q=>q.own).map(q=>({name:q.name,cat:q.cat}))});
+    if(window.LearnCore&&LV)for(const w of window.LearnCore.words(LV,this.today()))V.add(w);this._vocab=V;this._vocabFor=S.prices;this._vocabL=LV;return V;}
+  rowFrom(x,store,P,items){const S=this.state,RC=window.ReceiptCore,LC=window.LearnCore;const t0=this.today();const LV=this.learnView();const lk=LC&&LV?LC.lookup(LV,t0):null;const sg=RC.suggest(x.text,{lookup:lk,vocab:this.vocab(),learned:S.nameDict,learnedBrand:S.brandDict,store,known:(S.prices||[]).filter(q=>q.own).map(q=>({name:q.name,cat:q.cat}))});
     const a=this.aliasOf(x.text)||(sg.changes.length?this.aliasOf(sg.fixedText):null);let iid=null,how='none';const bn=x.num?this.itemByNum(x.num,store):null;
-    const li=!bn&&!a&&LC&&S.learn?LC.itemFor(S.learn,{text:x.text,fixedText:sg.fixedText},store,t0):null;
+    const li=!bn&&!a&&LC&&LV?LC.itemFor(LV,{text:x.text,fixedText:sg.fixedText},store,t0):null;
     if(bn&&P[bn]){iid=bn;how='number';}else if(a&&(a==='__ignore'||P[a])){iid=a;how='alias';}else if(li&&(li.iid==='__ignore'||P[li.iid])){iid=li.iid;how='learned';}
-    else{const ac=this._aliasN&&this._aliasNFor===S.learn?this._aliasN:(this._aliasNFor=S.learn,this._aliasN=LC&&S.learn?LC.aliasCount(S.learn,t0):{});
+    else{const ac=this._aliasN&&this._aliasNFor===LV?this._aliasN:(this._aliasNFor=LV,this._aliasN=LC&&LV?LC.aliasCount(LV,t0):{});
       const fz=fuzzy(sg.fixedText,items).map(f=>({...f,sc:f.sc+Math.min(.3,.1*(ac[f.p.id]||0))})).sort((a,b)=>b.sc-a.sc);if(fz[0]&&fz[0].sc>=.7&&(!fz[1]||fz[0].sc-fz[1].sc>=.08)){iid=fz[0].p.id;how='guess';}}
     const p=iid&&iid!=='__ignore'?this.atStore(P[iid],store):null;const w=!!x.weighed||(!!p&&this.isWeighed(p));const qn=w?(x.wt||(p?p.pkg:1)):Math.max(1,Math.round(x.qty||1));
     const name0=sg.name;const sz=RC.parseSize(sg.fixedText);const g={cat:sg.cat,sub:sg.sub};
@@ -4461,14 +4467,14 @@ class Component extends DCLogic {
     const ss=LC&&S.learn&&p&&!w?LC.sizeSeen(S.learn,iid,store):null;const size=ss!=null&&+ss>0?+ss:(p?p.pkg:1);
     return {rid:uid(),iid,iid0:iid,text:x.text,fixedText:sg.fixedText,num:x.num||'',num0:x.num||'',total0:r2(x.amount).toFixed(2),how,count:!w?qn:1,size,size0:size,sizeSettled:ss!=null,other:'',wt:w?String(qn):'',wtUnit:x.wtUnit||'lb',total:r2(x.amount).toFixed(2),unitP:(w&&x.unitP?r2(x.unitP):r2(x.amount/(qn||1))).toFixed(2),
       sale:x.disc?true:null,discAuto:!!x.disc,disc:x.disc?String(x.disc):'',showDisc:false,name0,nCat0:g.cat,nSub:g.sub,nSize:sz?{label:sz.label,amt:sz.base.amt,unit:sz.base.unit}:null,
-      vid,brand0:sg.brand,brandFrom:sg.brandFrom,sugLearned:sg.learned||[],flavor0:sg.flavor,variety0:sg.variety,fixes:sg.changes,sugConf:sg.conf,priceDoubt:(()=>{if(!p||!(p.price>0)||w)return false;const a=r2(x.amount/(qn||1)).toFixed(2),b=r2(p.price).toFixed(2);if(a===b||a.length!==b.length)return false;let d=0,ok=true;const pp=LC&&S.learn?LC.pairs(S.learn,'price',t0):null;for(let i=0;i<a.length;i++)if(a[i]!==b[i]){d++;if(!RC.confusable(a[i],b[i],pp))ok=false;}return d===1&&ok&&(x.conf?x.conf.price<92:false);})(),conf:x.conf||null,corrected:!!x.corrected,from:x.from||'',unclear:!!x.unclear,rawNum:x.raw||'',crop:x.crop||null,tax:x.tax||'',printed:x.printed||null};}
+      vid,brand0:sg.brand,brandFrom:sg.brandFrom,sugLearned:sg.learned||[],flavor0:sg.flavor,variety0:sg.variety,fixes:sg.changes,sugConf:sg.conf,priceDoubt:(()=>{if(!p||!(p.price>0)||w)return false;const a=r2(x.amount/(qn||1)).toFixed(2),b=r2(p.price).toFixed(2);if(a===b||a.length!==b.length)return false;let d=0,ok=true;const pp=LC&&LV?LC.pairs(LV,'price',t0):null;for(let i=0;i<a.length;i++)if(a[i]!==b[i]){d++;if(!RC.confusable(a[i],b[i],pp))ok=false;}return d===1&&ok&&(x.conf?x.conf.price<92:false);})(),conf:x.conf||null,corrected:!!x.corrected,from:x.from||'',unclear:!!x.unclear,rawNum:x.raw||'',crop:x.crop||null,tax:x.tax||'',printed:x.printed||null};}
   facts(d,pr,store){const u=d.userSet||{};const o={};const set=(k,v)=>{if(v!=null&&v!==''&&!u[k])o[k]=String(v);};
     set('date',pr.date);set('tax',pr.tax!=null?pr.tax.toFixed(2):null);set('printed',pr.total!=null?pr.total.toFixed(2):null);set('count',pr.count);if(!u.store&&store)o.store=store;
     o.subtotal=pr.subtotal;o.taxes=pr.taxes||[];o.time=pr.time||null;return o;}
   rcFromParsed(pr,store,extra){const S=this.state,d=S.receiptDraft,RC=window.ReceiptCore;const P=this.P();const items=S.prices.filter(p=>!p.retired);
     const g=RC.groupItems(pr.items);const rows=g.map(x=>this.rowFrom(x,store,P,items));
     for(const gp of (extra&&extra.gaps)||[]){const at=rows.findIndex(r=>r.lineIdx===gp.after);rows.splice(Math.min(rows.length,(gp.row??rows.length)),0,{rid:uid(),gap:true,missing:gp.missing,crop:gp.crop||null,text:gp.text||'',iid:'__gap',count:1,total:'0.00'});}
-    const am=pr.items.map(x=>x.amount);const fix=pr.subtotal!=null?RC.solveTotal(am,pr.subtotal,pr.items.map(x=>x.conf?x.conf.price:100),window.LearnCore&&S.learn?window.LearnCore.pairs(S.learn,'price',this.today()):null):null;
+    const am=pr.items.map(x=>x.amount);const fix=pr.subtotal!=null?RC.solveTotal(am,pr.subtotal,pr.items.map(x=>x.conf?x.conf.price:100),window.LearnCore&&S.learn?window.LearnCore.pairs(this.learnView(),'price',this.today()):null):null;
     let solve=null;if(fix){const it=pr.items[fix.i];const row=rows.find(r=>r.num===it.num&&!r.gap);solve={rid:row&&row.rid,from:fix.from,to:fix.to,line:fix.i+1};}
     this.saveDraft({...d,...this.facts(d,pr,store),tab:'table',rows,solve,countRead:RC.itemCount(g),photoNote:extra&&extra.note||'',readAt:new Date().toISOString()});
     const n=rows.filter(r=>!r.gap&&r.iid&&r.how!=='guess').length;this.flash(`${this.storeName(store)} receipt: ${RC.itemCount(g)} items read${n?`, ${n} matched`:''}.`);}
@@ -4614,7 +4620,8 @@ class Component extends DCLogic {
       if(!vid)continue;if(vid.startsWith('b_')&&!(vars[r.iid]||[]).some(v=>v.vid===vid)){const p=P2[r.iid];vars[r.iid]=[...(vars[r.iid]||[]),{vid,brand:p&&p.brand||'',flavor:'',nums:{}}];newV.push({item:r.iid,vid,brand:p&&p.brand||'',flavor:''});}
       const v=(vars[r.iid]||[]).find(z=>z.vid===vid);if(v){if(r.num&&!(v.nums[st]||[]).includes(r.num))newN.push({vid,store:st,num:r.num});if(r.num){v.nums[st]=[...new Set([...(v.nums[st]||[]),r.num])];nv[nkey(st,r.num)]=vid;}v.last={price:r2(parseFloat(r.unitP)||0),date,store:st};}r._vid=vid;}
     if(this.linked())ob=[...ob,...newV.map(v=>this.chg('variant.add',v)),...newN.map(n=>this.chg('variant.number',n))];
-    const LC=window.LearnCore;const learn=LC?LC.fromReceipt(S.learn,fin,{store:st,date,names:id=>P2[id]&&P2[id].name}):S.learn;
+    const LC=window.LearnCore;let learn=LC?LC.fromReceipt(S.learn,fin,{store:st,date,names:id=>P2[id]&&P2[id].name}):S.learn;
+    if(LC&&learn&&this.linked()){const recs=LC.toSend(learn);if(recs.length){ob=[...ob,...LC.batches(recs,50).map(records=>this.chg('learn.batch',{records}))];learn=LC.markSent(learn,recs);}}
     if(LC)this.lsSet('learnstats',[...this.lsGet('learnstats',[]),LC.statsOf(fin,{date,readAt:d.readAt,addAt:new Date().toISOString()})].slice(-50));
     const keepImg=this._keepImg;this._keepImg=null;
     this.relayer({learn,ownItems:own,outbox:ob,nameDict:dict,brandDict:bdict,variants:vars,numVar:nv,receiptDraft:{...d,rows:fin.map(r=>{const {_vid,...rest}=r;return {...rest,vid:_vid||r.vid||null};})}},()=>{
