@@ -14,7 +14,7 @@ const DICT={chkn:'chicken',ckn:'chicken',amer:'american',sngles:'singles',sngls:
   sauc:'sauce',bnls:'boneless',sknls:'skinless',wht:'white',whl:'whole',grnd:'ground',chs:'cheese',shrd:'shredded',shreds:'shreds',frz:'frozen',veg:'vegetable',
   btr:'butter',crm:'cream',pnt:'pint',ontheg:'on the go',onthego:'on the go',fp:'',lrw:'',hp:'halves and pieces','h&p':'halves & pieces',bev:'beverage',bkd:'baked',
   pck:'pack',asst:'assorted',choc:'chocolate',strwb:'strawberry',van:'vanilla',mozz:'mozzarella',parm:'parmesan',tom:'tomato',tomatoe:'tomato',pot:'potato'};
-const SIZE_RE=/(\d+(?:\.\d+)?)\s*(fl\.?\s*oz|oz|lbs?|kg|g|ml|l|ltr|ct|count|pk|pack)\.?(?=\s|$|[^a-z])/i;
+const SIZE_RE=/(\d+(?:\.\d+)?)(?:\s*|-)(fl\.?\s*oz|oz|lbs?|kg|g|ml|l|ltr|ct|count|pk|pack)\.?(?=\s|$|[^a-z])/i;
 function parseSize(text){const s=String(text||'');let m=s.match(SIZE_RE);let out=null;
   if(m){const v=+m[1];const u=m[2].toLowerCase().replace(/[\s.]/g,'');
     const U={floz:['fl oz',v,'fl oz'],oz:['oz',v,'oz'],lb:['lb',v,'lb'],lbs:['lb',v,'lb'],kg:['kg',v*35.274,'oz'],g:['g',v/28.35,'oz'],ml:['ml',v/29.574,'fl oz'],l:['L',v*33.814,'fl oz'],ltr:['L',v*33.814,'fl oz'],ct:['ct',v,'ct'],count:['ct',v,'ct'],pk:['ct',v,'ct'],pack:['ct',v,'ct']}[u];

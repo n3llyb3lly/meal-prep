@@ -94,6 +94,9 @@ window.LearnChecks=function(){const LC=window.LearnCore,RC=window.ReceiptCore;co
   {const L=LC.migrate(null,{priceHistory:{eggs:[{date:'2026-09-01',store:'aldi',paid:2.19},{date:'2026-09-08',store:'aldi',paid:1.49,sale:true},{date:'2026-09-15',store:'aldi',paid:2.29},{date:'2026-09-22',store:'aldi',paid:2.09}]}},t);
     eq('Earlier receipts in the price history count on the first load',LC.usual(L,'eggs','aldi'),{price:2.19,n:3,last:'2026-09-22'});}
   {const S=replayState();replay(S);replay(S);replay(S);eq('After logging the 10/10 receipt three times, Mild cheddar has a usual price',LC.usual(S.L,'u_383412','aldi').price,1.75);}
+
+  grp('Sizes printed with a hyphen (Prompt 4.3)');
+  eq('12-count and 6-pk are read as counts',['Eggs 12-count','Bars 6-pk'].map(t=>(RC.parseSize(t)||{}).label),['12-count','6-count']);
   return out;};
 
 // A person logging the 10/10 receipt: the photo misreads five item numbers and two words, and they fix a few suggestions.

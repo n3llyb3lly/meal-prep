@@ -3962,7 +3962,7 @@ class Component extends DCLogic {
   chg(type,data,base){return {id:'c_'+Date.now().toString(36)+'_'+uid(),type,at:new Date().toISOString(),data,base:base||{}};}
   priceBase(id,store){const c=this.cat&&this.cat.items.find(x=>x.id===id);if(!c)return {};if(!store||store==='aldi')return {price:c.price,priceDate:c.priceDate||null};const o=(c.offers||[]).find(x=>x.store===store);return o?{price:o.price,priceDate:o.priceDate||null}:{};}
   recBase(id){const c=this.cat&&this.cat.recipes.find(x=>x.id===id);return c?{changed:c.changed||null}:{};}
-  itemData(u,nl){const o={};for(const k of ['id','name','cat','pack','unit','pkg','price','src','priceDate','staple','storage','fridge','freezer','pantry','soldBy','family','tracking','aldi'])o[k]=u[k]??null;o.nums=Object.keys(nl||{}).filter(n=>!n.includes(':')&&nl[n]===u.id);o.brand=u.brand||'';o.node=u.node||null;o.store=u.store0||'aldi';
+  itemData(u,nl){const o={};for(const k of ['id','name','cat','pack','unit','pkg','price','src','priceDate','staple','storage','fridge','freezer','pantry','soldBy','family','tracking','aldi'])o[k]=u[k]??null;o.nums=Object.keys(nl||{}).filter(n=>!n.includes(':')&&nl[n]===u.id);o.brand=u.brand||'';o.flavor=u.flavor||'';o.unsorted=!!u.unsorted;o.node=u.node||null;o.store=u.store0||'aldi';
     const oe=(this.state.offerEdits||{})[u.id]||{};o.offers=Object.keys(oe).filter(s=>!oe[s].removed).map(s=>({store:s,price:oe[s].price,pack:oe[s].pack||null,unit:oe[s].unit||u.unit,pkg:oe[s].pkg||u.pkg,nums:Object.keys(nl||{}).filter(k=>k.startsWith(s+':')&&nl[k]===u.id).map(k=>splitKey(k)[1]),priceDate:oe[s].priceDate||null,src:oe[s].src||'edited'}));return o;}
   recData(r,id){const o={id:id||null};for(const k of ['meal','name','tags','serv','ing','total','hands','keeps','reheats','link','notes'])o[k]=r[k]??null;if(!id)delete o.id;return o;}
   recEditChg(orig,r){if(/^my (recipe|version)$/i.test(orig.source||''))return this.chg('recipe.update',this.recData({...orig,...r},orig.id),{changed:orig.changed||null});
@@ -4602,17 +4602,18 @@ class Component extends DCLogic {
     for(const r of d.rows){const nv=r.vNew||r.nv;const nm=String(r.nName??r.name0??'').toLowerCase().replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();if(nv&&nv.brand&&nm&&nv.brand!==r.brand0)bdict[nm]=nv.brand;}
     const rows=d.rows.filter(r=>!r.gap).map(r=>{let x={...r};if(!x.iid){const name=(x.nName??x.name0??x.text??'Item').trim()||'Item';if(x.nName&&x.nName!==x.name0)dict={...dict,...RC.learnNames(x.text,x.nName)};
         const w=!!x.wt;const sz=x.nSize;const it=this.makeUserItem({name,cat:x.nCat??x.nCat0??'Other',price:w?(parseFloat(x.unitP)||0):(parseFloat(x.unitP)||parseFloat(x.total)||0),amt:w?0:(sz?sz.amt:0),unit:w?'lb':(sz?sz.unit:'each'),src:'receipt'});
-        if(w){it.unit='lb';it.pack='per lb';it.soldBy='weight';it.pkg=1;}if(sz&&!w)it.pack=sz.label;it.store0=st;if(x.later)it.unsorted=true;
+        if(w){it.unit='lb';it.pack='per lb';it.soldBy='weight';it.pkg=1;}if(sz&&!w)it.pack=sz.label;it.store0=st;if(x.later)it.unsorted=true;{const v=x.vNew||x.nv;if(v&&v.brand)it.brand=v.brand;if(v&&v.flavor)it.flavor=v.flavor;}
         while(own.some(o=>o.id===it.id)||P[it.id])it.id=it.id+'_'+uid().slice(0,2);own.push(it);made.push(it);if(this.linked())ob=[...ob,this.chg('item.add',this.itemData(it,S.numLinks))];x.iid=it.id;x.how='named';}
       const c=x.iid!=='__ignore'?null:null;return x;});
     const P2={...P};for(const it of made)P2[it.id]=it;
     const fin=rows.map(r=>{if(r.sale!=null||!r.iid||r.iid==='__ignore')return r;const c=this.rowCalc(r,P2);return c&&c.ask?{...r,sale:c.off<0}:r;});
     const stats={changed:0,sales:0};for(const r of fin){const c=r.iid&&r.iid!=='__ignore'?this.rowCalc(r,P2):null;if(!c)continue;if(c.sale||r.sale===true)stats.sales++;else if(c.p&&c.p.price>0&&Math.abs(c.paid-c.p.price)>.005)stats.changed++;}
-    const vars=JSON.parse(JSON.stringify(S.variants||{}));const nv={...(S.numVar||{})};const date=d.date||this.today();
+    const vars=JSON.parse(JSON.stringify(S.variants||{}));const nv={...(S.numVar||{})};const date=d.date||this.today();const newV=[],newN=[];
     for(const r of fin){if(!r.iid||r.iid==='__ignore')continue;let vid=r.vid;const nv0=r.nv||(!r.how||r.how==='named'?{brand:r.brand0||'',flavor:r.flavor0||''}:null);const nvv=r.vNew||(nv0&&(nv0.brand||nv0.flavor)?nv0:null);
-      if(!vid&&nvv){const list=vars[r.iid]||[];const ex=list.find(v=>(v.brand||'')===(nvv.brand||'')&&(v.flavor||'')===(nvv.flavor||''));vid=ex?ex.vid:'v_'+uid();if(!ex)vars[r.iid]=[...list,{vid,brand:nvv.brand||'',flavor:nvv.flavor||'',nums:{}}];}
-      if(!vid)continue;if(vid.startsWith('b_')&&!(vars[r.iid]||[]).some(v=>v.vid===vid)){const p=P2[r.iid];vars[r.iid]=[...(vars[r.iid]||[]),{vid,brand:p&&p.brand||'',flavor:'',nums:{}}];}
-      const v=(vars[r.iid]||[]).find(z=>z.vid===vid);if(v){if(r.num){v.nums[st]=[...new Set([...(v.nums[st]||[]),r.num])];nv[nkey(st,r.num)]=vid;}v.last={price:r2(parseFloat(r.unitP)||0),date,store:st};}r._vid=vid;}
+      if(!vid&&nvv){const list=vars[r.iid]||[];const ex=list.find(v=>(v.brand||'')===(nvv.brand||'')&&(v.flavor||'')===(nvv.flavor||''));vid=ex?ex.vid:'v_'+uid();if(!ex){vars[r.iid]=[...list,{vid,brand:nvv.brand||'',flavor:nvv.flavor||'',nums:{}}];newV.push({item:r.iid,vid,brand:nvv.brand||'',flavor:nvv.flavor||''});}}
+      if(!vid)continue;if(vid.startsWith('b_')&&!(vars[r.iid]||[]).some(v=>v.vid===vid)){const p=P2[r.iid];vars[r.iid]=[...(vars[r.iid]||[]),{vid,brand:p&&p.brand||'',flavor:'',nums:{}}];newV.push({item:r.iid,vid,brand:p&&p.brand||'',flavor:''});}
+      const v=(vars[r.iid]||[]).find(z=>z.vid===vid);if(v){if(r.num&&!(v.nums[st]||[]).includes(r.num))newN.push({vid,store:st,num:r.num});if(r.num){v.nums[st]=[...new Set([...(v.nums[st]||[]),r.num])];nv[nkey(st,r.num)]=vid;}v.last={price:r2(parseFloat(r.unitP)||0),date,store:st};}r._vid=vid;}
+    if(this.linked())ob=[...ob,...newV.map(v=>this.chg('variant.add',v)),...newN.map(n=>this.chg('variant.number',n))];
     const LC=window.LearnCore;const learn=LC?LC.fromReceipt(S.learn,fin,{store:st,date,names:id=>P2[id]&&P2[id].name}):S.learn;
     if(LC)this.lsSet('learnstats',[...this.lsGet('learnstats',[]),LC.statsOf(fin,{date,readAt:d.readAt,addAt:new Date().toISOString()})].slice(-50));
     const keepImg=this._keepImg;this._keepImg=null;
