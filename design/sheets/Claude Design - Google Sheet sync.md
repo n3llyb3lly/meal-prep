@@ -18,7 +18,7 @@ The catalog now lives in a Google Sheet. An Apps Script web app attached to the 
   - `{ok:false, error:'refused'}` for a wrong key, `{ok:false, error:'sheet-errors', problems}` when the sheet has errors and there is no earlier good copy.
   - When `problems.stale` is true, the sheet has errors and `catalog` is the last good one.
   - `&ping=1` returns `{ok:true, app:'meal-prep-sheet'}` (for the connection test).
-- **Write:** `POST <address>` with body `{key, device, changes:[…]}` returns `{ok:true, results:[{id, status, message, sheet?}], idMap:{…}, version}`. `status` is one of `applied`, `duplicate` (already applied earlier: treat as success), `conflict` (the sheet kept its own value; `message` says so, `sheet` holds the sheet's value), `rejected` (can never apply; `message` says why), `error` (temporary; try again later). `{ok:false, error:'refused'|'busy'|'bad-json'}` for the whole request.
+- **Write:** `POST <address>` with body `{key, device, changes:[…]}` returns `{ok:true, results:[{id, status, message, sheet?}], idMap:{…}, version}`. `status` is one of `applied`, `duplicate` (already applied earlier: treat as success), `conflict` (the sheet kept its own value; `message` says so, `sheet` holds the sheet's value), `rejected` (can never apply; `message` says why), `deferred` (not yet: it names an own recipe the sheet hasn't got; keep it and send it again after the `recipe.add`), `error` (temporary; try again later). `{ok:false, error:'refused'|'busy'|'bad-json'}` for the whole request.
 
 ### 1. Settings › Google Sheet (new sub-screen)
 
@@ -82,11 +82,14 @@ Create changes in these places (only when `sheetLink.url` is set, or when buildi
 | Link an own item to a catalog item (`mergeItem`) | `item.merge` | `{from:'u_…', to:catalogId}` | `{}` |
 | Receipt saved (`import63`), each new brand or flavor (6.3.2, after the item's `item.add`) | `variant.add` | `{item, vid, brand, flavor}` | `{}` |
 | Receipt saved, each new number on a variant (6.3.2) | `variant.number` | `{vid, store, num}` | `{}` |
+| Kind or "Also good for breakfast" changed on a recipe sheet (6.5, `setKind`) | `recipe.kind` | `{id, kind, alsoBreakfast}`; kind is main, side, dessert, drink, snack or sauce | `{}` |
 | Receipt saved, what the phone learned since the last send (6.3.3) | `learn.batch` | `{records: [[kind, key, value, count], ...]}`, up to 50 records; kind is word, name, brand, group or number | `{}` |
 
 Variants go to the **Variants** tab (item_id, variant_id, brand, flavor, store, numbers, last_price, last_date), one row per variant and store. The catalog serves them back as `variants` in the phone's layer shape. Queue `variant.add` before any `variant.number` for the same `vid`, and only once the item is in the sheet (not `u_`).
 
 Learned facts go to the **Learned** tab (kind, key, value, count, last_seen), one row per kind, key and value. A record that is already there adds its count and sets last_seen to today; the phone never sends dates. Never prices, sizes, dates or quantities, and nothing with 4 or more digits in a row except item numbers. The catalog serves the tab back as `learned` (`[[kind, key, value, count, last_seen]]`, most counted first, up to 3000), and the phone uses it as source `catalog`, after its own facts. A catalog that changed only in `learned` doesn't show the "new catalog" summary.
+
+`recipe.kind` writes the Recipes `kind` and `also_breakfast` cells (also_breakfast is only ever TRUE on a main). The catalog serves them back as `kind` on every recipe (blank is `main`) and `alsoBreakfast: true` on mains where it is ticked. Sides paired on the sheet's **Pairings** tab come back as `sides: [side ids]` on mains. A side picked for one trip's menu item (`sidePair`) stays on the phone and is not sent.
 
 For items that are still `u_` (not yet in the sheet), do not queue `price.set` or `number.link`: update the queued `item.add` instead (its `price`, `priceDate`, `nums`).
 

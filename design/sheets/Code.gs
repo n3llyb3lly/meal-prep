@@ -8,8 +8,8 @@
  *            Ingredients and Receipt aliases sheets, in the same layout as catalog.json.
  *  - doPost: the app sends changes made on the phone. Each one is applied once, logged in
  *            "Change log", and answered (applied / already applied / sheet kept / refused).
- *  - A "Meal Prep" menu in the spreadsheet: check the data, set up sheets and dropdowns, fetch recipe photos and steps,
- *    set the app key, and show the app address.
+ *  - A "Meal Prep" menu in the spreadsheet: check the data, set up sheets and dropdowns, fetch recipe photos and steps
+ *    (which also guesses each recipe's kind), suggest side pairings, set the app key, and show the app address.
  *  - onEdit: when you edit a row of Items or Recipes (or a recipe's Ingredients), it stamps
  *    last_changed and changed_by = sheet. That is how "the sheet wins" is decided.
  *
@@ -22,7 +22,8 @@
 var SHEETS = {
   items: 'Items', categories: 'Categories', recipes: 'Recipes', ingredients: 'Ingredients',
   aliases: 'Receipt aliases', lists: 'Lists', log: 'Change log', idmap: 'Id map', cache: '_catalog',
-  offers: 'Offers', nodes: 'Nodes', stores: 'Stores', favorites: 'Favorites', variants: 'Variants', learned: 'Learned'
+  offers: 'Offers', nodes: 'Nodes', stores: 'Stores', favorites: 'Favorites', variants: 'Variants', learned: 'Learned',
+  pairings: 'Pairings', suggested: 'Suggested pairings', pairLists: '_pairing_lists'
 };
 var MEALS = ['breakfast', 'lunch', 'snack', 'dinner'];
 var STORAGE = ['fridge', 'freezer', 'pantry', 'counter'];
@@ -311,8 +312,14 @@ function buildCatalog_(prev) {
     var photo = cssSafeUrl_(r.photo_url), steps = stepsCell_(r.steps);
     if (/^https:\/\/\S+$/i.test(photo)) rec.photo = photo;
     if (steps.length) rec.steps = steps;
+    // 6.5: kind is always written (blank is main); alsoBreakfast only when ticked on a main.
+    var kind = kindOf_(r.kind);
+    if (KINDS.indexOf(kind) < 0) { W(line + ' (' + id + '): kind "' + r.kind + '" isn\'t one of ' + KINDS.join(', ') + '. Read as main.'); kind = 'main'; }
+    rec.kind = kind;
+    if (truthy_(r.also_breakfast)) { if (kind === 'main') rec.alsoBreakfast = true; else if (active) W(id + ': also_breakfast is ticked, but it is a ' + kind + '. Only a main can also be breakfast.'); }
     R[id] = rec; recipes.push(rec);
   });
+  kindChecks_(recipes, R, pairingsOf_(recR), W);
 
   // Ingredients: qty in the sheet is for the whole recipe; the catalog stores it per serving.
   var seenLine = {};
@@ -368,6 +375,28 @@ function buildCatalog_(prev) {
   };
   return { catalog: catalog, errors: errors, warnings: warnings };
 }
+
+// Pairings into recipe.sides (mains only, real sides only), plus the kind counts and the side basics still missing.
+var SIDE_BASICS = [['white rice', /\brice\b|\barroz\b/i], ['black beans', /black beans|frijoles negros/i], ['tortillas', /tortillas?/i], ['garlic bread', /garlic bread/i], ['green salad', /green salad|garden salad|side salad|mixed greens/i]];
+function kindChecks_(recipes, R, pairs, W) {
+  Object.keys(pairs).forEach(function (mid) {
+    var m = R[mid]; if (!m) { W('Pairings: main "' + mid + '" isn\'t on the Recipes sheet.'); return; }
+    if (m.kind !== 'main') { W('Pairings: ' + mid + ' is a ' + m.kind + ', not a main. Its sides were left out.'); return; }
+    var ok = pairs[mid].filter(function (sid) {
+      if (!R[sid]) { W('Pairings: ' + mid + ' lists side "' + sid + '", which isn\'t on the Recipes sheet.'); return false; }
+      if (!R[sid].active) { W('Pairings: ' + mid + ' lists ' + sid + ', which isn\'t active.'); return false; }
+      if (R[sid].kind !== 'side') { W('Pairings: ' + mid + ' lists ' + sid + ', which is a ' + R[sid].kind + ', not a side.'); return false; }
+      return true;
+    });
+    if (ok.length) m.sides = ok;
+  });
+  var act = recipes.filter(function (r) { return r.active; }), kc = kindCounts_(act);
+  W('Recipe kinds: ' + KINDS.map(function (k) { return (kc[k] || 0) + ' ' + k; }).join(', ') + '.');
+  var sideNames = act.filter(function (r) { return r.kind === 'side'; }).map(function (r) { return r.name; });
+  var missing = SIDE_BASICS.filter(function (b) { return !sideNames.some(function (n) { return b[1].test(n); }); }).map(function (b) { return b[0]; });
+  if (missing.length) W('No side recipe yet for: ' + missing.join(', ') + '. Mains have only ' + sideNames.length + ' side' + (sideNames.length === 1 ? '' : 's') + ' to pair with.');
+}
+function kindCounts_(recipes) { var kc = {}; recipes.forEach(function (r) { kc[r.kind] = (kc[r.kind] || 0) + 1; }); return kc; }
 
 function learnKey_(kind, key, value) { return str_(kind) + '|' + str_(key) + '|' + str_(value); }
 // Learned rows -> [[kind, key, value, count, last_seen]]. Unknown kinds are left out; at most 3000 rows, most counted first.
@@ -655,8 +684,10 @@ function stepsCell_(v) {
   if (blank_(v)) return [];
   try { var a = JSON.parse(String(v)); return Array.isArray(a) ? a.map(function (x) { return str_(x); }).filter(String) : []; } catch (e) { return []; }
 }
+// fetch_note is a fetch code (no-steps, http-403, …), then "; kind guessed: …" when the kind was guessed in the same run.
+function noteCode_(v) { var s = str_(v); return /^kind guessed/.test(s) ? '' : s.split(';')[0].trim(); }
 function needsFetch_(r) {
-  return /^https?:\/\//i.test(str_(r.link)) && blank_(r.steps) && FETCH_DONE_NOTES.indexOf(str_(r.fetch_note)) < 0;
+  return /^https?:\/\//i.test(str_(r.link)) && blank_(r.steps) && FETCH_DONE_NOTES.indexOf(noteCode_(r.fetch_note)) < 0;
 }
 
 /** Meal Prep > Fetch photos and steps. Starts from the top; long catalogs carry on by themselves from a trigger. */
@@ -666,9 +697,9 @@ function menuFetchSteps() {
 }
 // recipe.fetchAll from the phone, or the menu. Runs what fits in budgetMs, then hands the rest to a trigger.
 function startFetchAll_(budgetMs) {
-  ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS, []);
+  ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS.concat(RECIPE_KIND_HEADERS), []);
   var props = PropertiesService.getScriptProperties();
-  props.setProperty('FETCH_NEXT_ROW', '2'); props.setProperty('FETCH_STATS', JSON.stringify({ steps: 0, missed: [] }));
+  props.setProperty('FETCH_NEXT_ROW', '2'); props.setProperty('FETCH_STATS', JSON.stringify({ steps: 0, missed: [], kinds: [] }));
   return fetchSteps_(budgetMs);
 }
 /** The time trigger's entry point. Carries on where the last run stopped. */
@@ -679,37 +710,53 @@ function fetchSteps_(budgetMs) {
   if (!lock.tryLock(30000)) { scheduleFetch_(); return { ok: true, done: false, message: 'The sheet is busy. Fetching will carry on in a minute.' }; }
   try {
     var t = table_(SHEETS.recipes); if (!t) return { ok: false, error: 'no-recipes', message: 'No "Recipes" sheet found.' };
-    if (RECIPE_FETCH_HEADERS.some(function (h) { return t.col[h] == null; })) { ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS, []); t = table_(SHEETS.recipes); }
-    var stats; try { stats = JSON.parse(props.getProperty('FETCH_STATS') || ''); } catch (e) { } if (!stats) stats = { steps: 0, missed: [] };
+    var H = RECIPE_FETCH_HEADERS.concat(RECIPE_KIND_HEADERS);
+    if (H.some(function (h) { return t.col[h] == null; })) { ensureColumns_(SHEETS.recipes, H, []); t = table_(SHEETS.recipes); }
+    var stats; try { stats = JSON.parse(props.getProperty('FETCH_STATS') || ''); } catch (e) { } if (!stats) stats = { steps: 0, missed: [] }; if (!stats.kinds) stats.kinds = [];
     var rows = t.objects(), next = Math.max(2, parseInt(props.getProperty('FETCH_NEXT_ROW') || '2', 10) || 2), last = {}, n = 0;
     for (var i = next - 2; i < rows.length; i++) {
       if (Date.now() - t0 > budgetMs) { props.setProperty('FETCH_NEXT_ROW', String(rows[i]._row)); props.setProperty('FETCH_STATS', JSON.stringify(stats)); scheduleFetch_();
         return { ok: true, done: false, steps: stats.steps, missed: stats.missed, message: 'Fetched ' + stats.steps + ' so far. The rest carry on by themselves in a minute.' }; }
-      var r = rows[i]; if (!str_(r.recipe_id) || !needsFetch_(r)) continue;
-      var link = str_(r.link), host = (link.match(/^https?:\/\/([^\/?#]+)/i) || [])[1] || '';
+      var r = rows[i]; if (!str_(r.recipe_id)) continue;
+      // A row is fetched for its steps (none yet) or for its kind (kind cell empty). A kind-only fetch never touches the steps.
+      var wantSteps = needsFetch_(r), wantKind = blank_(r.kind), link = str_(r.link);
+      var canFetch = /^https?:\/\//i.test(link) && FETCH_DONE_NOTES.indexOf(noteCode_(r.fetch_note)) < 0;
+      if (!wantSteps && !(wantKind && canFetch)) {
+        if (wantKind) { var g0 = kindGuess_(null, r.name, r.meal); writeKind_(t, r, g0, noteCode_(r.fetch_note)); stats.kinds.push([str_(r.recipe_id), g0.kind, g0.why]); }
+        continue;
+      }
+      var host = (link.match(/^https?:\/\/([^\/?#]+)/i) || [])[1] || '';
       var wait = last[host] ? FETCH_GAP_MS - (Date.now() - last[host]) : 0; if (wait > 0) Utilities.sleep(wait);
       var res = fetchOne_(link); last[host] = Date.now();
-      t.set(r._row, 'photo_url', res.photo || ''); t.set(r._row, 'steps', res.steps.length ? JSON.stringify(res.steps) : '');
-      t.set(r._row, 'fetched_at', new Date()); t.set(r._row, 'fetch_note', res.note || '');
-      if (res.steps.length) stats.steps++; else stats.missed.push([str_(r.recipe_id), res.note]);
+      var code = noteCode_(r.fetch_note);
+      if (wantSteps) {
+        t.set(r._row, 'photo_url', res.photo || ''); t.set(r._row, 'steps', res.steps.length ? JSON.stringify(res.steps) : '');
+        t.set(r._row, 'fetched_at', new Date()); t.set(r._row, 'fetch_note', res.note || ''); code = res.note || '';
+        if (res.steps.length) stats.steps++; else stats.missed.push([str_(r.recipe_id), res.note]);
+      }
+      if (wantKind) { var g = kindGuess_(res.ld, r.name, r.meal); writeKind_(t, r, g, code); stats.kinds.push([str_(r.recipe_id), g.kind, g.why]); }
       if (++n % FETCH_BATCH === 0) SpreadsheetApp.flush();
     }
     props.deleteProperty('FETCH_NEXT_ROW'); props.deleteProperty('FETCH_STATS'); clearFetchTriggers_();
     SpreadsheetApp.flush(); try { currentCatalog_(); } catch (e) { }
     var miss = stats.missed.map(function (x) { return x[0] + ' (' + x[1] + ')'; });
-    return { ok: true, done: true, steps: stats.steps, missed: stats.missed,
-      message: 'Done. ' + stats.steps + ' recipe' + (stats.steps === 1 ? '' : 's') + ' got steps.' + (miss.length ? '\n\nNo steps for ' + miss.length + ': ' + miss.slice(0, 30).join(', ') + (miss.length > 30 ? ', …' : '') : '') };
+    var kc = {}; stats.kinds.forEach(function (x) { kc[x[1]] = (kc[x[1]] || 0) + 1; });
+    var kinds = KINDS.filter(function (k) { return kc[k]; }).map(function (k) { return kc[k] + ' ' + k; });
+    return { ok: true, done: true, steps: stats.steps, missed: stats.missed, kinds: stats.kinds,
+      message: 'Done. ' + stats.steps + ' recipe' + (stats.steps === 1 ? '' : 's') + ' got steps.' + (miss.length ? '\n\nNo steps for ' + miss.length + ': ' + miss.slice(0, 30).join(', ') + (miss.length > 30 ? ', …' : '') : '') +
+        (kinds.length ? '\n\nGuessed the kind of ' + stats.kinds.length + ' recipe' + (stats.kinds.length === 1 ? '' : 's') + ': ' + kinds.join(', ') + '. Check them in the kind column; fetch_note says why.' : '') };
   } finally { lock.releaseLock(); }
 }
-// {photo, steps, note}. note: no-recipe-data, no-steps, http-403, fetch-failed.
+// {photo, steps, note, ld}. note: no-recipe-data, no-steps, http-403, fetch-failed. ld = the Recipe block, for the kind guess.
 function fetchOne_(url) {
   var res;
   try { res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true, headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 14) MealPrep' } }); }
-  catch (err) { return { photo: '', steps: [], note: 'fetch-failed' }; }
-  var code = res.getResponseCode(); if (code >= 400) return { photo: '', steps: [], note: 'http-' + code };
-  var x = recipeSteps_(String(res.getContentText() || '').slice(0, 3000000), url);
-  if (!x.found) return { photo: '', steps: [], note: 'no-recipe-data' };
-  return { photo: x.photo, steps: x.steps, note: x.steps.length ? '' : 'no-steps' };
+  catch (err) { return { photo: '', steps: [], note: 'fetch-failed', ld: null }; }
+  var code = res.getResponseCode(); if (code >= 400) return { photo: '', steps: [], note: 'http-' + code, ld: null };
+  var n = findRecipeLd_(String(res.getContentText() || '').slice(0, 3000000));
+  if (!n) return { photo: '', steps: [], note: 'no-recipe-data', ld: null };
+  var steps = stepsOf_(n);
+  return { photo: photoOf_(n, url), steps: steps, note: steps.length ? '' : 'no-steps', ld: n };
 }
 function scheduleFetch_() { clearFetchTriggers_(); ScriptApp.newTrigger('fetchStepsRun').timeBased().after(60000).create(); }
 function clearFetchTriggers_() {
@@ -723,12 +770,168 @@ function clearFetched_(sh, headers, r0, r1) {
   });
 }
 
+// ---------------------------------------------------------------- recipe kinds and side pairings (6.5)
+
+// Recipes > kind is one of KINDS (blank is read as main). also_breakfast (a checkbox) marks a main that is also good for
+// breakfast. sides lists the side recipe ids paired with a main; it is copied from the Pairings tab, never typed.
+// Fetch photos and steps fills an empty kind from the page's recipeCategory and keywords, and never changes a kind
+// someone set. The app has its own guess (kindGuess in the app) for when the catalog has no kind.
+var KINDS = ['main', 'side', 'dessert', 'drink', 'snack', 'sauce'];
+var RECIPE_KIND_HEADERS = ['kind', 'also_breakfast', 'sides'];
+var PAIRING_HEADERS = ['main_id', 'main_name', 'side_id', 'side_name', 'note'];
+var KIND_RULES_ = [
+  ['side', /side dish(?:es)?|\bsides?\b|accompaniments?/i],
+  ['dessert', /desserts?|\bsweets?\b|\bcakes?\b|\bpies?\b|cookies?/i],
+  ['drink', /\bdrinks?\b|beverages?|cocktails?|smoothies?|agua fresca/i],
+  ['sauce', /sauces?|condiments?|\bsalsas?\b|dressings?|\bdips?\b/i],
+  ['snack', /\bsnacks?\b|appetizers?/i]
+];
+// Names are only trusted when they don't also name a main: "Chicken pot pie" is not a dessert. Only the name before any
+// "(…)" is read, so "Shakshuka (eggs in spiced tomato sauce)" stays a main.
+var KIND_NAME_EXTRA_ = { side: /cucumber salad|green salad|plantains?|maduros|patacones|roasted vegetables|mashed potatoes|\brice\b|black beans|refried beans|tortillas|garlic bread|\bslaw\b|elote|cornbread/i,
+  dessert: /tres leches|flan|brownies?|mousse|cobbler|\bcrisp\b|crumble|cheesecake|ice cream|pudding|lemon bars/i,
+  drink: /horchata|lemonade|limonada|\bagua de\b|\bjugo\b|\bjuice\b|chicha|colada morada|iced tea/i, sauce: /\baj[ií](?![a-z])|chimichurri|pesto|vinaigrette|pickled|curtido|pico de gallo/i };
+var KIND_NAME_MAIN_ = /\b(chicken|beef|pork|steak|fish|salmon|tuna|shrimp|turkey|sausage|tacos?|burritos?|enchiladas?|pupusas?|empanadas?|quesadillas?|pasta|lasagna|bowl|soup|stew|curry|fried rice|pot pie|shepherd)\b/i;
+
+function ldText_(v) {
+  if (v == null) return [];
+  if (Array.isArray(v)) return v.reduce(function (a, x) { return a.concat(ldText_(x)); }, []);
+  if (typeof v === 'object') return ldText_(v.name || v['@value'] || '');
+  return String(v).split(/\s*,\s*/).map(function (x) { return decodeHtml_(x); }).filter(String);
+}
+// {kind, why, breakfast} for a recipe from its JSON-LD block (ld, may be null), its name and its meal.
+// recipeCategory first, then keywords (a keyword must be the kind word itself, so "sweet potato" isn't a dessert), then the
+// name, then meal = snack (as the app does). Otherwise main.
+function kindGuess_(ld, name, meal) {
+  var cats = ldText_(ld && ld.recipeCategory), keys = ldText_(ld && ld.keywords), nm = str_(name).replace(/\s*\(.*$/, '');
+  var breakfast = cats.some(function (c) { return /breakfast|brunch/i.test(c); });
+  function hit(list, whole) {
+    for (var i = 0; i < KIND_RULES_.length; i++) for (var j = 0; j < list.length; j++) {
+      var t = list[j], re = KIND_RULES_[i][1];
+      if (whole ? re.test(t) && t.replace(new RegExp(re.source, 'gi'), '').replace(/[^a-z]/gi, '') === '' : re.test(t)) return { kind: KIND_RULES_[i][0], text: t };
+    }
+    return null;
+  }
+  var h = hit(cats, false);
+  if (h) return { kind: h.kind, why: 'recipeCategory "' + h.text + '"', breakfast: false };
+  h = hit(keys, true);
+  if (h) return { kind: h.kind, why: 'keywords "' + h.text + '"', breakfast: false };
+  if (nm && !KIND_NAME_MAIN_.test(nm)) {
+    h = hit([nm], false);
+    if (!h) for (var k in KIND_NAME_EXTRA_) if (KIND_NAME_EXTRA_[k].test(nm)) { h = { kind: k }; break; }
+    if (h) return { kind: h.kind, why: 'name "' + str_(name) + '"', breakfast: false };
+  }
+  if (str_(meal).toLowerCase() === 'snack') return { kind: 'snack', why: 'meal "snack"', breakfast: false };
+  return { kind: 'main', why: cats.length ? 'recipeCategory "' + cats.join(', ') + '"' : ld ? 'no category' : 'no recipe data', breakfast: breakfast };
+}
+// Writes a guessed kind into an empty kind cell, and TRUE into an empty also_breakfast cell for a breakfast main.
+// The guess goes in fetch_note after the fetch code, e.g. "no-steps; kind guessed: side (recipeCategory "Side Dish")".
+function writeKind_(t, r, g, code) {
+  t.set(r._row, 'kind', g.kind);
+  if (g.kind === 'main' && g.breakfast && blank_(r.also_breakfast)) t.set(r._row, 'also_breakfast', true);
+  var note = 'kind guessed: ' + g.kind + ' (' + g.why + ')';
+  t.set(r._row, 'fetch_note', code ? code + '; ' + note : note);
+}
+function kindOf_(v) { var k = str_(v).toLowerCase(); return k || 'main'; }
+function truthy_(v) { return v === true || /^(y|yes|true|1)$/i.test(str_(v)); }
+
+// Pairings rows -> {main_id: [side_id, …]} in row order, without repeats. Rows missing either id are skipped.
+function groupPairings_(rows) {
+  var out = {};
+  rows.forEach(function (r) {
+    var m = str_(r.main_id), sd = str_(r.side_id); if (!m || !sd) return;
+    var list = out[m] || (out[m] = []); if (list.indexOf(sd) < 0) list.push(sd);
+  });
+  return out;
+}
+// The pairings for the catalog: the Pairings tab when there is one, else the Recipes sides column.
+function pairingsOf_(recR) {
+  var tP = table_(SHEETS.pairings); if (tP) return groupPairings_(tP.objects());
+  var out = {}; recR.forEach(function (r) { var ids = str_(r.sides).split(/[;,]/).map(function (x) { return x.trim(); }).filter(String); if (ids.length) out[str_(r.recipe_id)] = ids; });
+  return out;
+}
+
+// The same rules as the app's sideScore, without ratings. 0 means no reason to pair them.
+var CUISINE_TAGS = ['mexican', 'ecuadorian', 'salvadoran', 'peruvian', 'colombian', 'cuban', 'caribbean', 'latin', 'indian', 'chinese', 'asian', 'thai', 'korean', 'japanese', 'vietnamese',
+  'filipino', 'italian', 'greek', 'mediterranean', 'middle eastern', 'french', 'spanish', 'american', 'southern', 'cajun', 'tex-mex'];
+function sideScore_(main, side) {
+  var sc = 0, why = [], mn = String(main.name).toLowerCase(), sn = String(side.name).toLowerCase();
+  var shared = (side.tags || []).filter(function (t) { return CUISINE_TAGS.indexOf(t) >= 0 && (main.tags || []).indexOf(t) >= 0; });
+  if (shared.length) { sc += 3; why.push('both ' + shared.join(', ')); }
+  if (/curry|masala|stew|tinga|chili|guiso|seco|encebollado|stir fry|teriyaki|adobo/.test(mn) && /rice|arroz|naan|tortilla|bread/.test(sn)) { sc += 3; why.push('rice or bread with a saucy main'); }
+  if (/taco|burrito|enchilada|fajita|carnitas/.test(mn) && /rice|beans|elote|slaw|salsa/.test(sn)) { sc += 3; why.push('goes with tacos'); }
+  if (/steak|chicken|pork|salmon|fish|chop/.test(mn) && /salad|roasted|mashed|plantain|patacones|maduros|vegetables/.test(sn)) { sc += 2; why.push('a vegetable with meat'); }
+  if (/pasta|lasagna|spaghetti/.test(mn) && /salad|garlic bread/.test(sn)) { sc += 3; why.push('goes with pasta'); }
+  return { score: sc, why: why.join('; ') };
+}
+var SUGGEST_MAX = 4;   // suggested sides per main
+// Suggested pairings for every active main, best first, leaving out pairs already on the Pairings tab.
+function suggestPairings_() {
+  var tR = table_(SHEETS.recipes); if (!tR) return { rows: [], mains: 0, sides: 0 };
+  var recs = tR.objects().filter(function (r) { return str_(r.recipe_id) && yn_(r.active) !== 'N'; }).map(function (r) {
+    return { id: str_(r.recipe_id), name: str_(r.name) || str_(r.recipe_id), kind: kindOf_(r.kind), tags: str_(r.tags).split(',').map(function (x) { return x.trim().toLowerCase(); }).filter(String) };
+  });
+  var tP = table_(SHEETS.pairings), have = groupPairings_(tP ? tP.objects() : []);
+  var mains = recs.filter(function (r) { return r.kind === 'main'; }), sides = recs.filter(function (r) { return r.kind === 'side'; }), rows = [];
+  mains.forEach(function (m) {
+    sides.map(function (sd) { var x = sideScore_(m, sd); return { sd: sd, score: x.score, why: x.why }; })
+      .filter(function (x) { return x.score > 0 && (have[m.id] || []).indexOf(x.sd.id) < 0; })
+      .sort(function (a, b) { return b.score - a.score || a.sd.name.localeCompare(b.sd.name); }).slice(0, SUGGEST_MAX)
+      .forEach(function (x) { rows.push([m.id, m.name, x.sd.id, x.sd.name, x.why]); });
+  });
+  return { rows: rows, mains: mains.length, sides: sides.length };
+}
+/** Meal Prep > Suggest pairings. Writes the Suggested pairings tab; copy the rows you like to Pairings. */
+function menuSuggestPairings() {
+  var x = suggestPairings_(), ss = SpreadsheetApp.getActive();
+  var sh = sheet_(SHEETS.suggested) || ss.insertSheet(SHEETS.suggested);
+  sh.clear(); var rows = [PAIRING_HEADERS].concat(x.rows);
+  sh.getRange(1, 1, rows.length, PAIRING_HEADERS.length).setValues(rows); sh.getRange(1, 1, 1, PAIRING_HEADERS.length).setFontWeight('bold'); sh.setFrozenRows(1);
+  SpreadsheetApp.getUi().alert(x.sides ? 'Suggested ' + x.rows.length + ' pairing' + (x.rows.length === 1 ? '' : 's') + ' for ' + x.mains + ' mains from ' + x.sides + ' sides, in the "' + SHEETS.suggested +
+    '" tab. Copy the rows you want to the Pairings tab. Nothing is paired until it is there.'
+    : 'No recipe has kind side yet. Run Meal Prep > Fetch photos and steps to guess kinds, or set some in the Recipes kind column, then try again.');
+}
+
+// The hidden _pairing_lists tab holds the names the Pairings dropdowns offer: column A mains (blank kind counts), B sides.
+function ensurePairingLists_() {
+  var rec = sheet_(SHEETS.recipes); if (!rec) return null;
+  var h = rec.getRange(1, 1, 1, rec.getLastColumn()).getValues()[0].map(norm_), nc = h.indexOf('name'), kc = h.indexOf('kind');
+  if (nc < 0 || kc < 0) return null;
+  var L = function (c) { return colLetter_(c + 1); }, q = "'" + rec.getName() + "'!", N = q + L(nc) + '2:' + L(nc), K = q + L(kc) + '2:' + L(kc);
+  var sh = sheet_(SHEETS.pairLists); if (!sh) { sh = SpreadsheetApp.getActive().insertSheet(SHEETS.pairLists); sh.hideSheet(); }
+  sh.clear();
+  sh.getRange(1, 1, 2, 2).setValues([['mains', 'sides'], ['=IFERROR(SORT(FILTER(' + N + ',' + N + '<>"",(' + K + '="main")+(' + K + '=""))),"")', '=IFERROR(SORT(FILTER(' + N + ',' + K + '="side")),"")']]);
+  return sh;
+}
+function colLetter_(n) { var s = ''; while (n > 0) { var m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
+
+// onEdit on Pairings: a name picked from the dropdown fills its id, then the Recipes sides column is rewritten.
+function pairingEdited_(sh, r0, n) {
+  var headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(norm_);
+  var tR = table_(SHEETS.recipes); if (!tR) return;
+  var byName = {}; tR.objects().forEach(function (r) { var k = nname_(r.name); if (k && str_(r.recipe_id) && !byName[k]) byName[k] = str_(r.recipe_id); });
+  [['main_name', 'main_id'], ['side_name', 'side_id']].forEach(function (p) {
+    var nc = headers.indexOf(p[0]), ic = headers.indexOf(p[1]); if (nc < 0 || ic < 0) return;
+    for (var r = Math.max(2, r0); r < r0 + n; r++) {
+      var name = sh.getRange(r, nc + 1).getValues()[0][0];
+      sh.getRange(r, ic + 1).setValue(blank_(name) ? '' : (byName[nname_(name)] || ''));
+    }
+  });
+  syncSides_();
+}
+// Recipes > sides = the Pairings rows grouped by main_id, as "s_rice, s_plantains".
+function syncSides_() {
+  var tR = table_(SHEETS.recipes), tP = table_(SHEETS.pairings); if (!tR || !tP || tR.col.sides == null) return;
+  var by = groupPairings_(tP.objects());
+  tR.objects().forEach(function (r) { var v = (by[str_(r.recipe_id)] || []).join(', '); if (str_(r.sides) !== v) tR.set(r._row, 'sides', v); });
+}
+
 // ---------------------------------------------------------------- applying phone changes
 
 // Everything one request needs, read once.
 function context_() {
   var log = ensureSheet_(SHEETS.log, LOG_HEADERS), idm = ensureSheet_(SHEETS.idmap, IDMAP_HEADERS);
-  ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS, []);
+  ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS.concat(RECIPE_KIND_HEADERS), []);
   var ctx = { items: table_(SHEETS.items), recipes: table_(SHEETS.recipes), ingredients: table_(SHEETS.ingredients), aliases: table_(SHEETS.aliases), log: table_(SHEETS.log), idm: table_(SHEETS.idmap), idMap: {} };
   ctx.done = {}; ctx.log.objects().forEach(function (r) { if (r.change_id) ctx.done[String(r.change_id)] = r; });
   ctx.map = {}; ctx.idm.objects().forEach(function (r) { if (r.phone_id) ctx.map[String(r.phone_id)] = String(r.sheet_id); });
@@ -798,8 +1001,8 @@ function applyOne_(ctx, ch, device) {
     var fn = HANDLERS[ch.type];
     out = fn ? fn(ctx, ch.data || {}, ch.base || {}) : { status: 'rejected', message: 'Unknown change type "' + ch.type + '".' };
   } catch (err) { out = { status: 'error', message: String(err && err.message || err) }; }
-  if (out.status !== 'error') logChange_(ctx, ch, out.target, out.status, out.message);   // errors are not logged, so a retry can apply them
-  ctx.done[String(ch.id)] = { received_at: new Date(), result: out.status };
+  // errors and deferred changes are not logged, so a retry can apply them
+  if (out.status !== 'error' && out.status !== 'deferred') { logChange_(ctx, ch, out.target, out.status, out.message); ctx.done[String(ch.id)] = { received_at: new Date(), result: out.status }; }
   var res = { id: ch.id, status: out.status, message: out.message || '' }; if (out.sheet) res.sheet = out.sheet;
   return res;
 }
@@ -1093,6 +1296,19 @@ var HANDLERS = {
     return { status: 'applied', target: id, message: 'Added recipe ' + d.name + ' as ' + id + '.' };
   },
 
+  // 6.5: kind or "also good for breakfast" changed on a recipe sheet. data = {id, kind, alsoBreakfast}
+  // An own recipe (u_…) the sheet hasn't got yet answers deferred: the phone keeps it and sends it again after recipe.add.
+  'recipe.kind': function (ctx, d, base) {
+    var raw = String(d.id || ''), id = resolve_(ctx, raw), r = ctx.recRow[id], kind = String(d.kind || '').toLowerCase();
+    if (!r) return /^u_/.test(raw) ? { status: 'deferred', target: raw, message: raw + ' isn\'t in the sheet yet. Sent again after the recipe is added.' }
+      : { status: 'rejected', target: id, message: 'No recipe ' + (id || '(no id)') + ' in the sheet.' };
+    if (KINDS.indexOf(kind) < 0) return { status: 'rejected', target: id, message: 'Kind "' + d.kind + '" isn\'t one of ' + KINDS.join(', ') + '.' };
+    if (base && base.changed && sheetEditedSince_(ctx.recipes, r, base.changed)) return { status: 'conflict', target: id, message: r.name + ' was changed in the sheet. The sheet\'s kind was kept.', sheet: { kind: kindOf_(cell_(ctx.recipes, r, 'kind')), alsoBreakfast: truthy_(cell_(ctx.recipes, r, 'also_breakfast')) } };
+    ctx.recipes.set(r._row, 'kind', kind); ctx.recipes.set(r._row, 'also_breakfast', kind === 'main' && !!d.alsoBreakfast);
+    stampRow_(ctx.recipes, r._row);
+    return { status: 'applied', target: id, message: (str_(r.name) || id) + ' is now a ' + kind + (kind === 'main' && d.alsoBreakfast ? ', also good for breakfast' : '') + '.' };
+  },
+
   // The phone changed a recipe that is already in the sheet (its own recipe, or its "my version").
   // data = the full recipe with its sheet id; base = {changed: the last_changed the phone saw}
   'recipe.update': function (ctx, d, base) {
@@ -1221,6 +1437,7 @@ function writeRecipe_(ctx, id, d, extra, existing) {
 function onEdit(e) {
   try {
     var sh = e.range.getSheet(), name = sh.getName(), key = norm_(name), r0 = e.range.getRow(), n = e.range.getNumRows();
+    if (key === norm_(SHEETS.pairings)) { pairingEdited_(sh, r0, n); return; }
     if ([SHEETS.items, SHEETS.recipes, SHEETS.ingredients, SHEETS.offers, SHEETS.nodes, SHEETS.favorites].map(norm_).indexOf(key) < 0) return;
     var lastCol = sh.getLastColumn(), headers = sh.getRange(1, 1, 1, lastCol).getValues()[0].map(norm_);
     if (key === norm_(SHEETS.ingredients)) {  // an ingredient change counts as a change to its recipe
@@ -1272,6 +1489,7 @@ function onOpen() {
     .addItem('Add starter household items', 'menuAddHousehold')
     .addItem('Suggest food types', 'menuSuggestFoodTypes')
     .addItem('Fetch photos and steps', 'menuFetchSteps')
+    .addItem('Suggest pairings', 'menuSuggestPairings')
     .addSeparator()
     .addItem('Set the app key', 'menuSetKey')
     .addItem('Show the app address and key', 'menuShowAddress')
@@ -1287,7 +1505,8 @@ function menuCheck() {
   sh.getRange(1, 1, rows.length, 2).setValues(rows); sh.setFrozenRows(1); sh.setColumnWidth(2, 900); sh.getRange(1, 1, 1, 2).setFontWeight('bold');
   if (!b.errors.length) currentCatalog_();
   ui.alert(b.errors.length ? b.errors.length + ' error(s) and ' + b.warnings.length + ' warning(s). The app keeps using the last good catalog until the errors are fixed. See the "Data check" sheet.'
-    : 'No errors. ' + b.warnings.length + ' warning(s) are listed in the "Data check" sheet. ' + (b.catalog ? b.catalog.items.length + ' items, ' + b.catalog.recipes.length + ' active recipes.' : ''));
+    : 'No errors. ' + b.warnings.length + ' warning(s) are listed in the "Data check" sheet. ' + (b.catalog ? b.catalog.items.length + ' items, ' + b.catalog.recipes.length + ' active recipes (' +
+      KINDS.map(function (k) { return (kindCounts_(b.catalog.recipes)[k] || 0) + ' ' + k; }).join(', ') + ').' : ''));
 }
 
 /** Meal Prep > Set the app key: stores the secret key the app must send. Leave blank to make one up. */
@@ -1335,6 +1554,10 @@ function menuSetup() {
   // Learning step 4: the Learned tab
   if (!sheet_(SHEETS.learned)) { ensureSheet_(SHEETS.learned, LEARNED_HEADERS); notes.push('Added the Learned tab.'); }
   var lk = colRange_(SHEETS.learned, 'key'); if (lk) lk.setNumberFormat('@'); var lv = colRange_(SHEETS.learned, 'value'); if (lv) lv.setNumberFormat('@');
+  // Version 6.5: recipe kinds, also good for breakfast, and the Pairings tab
+  ensureColumns_(SHEETS.recipes, RECIPE_KIND_HEADERS, notes);
+  if (!sheet_(SHEETS.pairings)) { ensureSheet_(SHEETS.pairings, PAIRING_HEADERS); notes.push('Added the Pairings tab. Meal Prep > Suggest pairings proposes rows for it.'); }
+  ensurePairingLists_(); syncSides_();
 
   // Each rule: [sheet, column, kind, source, help]. kind "list" = dropdown from a range ([sheet, column] of the source).
   // A rule whose column or source can't be found is skipped and named in the message, instead of stopping the setup.
@@ -1373,7 +1596,11 @@ function menuSetup() {
     [IT, 'group', 'values', HOUSE_GROUPS, 'Household items only: kitchen, paper, cleaning or personal. Leave blank for food.'],
     [IT, 'units_per_package', 'formula', function (c) { return '=OR(' + c + '="",AND(ISNUMBER(' + c + '),' + c + '>=1,INT(' + c + ')=' + c + '))'; }, 'Household items: how many rolls, bags or bottles come in one package (a whole number).'],
     [IT, 'typical_days', 'gt', 0, 'Household items: about how many days one unit lasts.'],
-    [IT, 'scales_with_people', 'list', YN, 'Household items: Y if more people use it up faster.']
+    [IT, 'scales_with_people', 'list', YN, 'Household items: Y if more people use it up faster.'],
+    [RE, 'kind', 'values', KINDS, 'main, side, dessert, drink, snack or sauce. Blank is main.'],
+    [RE, 'also_breakfast', 'checkbox', null, 'Ticked: this main also shows up when choosing a breakfast.'],
+    [SHEETS.pairings, 'main_name', 'list', [SHEETS.pairLists, 'mains'], 'Pick a main. Its id fills in by itself.'],
+    [SHEETS.pairings, 'side_name', 'list', [SHEETS.pairLists, 'sides'], 'Pick a side. Its id fills in by itself.']
   ];
   var n = 0, skipped = [];
   specs.forEach(function (x) {
@@ -1388,6 +1615,7 @@ function menuSetup() {
     else if (x[2] === 'gte') b.requireNumberGreaterThanOrEqualTo(x[3]);
     else if (x[2] === 'gt') b.requireNumberGreaterThan(x[3]);
     else if (x[2] === 'date') b.requireDate();
+    else if (x[2] === 'checkbox') b.requireCheckbox();
     else if (x[2] === 'formula') { var letter = target.getA1Notation().replace(/\d+.*$/, ''); b.requireFormulaSatisfied(x[3](letter + '2', '$' + letter + '$2:$' + letter)); }
     if (x[4]) b.setHelpText(x[4]);
     try { target.setDataValidation(b.build()); n++; } catch (err) { skipped.push(x[0] + ' > ' + x[1] + ' (' + err.message + ')'); }
