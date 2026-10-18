@@ -198,6 +198,7 @@
           </div>
         </sc-if>
         <div style="position:relative">
+          <sc-if value="{{ galHasDots }}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="display:flex;justify-content:center;align-items:center;gap:14px;padding:2px 0 14px;min-height:20px"><sc-for list="{{ galDots }}" as="d" hint-placeholder-count="4"><span style="flex:none;width:{{ d.w }};height:{{ d.w }};border-radius:50%;background:{{ d.bg }};box-shadow:{{ d.ring }}"></span></sc-for></div></sc-if>
           <button onClick="{{ galPrev }}" aria-label="Previous day" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0">Previous day</button>
           <button onClick="{{ galNext }}" aria-label="Next day" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0">Next day</button>
           <div ref="{{ galRef }}" onScroll="{{ galScroll }}" onTouchStart="{{ galTS }}" onTouchMove="{{ galTM }}" onTouchEnd="{{ galTE }}" onTouchCancel="{{ galTE }}" style="display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;margin:0 -18px;padding:0 18px 4px;scroll-padding:0 18px;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch">
@@ -317,7 +318,6 @@
           </div>
             </div>
           </div>
-          <sc-if value="{{ galHasDots }}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="display:flex;justify-content:center;align-items:center;gap:6px;padding-top:10px"><sc-for list="{{ galDots }}" as="d" hint-placeholder-count="4"><span style="width:{{ d.w }};height:6px;border-radius:99px;background:{{ d.bg }}"></span></sc-for></div></sc-if>
         </div>
         </div></sc-if>
       </div>
@@ -2040,6 +2040,36 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{ esOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:rgba(21,32,43,.55);display:flex;flex-direction:column;justify-content:flex-end;z-index:26">
+      <div onClick="{{ esClose }}" style="flex:1;min-height:40px"></div>
+      <div style="background:var(--surface);color:var(--ink);border-radius:24px 24px 0 0;width:100%;max-height:88%;display:flex;flex-direction:column">
+        <div style="padding:16px 18px 10px;display:flex;align-items:flex-start;gap:10px">
+          <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">{{ esKicker }}</div><h2 style="font:700 22px/1.2 'Bricolage Grotesque',sans-serif;margin:2px 0 0">{{ esTitle }}</h2><div style="font-size:13.5px;color:var(--muted);margin-top:4px">{{ esSub }}</div></div>
+          <button onClick="{{ esClose }}" aria-label="Close" style="flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px">×</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:0 18px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <sc-for list="{{ esActs }}" as="a" hint-placeholder-count="4"><button onClick="{{ a.go }}" style="min-height:60px;border-radius:14px;border:1px solid {{ a.border }};background:{{ a.bg }};color:{{ a.color }};text-align:left;padding:8px 12px"><span style="display:block;font-weight:600;font-size:15px">{{ a.label }}</span><span style="display:block;font-size:12.5px;color:{{ a.subColor }}">{{ a.sub }}</span></button></sc-for>
+          </div>
+          <sc-if value="{{ esHasRecipes }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">{{ esRecTitle }}</div>
+              <sc-for list="{{ esRecipes }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);min-height:60px;padding:6px 0">
+                  <button onClick="{{ r.open }}" style="flex:1;min-width:0;text-align:left;border:0;background:transparent;color:var(--ink);padding:0"><span style="display:block;font-weight:600;font-size:15px">{{ r.name }} ›</span><span style="display:block;font-size:12.5px;color:var(--muted);line-height:1.35">{{ r.meta }}</span></button>
+                  <sc-if value="{{ r.notOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ r.add }}" style="flex:none;height:40px;padding:0 14px;border-radius:10px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:14px">Add</button></sc-if>
+                  <sc-if value="{{ r.on }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font-size:13px;font-weight:600;color:var(--good-ink)">On menu</span></sc-if>
+                </div>
+              </sc-for>
+              <sc-if value="{{ esHasMore }}" hint-placeholder-val="{{ false }}"><button onClick="{{ esShowMore }}" style="margin-top:4px;min-height:40px;padding:0;border:0;background:transparent;color:var(--primary-ink);font-weight:600;font-size:14px;text-decoration:underline">Show more meals</button></sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ esNoRecipes }}" hint-placeholder-val="{{ false }}"><div style="font-size:13.5px;color:var(--muted)">No recipes in your library use this yet.</div></sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
   <sc-if value="{{ hadOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:absolute;inset:0;background:rgba(21,32,43,.55);display:flex;flex-direction:column;justify-content:flex-end;z-index:30">
       <div onClick="{{ hadClose }}" style="flex:1"></div>
@@ -2786,7 +2816,7 @@ function checkCat(c){if(!c||typeof c!=='object')return 'Not a catalog file.';if(
   if(!Array.isArray(c.items)||!Array.isArray(c.recipes))return 'It has no items or recipes.';const I=new Set(c.items.map(x=>x.id));
   for(const r of c.recipes)for(const x of r.ing)if(!I.has(x[0])&&!isNodeId(x[0]))return `Recipe ${r.id} uses unknown item ${x[0]}.`;return null;}
 function fromMaster(M){const d=String(M.updatedAt||'').slice(0,10);return {schemaVersion:1,catalogVersion:M.catalogVersion||'built-in',builtAt:M.updatedAt,items:M.prices.map(p=>({...p,priceDate:d})),recipes:M.recipes,aliases:[]};}
-const OVERLAYS=['dialog','conflict','hhChanged','memEd','whoSheet','essSheet','calDay','calRange','treePick','itemCard','rowSheet','histOpen','stapleSheet','budgetSheet','itemSheet','recEd','webRec','hadFor','daySheet','sheet','pantryOpen','rcOpen','askTrip','startOpen','storeOpen','sub'];
+const OVERLAYS=['esSheet','dialog','conflict','hhChanged','memEd','whoSheet','essSheet','calDay','calRange','treePick','itemCard','rowSheet','histOpen','stapleSheet','budgetSheet','itemSheet','recEd','webRec','hadFor','daySheet','sheet','pantryOpen','rcOpen','askTrip','startOpen','storeOpen','sub'];
 const UNDO_KEYS_SKIP=['history','redo','changeCount','lastExportAt','snoozeUntil','receiptDraft','lastCatalogVersion','catImport','calSeq','stapleNote','mig51','sheetLink','syncLog','idSwaps','lastStore'];
 const HIST_KEYS=LAYER_KEYS.filter(k=>!UNDO_KEYS_SKIP.includes(k));
 const CLAUDE_MSG="Read this Aldi receipt photo. Reply with plain lines only, no commentary. One line per item in the form: description, quantity, line total, item number (for example: All Purpose Flour, 1, 1.95, 382147). The item number is the 6-digit number at the far left of the item line; leave it blank if there is none. Keep each description exactly as printed. For weighed items, put the net weight in lb as the quantity (the (N) line). Ignore store, card, reference and transaction numbers. Leave out tax, subtotal and payment lines. End with one line: TOTAL,,amount";
@@ -3654,7 +3684,7 @@ class Component extends DCLogic {
   saveRec(andTrip){const S=this.state,e=S.recEd;if(!e)return;const b=this.recBuild();if(b.err){this.flash(b.err);return;}const r=b.r,at=new Date().toISOString();
     const reopen=id=>e.back&&e.back.rid===id?e.back:{rid:id,serv:S.people*this.multFor({...r,id}),kicker:`Library · ${ML[r.meal]}`};
     if(e.mode==='web'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
-      const d=e.d,RC=window.RecipeCore;const nr={...r,id,source:'From the web',created:at,editedAt:at,...(d.basics&&d.basics.length?{basics:d.basics}:{}),...(d.photo?{photo:d.photo}:{}),...(d.steps&&d.steps.length?{steps:d.steps}:{})};
+      const d=e.d,RC=window.RecipeCore;const nr={...r,id,source:'From the web',created:at,editedAt:at,...(d.basics&&d.basics.length?{basics:d.basics}:{})};
       // Items the person picked for unmatched or wrong lines are used first next time.
       const LC=window.LearnCore,lc=LC&&LC.clone?LC.clone(S.learn):null;const ra={...(S.recipeAliases||{})};for(const x of d.ings)if(x.web&&x.web.picked&&x.iid){const k=RC.learnKey(x.web.item);if(!k)continue;ra[k]=x.iid;if(lc)LC.record(lc,'name','recipe:'+k,'@'+x.iid,'user-edit');}
       const obp=nr.keeper&&this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
@@ -3664,7 +3694,7 @@ class Component extends DCLogic {
     if(e.mode==='new'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
       const nr={...r,id,source:'My recipe',created:at,editedAt:at};const obp=this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
       this.commit(`Added recipe ${r.name}`,{ownRecipes:[...(S.ownRecipes||[]),nr],recEd:null,sheet:reopen(id),...obp});this.flash(`Saved ${r.name}. It's in the library.`);return;}
-    if(e.mode==='own'){const was=(S.ownRecipes||[]).find(x=>x.id===e.id)||{};const ownRecipes=(S.ownRecipes||[]).map(x=>{if(x.id!==e.id)return x;const y={...x,...r,editedAt:at};if((x.link||'')!==(r.link||'')){delete y.photo;delete y.steps;}return y;});const nr=ownRecipes.find(x=>x.id===e.id);
+    if(e.mode==='own'){const was=(S.ownRecipes||[]).find(x=>x.id===e.id)||{};const ownRecipes=(S.ownRecipes||[]).map(x=>x.id===e.id?{...x,...r,editedAt:at}:x);const nr=ownRecipes.find(x=>x.id===e.id);
       // A web recipe that was kept on the phone goes to the sheet when it's marked as a keeper.
       const ob=!this.linked()||!nr||(nr.fromWeb&&!nr.keeper)?null:nr.fromWeb&&!was.keeper?[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,e.id))]:this.obPatch(S.outbox,'recipe.add',e.id,()=>this.recData(nr,e.id));
       this.commit(`Edited ${r.name}`,{ownRecipes,recEd:null,sheet:reopen(e.id),...(ob?{outbox:ob}:{})});this.flash(`Saved ${r.name}`);return;}
@@ -3745,7 +3775,7 @@ class Component extends DCLogic {
     return {P,fuzzy:t=>fuzzy(t,items),learned:this.state.recipeAliases||{},alias:t=>{const a=this.aliasOf(t);return a&&a!=='__ignore'&&P[a]?a:null;}};}
   openWebEditor(rec){const S=this.state,RC=window.RecipeCore,P=this.P();const b=RC.build(rec.ings,this.webMatchOpts());const total=Math.max(1,Math.round(+rec.total||30));
     const d={name:rec.name||'',meal:MEALS.includes(rec.meal)?rec.meal:(S.libMeal||'dinner'),serv:Math.max(1,Math.min(24,Math.round(+rec.serv||4))),total:String(total),hands:String(Math.min(total,Math.round(+rec.hands||15))),
-      keeps:3,reheats:true,tags:(rec.tags||[]).filter(t=>TAG_ORDER.includes(t)),link:rec.link||'',fromWeb:true,keeper:false,basics:b.basics,photo:rec.photo||'',steps:rec.steps||[],
+      keeps:3,reheats:true,tags:(rec.tags||[]).filter(t=>TAG_ORDER.includes(t)),link:rec.link||'',fromWeb:true,keeper:false,basics:b.basics,
       ings:b.rows.map(r=>({k:uid(),iid:r.iid,...(()=>{const v=RC.display(r.q,P[r.iid]);return {q:v.q,u:v.u&&P[r.iid]&&v.u!==P[r.iid].unit?v.u:undefined};})(),aw:r.text,o:!!r.optional,web:{item:r.item,how:r.how,cand:((r.cands||[]).find(c=>c.iid&&c.iid!==r.iid&&P[c.iid]&&c.sc>=.6)||{}).iid||null}}))};
     this.setState({webRec:null,recEd:{mode:'web',id:null,d,arm:null,dirty:true,back:null},sheet:null});}
   webPick(k,iid){const P=this.P(),RC=window.RecipeCore;this.setState(s=>{if(!s.recEd)return null;const d=s.recEd.d;
@@ -4083,7 +4113,7 @@ class Component extends DCLogic {
   recBase(id){const c=this.cat&&this.cat.recipes.find(x=>x.id===id);return c?{changed:c.changed||null}:{};}
   itemData(u,nl){const o={};for(const k of ['id','name','cat','pack','unit','pkg','price','src','priceDate','staple','storage','fridge','freezer','pantry','soldBy','family','tracking','aldi'])o[k]=u[k]??null;o.nums=Object.keys(nl||{}).filter(n=>!n.includes(':')&&nl[n]===u.id);o.brand=u.brand||'';o.flavor=u.flavor||'';o.unsorted=!!u.unsorted;o.node=u.node||null;o.store=u.store0||'aldi';
     const oe=(this.state.offerEdits||{})[u.id]||{};o.offers=Object.keys(oe).filter(s=>!oe[s].removed).map(s=>({store:s,price:oe[s].price,pack:oe[s].pack||null,unit:oe[s].unit||u.unit,pkg:oe[s].pkg||u.pkg,nums:Object.keys(nl||{}).filter(k=>k.startsWith(s+':')&&nl[k]===u.id).map(k=>splitKey(k)[1]),priceDate:oe[s].priceDate||null,src:oe[s].src||'edited'}));return o;}
-  recData(r,id){const o={id:id||null};for(const k of ['meal','name','tags','serv','ing','total','hands','keeps','reheats','link','notes'])o[k]=r[k]??null;if(r.photo)o.photo=r.photo;if(r.steps&&r.steps.length)o.steps=r.steps;if(!id)delete o.id;return o;}
+  recData(r,id){const o={id:id||null};for(const k of ['meal','name','tags','serv','ing','total','hands','keeps','reheats','link','notes'])o[k]=r[k]??null;if(!id)delete o.id;return o;}
   recEditChg(orig,r){if(/^my (recipe|version)$/i.test(orig.source||''))return this.chg('recipe.update',this.recData({...orig,...r},orig.id),{changed:orig.changed||null});
     return this.chg('recipe.edit',{orig:orig.id,recipe:this.recData({...orig,...r})},this.recBase(orig.id+'_mine'));}
   obPatch(ob,type,id,fn){const i=(ob||[]).findIndex(c=>c.type===type&&c.data&&c.data.id===id);if(i<0)return null;const out=[...ob];out[i]={...out[i],data:fn(out[i].data)};return out;}
@@ -4751,6 +4781,23 @@ class Component extends DCLogic {
       const rc=(this.state.receipts||[]).slice(-1)[0];if(keepImg&&rc)idbSet('rcimg:'+rc.id,keepImg).catch(()=>{});
       const n=fin.filter(r=>r.iid&&r.iid!=='__ignore').reduce((a,r)=>a+(r.wt?1:Math.max(1,+r.count||1)),0);
       this.flash(`Receipt added: ${n} items${made.length?`, ${made.length} new`:''}. Prices updated: ${stats.changed} changed, ${stats.sales} sale${stats.sales===1?'':'s'}.`);});}
+  esVals(){const S=this.state,es=S.esSheet;if(!es)return {esOpen:false,esRecipes:[],esActs:[]};const P=this.P(),R=this.R(),t0=this.today();const close=()=>this.setState({esSheet:null});const after=fn=>()=>{fn();close();};
+    const onMenu=new Set(S.menu.filter(i=>i.status==='open').map(i=>i.rid));const tpe=m=>this.tpe(m||'dinner');
+    if(es.lid){const l=S.leftovers.find(z=>z.lid===es.lid);const r=l&&R[l.rid];if(!r)return {esOpen:false,esRecipes:[],esActs:[]};const dl=diffD(addD(l.on,meta(r).keeps),t0);const F=window.HouseCore.fracText;
+      return {esOpen:true,esClose:close,esKicker:'Leftover',esTitle:shortName(r.name),esSub:`${F(l.portions)} portion${l.portions===1?'':'s'} · ${dl<0?`eat-by was ${mdDate(addD(l.on,meta(r).keeps))}`:dl===0?'eat by today':'eat by tomorrow'}`,
+        esActs:[{label:'Ate it',sub:'All of it',primary:true,go:after(()=>this.eatLeft(l.lid,l.portions))},{label:'Ate some',sub:'About half',go:after(()=>this.eatLeft(l.lid,Math.max(.25,Math.round(l.portions*2)/4)))},{label:'Keep 1 more day',sub:'It still looks fine',go:after(()=>this.calMoveLeft([l.lid],1))},{label:'Toss',sub:'Throw it out',danger:true,go:after(()=>this.tossLeft([l.lid]))}].map(a=>({...a,bg:a.primary?'var(--primary)':'var(--surface)',color:a.primary?'var(--on-accent)':a.danger?'var(--bad-ink)':'var(--ink)',subColor:a.primary?'var(--on-accent-muted)':'var(--muted)',border:a.primary?'var(--primary)':a.danger?'var(--bad-line)':'var(--line)'})),
+        esHasRecipes:false,esRecipes:[],esRecTitle:''};}
+    const id=es.id,p=P[id];if(!p)return {esOpen:false,esRecipes:[],esActs:[]};const bs=this.batches(id);const bids=bs.map(b=>b.bid);const dl=this.invDaysLeft(id);const q=bs.reduce((a,b)=>a+b.q,0);
+    const acts=[{label:'Used it up',sub:'None left',primary:true,go:after(()=>this.calAte(id,bids))},{label:'Had some',sub:'Some is left',go:()=>this.setState({esSheet:null,hadFor:id})},
+      {label:'Still good',sub:'Keep 3 more days',go:after(()=>this.calMove(id,bids,3))},...(bs.some(b=>!b.frozen)?[{label:'Freeze it',sub:'Keeps much longer',go:after(()=>this.calFreeze(id,bids.filter(x=>!bs.find(b=>b.bid===x).frozen)))}]:[]),
+      {label:'Toss',sub:'Throw it out',danger:true,go:after(()=>this.calToss(id,bids))}].map(a=>({...a,bg:a.primary?'var(--primary)':'var(--surface)',color:a.primary?'var(--on-accent)':a.danger?'var(--bad-ink)':'var(--ink)',subColor:a.primary?'var(--on-accent-muted)':'var(--muted)',border:a.primary?'var(--primary)':a.danger?'var(--bad-line)':'var(--line)'}));
+    const sc=S.recipes.filter(r=>r.ing.some(([i])=>i===id)).map(r=>{const pe=tpe(r.meal);let have=0,miss=0,cost=0;for(const [iid,qq] of r.ing){const pp=P[iid];if(!pp||pp.staple||iid===id)continue;const need=qq*pe;if(this.qty(iid)>=need-1e-6)have++;else{miss++;cost+=pp.price*Math.max(1,Math.ceil((need-this.qty(iid))/(pp.pkg||1)));}}
+      const use=(r.ing.find(([i])=>i===id)||[])[1]*pe;return {r,have,miss,cost:r2(cost),use,on:onMenu.has(r.id)};}).sort((a,b)=>(b.on-a.on)||(a.miss-b.miss)||(b.use-a.use)).slice(0,S.esMore?12:5);
+    return {esOpen:true,esClose:close,esKicker:dl<0?'Expired':dl===0?'Use today':`Use within ${dl} day${dl===1?'':'s'}`,esTitle:p.name,esSub:`${fmtQ(q,p.unit)} on hand · use by ${mdDate(bs.map(b=>b.use).sort()[0])}`,esActs:acts,
+      esHasRecipes:sc.length>0,esRecTitle:'Meals that use it',esNoRecipes:!sc.length,
+      esRecipes:sc.map(x=>({name:x.r.name,meta:`${ML[x.r.meal]} · uses ${fmtQ(Math.min(x.use,q),p.unit)} · ${x.miss?`needs ${x.miss} more item${x.miss===1?'':'s'}, about ${money(x.cost)}`:'everything else is in your kitchen'}`,on:x.on,notOn:!x.on,
+        add:()=>{this.addToMenu(x.r.id,this.multFor(x.r));},open:()=>this.setState({esSheet:null,sheet:{rid:x.r.id,serv:tpe(x.r.meal),kicker:`Uses ${shortName(p.name).toLowerCase()}`}})})),
+      esHasMore:!S.esMore&&S.recipes.filter(r=>r.ing.some(([i])=>i===id)).length>5,esShowMore:()=>this.setState({esMore:true})};}
   // ---------- 6.2 ----------
   mainStore(){return this.state.mainStore||'aldi';}
   storeList(){const S=this.state;const base=(this.cat&&this.cat.stores)||DEFAULT_STORES;const gone=S.storeGone||{};return [...base,...(S.ownStores||[])].filter(s=>!gone[s.id]).map(s=>({...s,name:this.storeName(s.id)}));}
@@ -4799,7 +4846,7 @@ class Component extends DCLogic {
     const list=noTrip||ended?[]:dayCards;const gi=Math.min(S.galDate===t0?(S.galIdx||0):0,list.length);const pull=S.galPull||0;const ready=H.pullReady(pull);
     const rm=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);const past=this.pastRows(t0,x.R);
     const galDays=list.map((dc,i)=>{const near=Math.abs(i-gi)<=1;const d=days[i];return {...dc,near,far:!near,isToday:!!d&&d.k===t0,pos:`Day ${i+1} of ${list.length}`,hasPast:i===0&&past.length>0,pastRows:i===0?past:[]};});
-    const dots=[...list.map((dc,i)=>({done:!!days[i]&&days[i].meals.length>0&&days[i].meals.every(m=>m.done),i})),{i:list.length}].map(d=>({w:d.i===gi?'18px':'6px',bg:d.i===gi?'var(--primary-ink)':d.done?'var(--good)':'var(--line-strong)'}));
+    const dots=[...list.map((dc,i)=>({done:!!days[i]&&days[i].meals.length>0&&days[i].meals.every(m=>m.done),i})),{i:list.length}].map(d=>({w:d.i===gi?'14px':'11px',ring:d.i===gi?'0 0 0 3px var(--primary-tint, rgba(70,110,170,.25))':'none',bg:d.i===gi?'var(--primary-ink)':d.done?'var(--good)':'var(--line-strong)'}));
     const nd=Math.max(1,diffD(this.nextShopDay(x.tEnd),x.tEnd));const nb=r2((S.budget||0)*nd/7);const carry=Math.min(S.budget||0,r2(x.TB-x.spent-(x.shop.total+x.stockCost)));
     const dueN=Object.keys(S.inv||{}).filter(id=>{const d=this.invDaysLeft(id);return d!=null&&d<=diffD(x.tEnd,t0)+2;}).length;const lo=(S.leftovers||[]).length;
     const carryLine=[dueN?`${dueN} item${dueN===1?'':'s'} to use soon`:'',lo?`${lo} leftover${lo===1?'':'s'}`:''].filter(Boolean).join(' · ');
@@ -4912,7 +4959,7 @@ class Component extends DCLogic {
     const base={scrollRef:this.scrollRef,isDays:S.tab==='days',isShop:S.tab==='shop',isKitchen:S.tab==='kitchen',isMore:S.tab==='more',isMenu:S.tab==='menu',goMenu:go('menu'),
       tabs:[['days','Days'],['menu','Menu'],['shop','Groceries'],['kitchen','At home'],['more','Settings']].map(([k,l])=>({key:k,iKit:k==='kitchen',badge:'',hasBadge:false,label:l,go:go(k),color:S.tab===k?'var(--ink)':'var(--faint)',iDays:k==='days',iMenu:k==='menu',iShop:k==='shop',iMore:k==='more',bar:S.tab===k?'var(--primary-ink)':'transparent',dot:k==='more'&&(daysLeft<=3||(S.ready&&((S.changeCount||0)>=30||(S.lastExportAt?Date.now()-new Date(S.lastExportAt).getTime()>7*DAY:(S.history||[]).length>0))))})),
       toastOn:!!S.toast,toast:S.toast,goShop:go('shop'),goMore:go('more')};
-    if(!S.ready)return {...base,galDays:[],galDots:[],pcLines:[],eveChips:[],eveAmts:[],homeSegs:[],storeChips:[],inStoreChips:[],startStoreChips:[],suMembers:[],suStores:[],suPreview:[],rsBoxes:[],storeRows:[],noticeRows:[],hdLine:'',pcKicker:'',pcTitle:'',pcBtn:'',stockRows:[],extraChips:[],lowStock:[],habitRows:[],hadOpts:[],steps:[],startOpts:[],setupDots:[],rcTripOpts:[],rcRows:[],rcTabs:[],rcStores:[],rcNumOpts:[],icOffers:[],icAddStores:[],tpRows:[],tpCrumbs:[],isRows:[],isCats:[],isUnits:[],...this.chromeVals(),histSheetRows:[],budgetLines:[],stOpts:[],stGroups:[],suRows:[],suFracs:[],groMetrics:[],pantryGroups:[],uRows:[],uMerges:[],snapRows:[],tripChips:[],makeNowRows:[],...EMPTY_MENU,rcLines:[],receiptRows:[],histRows:[],ckRows:[],notOpts:[],pickGroups:[],patternDays:[],daysTitle:'Loading…',daysSub:'',importRows:[],invRows:[],quickRows:[],eatSoon:[],leftCheckRows:[],pantryGroups:[],oneAwayRows:[],horizonOpts:[],dayCards:[],poolGroups:[],shopGroups:[],lowRows:[],boughtRows:[],addRows:[],leftRows:[],readyRows:[],invGroups:[],stapleRows:[],shopDays:[],cycle:[],priceRows:[],sh:{facts:[],tags:[],ings:[]},viewSeg:[],calModeSeg:[],calCells:[],calLayerChips:[],calWeekdays:[],rgDays:[],rgGroups:[],rgTrips:[],rgGroupBy:[],memRows:[],essGroups:[],essFilters:[],essAsks:[],esGroups:[],esAGroups:[],whoRows:[],whoHead:[],whoTimes:[],meColors:[],meAges:[],meFine:[],meGrid:[],meGridHead:[],meLists:[],hcOpts:[],edCycles:[],edOwners:[],cdSpoil:[],cdEss:[],cdRc:[],cdMeals:[],cdAvs:[],crSecs:[],costRows:[],isPlanView:true};
+    if(!S.ready)return {...base,galDays:[],galDots:[],esRecipes:[],esActs:[],pcLines:[],eveChips:[],eveAmts:[],homeSegs:[],storeChips:[],inStoreChips:[],startStoreChips:[],suMembers:[],suStores:[],suPreview:[],rsBoxes:[],storeRows:[],noticeRows:[],hdLine:'',pcKicker:'',pcTitle:'',pcBtn:'',stockRows:[],extraChips:[],lowStock:[],habitRows:[],hadOpts:[],steps:[],startOpts:[],setupDots:[],rcTripOpts:[],rcRows:[],rcTabs:[],rcStores:[],rcNumOpts:[],icOffers:[],icAddStores:[],tpRows:[],tpCrumbs:[],isRows:[],isCats:[],isUnits:[],...this.chromeVals(),histSheetRows:[],budgetLines:[],stOpts:[],stGroups:[],suRows:[],suFracs:[],groMetrics:[],pantryGroups:[],uRows:[],uMerges:[],snapRows:[],tripChips:[],makeNowRows:[],...EMPTY_MENU,rcLines:[],receiptRows:[],histRows:[],ckRows:[],notOpts:[],pickGroups:[],patternDays:[],daysTitle:'Loading…',daysSub:'',importRows:[],invRows:[],quickRows:[],eatSoon:[],leftCheckRows:[],pantryGroups:[],oneAwayRows:[],horizonOpts:[],dayCards:[],poolGroups:[],shopGroups:[],lowRows:[],boughtRows:[],addRows:[],leftRows:[],readyRows:[],invGroups:[],stapleRows:[],shopDays:[],cycle:[],priceRows:[],sh:{facts:[],tags:[],ings:[]},viewSeg:[],calModeSeg:[],calCells:[],calLayerChips:[],calWeekdays:[],rgDays:[],rgGroups:[],rgTrips:[],rgGroupBy:[],memRows:[],essGroups:[],essFilters:[],essAsks:[],esGroups:[],esAGroups:[],whoRows:[],whoHead:[],whoTimes:[],meColors:[],meAges:[],meFine:[],meGrid:[],meGridHead:[],meLists:[],hcOpts:[],edCycles:[],edOwners:[],cdSpoil:[],cdEss:[],cdRc:[],cdMeals:[],cdAvs:[],crSecs:[],costRows:[],isPlanView:true};
     const P=this.P(),R=this.R(),t0=this.today(),ppl=`${S.people} ${S.people===1?'person':'people'}`;
     const dayTitle=k=>{const d=diffD(k,t0);return d===0?'Today':d===1?'Tomorrow':kdate(k).toLocaleDateString(undefined,{weekday:'long'});};
     // days
@@ -4990,8 +5037,8 @@ class Component extends DCLogic {
       .map(({id,b})=>({name:P[id].name,detail:`${fmtQ(b.q,P[id].unit)} · last touched ${mdDate(b.touched||b.at)}`,same:()=>this.quick(id,b.bid,'same'),less:()=>this.quick(id,b.bid,'less'),gone:()=>this.quick(id,b.bid,'gone')}));
     const useBy={};for(const it of S.menu)if(it.status==='open'&&R[it.rid])for(const [iid] of R[it.rid].ing)if(!useBy[iid])useBy[iid]=R[it.rid];
     const eatSoon=[...invIds.filter(id=>this.invDaysLeft(id)<=2).map(id=>{const dl=this.invDaysLeft(id);return {id,label:P[id].name,when:dl<0?'expired':dl===0?'today':dl===1?'1 day':`${dl} days`,dl};}),
-      ...S.leftovers.filter(l=>R[l.rid]).map(l=>{const dl=diffD(addD(l.on,meta(R[l.rid]).keeps),t0);return {label:`Leftover ${R[l.rid].name.split(' (')[0].toLowerCase()}`,when:dl<0?'past eat-by':dl===0?'today':'tomorrow',dl};}).filter(x=>x.dl<=1)]
-      .sort((a,b)=>a.dl-b.dl).map(x=>{const r=x.id&&useBy[x.id];return {...x,use:r?`Used in ${shortName(r.name)}`:x.id?'Not on your menu yet':'In your kitchen',bg:x.dl<0?'var(--bad-tint)':'var(--warn-tint)',color:x.dl<0?'var(--bad-ink)':'var(--warn-ink)',go:r?()=>this.setState({sheet:{rid:r.id,serv:S.people,kicker:'Uses what you have'}}):()=>this.goHand()};});
+      ...S.leftovers.filter(l=>R[l.rid]).map(l=>{const dl=diffD(addD(l.on,meta(R[l.rid]).keeps),t0);return {lid:l.lid,label:`Leftover ${R[l.rid].name.split(' (')[0].toLowerCase()}`,when:dl<0?'past eat-by':dl===0?'today':'tomorrow',dl};}).filter(x=>x.dl<=1)]
+      .sort((a,b)=>a.dl-b.dl).map(x=>{const r=x.id&&useBy[x.id];return {...x,use:r?`Used in ${shortName(r.name)}`:x.id?'Not on your menu yet':'In your kitchen',bg:x.dl<0?'var(--bad-tint)':'var(--warn-tint)',color:x.dl<0?'var(--bad-ink)':'var(--warn-ink)',go:()=>this.setState({esSheet:x.id?{id:x.id}:{lid:x.lid}})};});
     const leftCheckRows=(S.leftCheck||[]).map(({iid,bid})=>{const p=P[iid];const b=this.batches(iid).find(x=>x.bid===bid);return p&&b?{name:p.name,now:fmtQ(b.q,p.unit),fracs:FRACS.map(([l,f])=>({label:l,pick:()=>this.setFrac(iid,bid,f)}))}:null;}).filter(Boolean);
     const unansweredNeed=Object.keys(need).filter(id=>P[id]&&P[id].staple&&!(S.staplesAnswered||{})[id]);
     const pIds=S.pantryOpen&&S.pantryOpen.ids;
@@ -5044,7 +5091,7 @@ class Component extends DCLogic {
       tripLine:`${mdDate(tStart)} to ${shortDate(tEnd)} · ${money(TB)} budget`,tripEditOpen:!!S.tripEditOpen,tripEditText:S.tripEditOpen?'Done':'Edit',toggleTripEdit:()=>this.setState({tripEditOpen:!S.tripEditOpen,newTripArm:false}),
       handMore:!!S.handMore,handMoreText:S.handMore?'Show less':'More: habits and recipes you could make',toggleHandMore:()=>this.setState({handMore:!S.handMore}),
       showMenuNext:this.phase()==='planning'&&S.menu.length>0,menuNext:()=>{this.save({shopMode:S.tripStart});this.goTab('shop');},
-      ...this.rc63(this.rcVals()),...this.stepVals(this.phase(),shop.buy.length+stockLines.length>0),...this.extrasVals(P,R,t0),...(S.tab==='kitchen'?this.stockVals(P):{stockRows:[]}),...this.startVals(),...this.setupVals(),helpFirst:!!S.helpFirst,
+      ...this.rc63(this.rcVals()),...this.esVals(),...this.stepVals(this.phase(),shop.buy.length+stockLines.length>0),...this.extrasVals(P,R,t0),...(S.tab==='kitchen'?this.stockVals(P):{stockRows:[]}),...this.startVals(),...this.setupVals(),helpFirst:!!S.helpFirst,
       ...(()=>{const ph=this.phase();const T={none:'Next: start a trip',planning:'Next: pick meals, then shop',shopping:'Next: log your receipt'};return {dNextOn:!!T[ph],dNextText:T[ph]||'',dTripChip:ph==='cooking'&&!!S.nextChip,hideTripChip:()=>this.save({nextChip:false})};})(),
       showStocked:false,hideStocked:()=>this.save({stockedNote:null}),
       openReceipt:()=>this.openReceipt(),hasDraft:!!(S.receiptDraft&&S.receiptDraft.rows&&S.receiptDraft.rows.length),draftText:S.receiptDraft&&S.receiptDraft.rows?`Unfinished receipt, ${S.receiptDraft.rows.length} line${S.receiptDraft.rows.length===1?'':'s'}. Tap Log receipt to continue.`:'',rcSub:tripRc.length?`${money(tripRc.reduce((a,r)=>a+r.total,0))} spent on ${tripRc.length} receipt${tripRc.length===1?'':'s'} this trip`:'Enter or paste your Aldi receipt to update the kitchen, prices and spending.',

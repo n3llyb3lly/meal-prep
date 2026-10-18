@@ -12,6 +12,7 @@
 <script src="./tools/meal-core.js"></script>
 <script src="./tools/house-core.js"></script>
 <script src="./tools/receipt-core.js"></script>
+<script src="./tools/cook-core.js"></script>
 <script src="./tools/learn-core.js"></script>
 <script src="./tools/learn-checks.js"></script>
 <title>Meal Prep self-test</title>
@@ -141,6 +142,18 @@ class Component extends DCLogic {
     eq('A brand-only line gets the kind of item',RC.suggest('La Croix 12pk').name,'Sparkling water');
     grp('Receipt prices (WP52)');
     eq('Within 8% updates quietly',RC.classifyPrice(1.89,1.80),'quiet');eq('A drop of 8% or more defaults to sale',RC.classifyPrice(1.50,1.89),'drop');eq('A rise defaults to a new price',RC.classifyPrice(2.10,1.89),'rise');eq('A discount line marks a sale',RC.classifyPrice(1.50,1.89,.39),'sale');
+    }}
+    {const C=window.CookCore;if(C){
+    grp('6.4 units and recipe text (cook-core)');
+    eq('Reads "1½ cups (130 g) onions"',[C.parseAmt('1½ cups (130 g) onions').q,C.parseAmt('1½ cups (130 g) onions').unit],[1.5,'cup']);
+    eq('Reads a range "2 to 3 tbsp butter"',[C.parseAmt('2 to 3 tbsp butter').q,C.parseAmt('2 to 3 tbsp butter').q2],[2,3]);
+    eq('1 cup flour is about 125 g',Math.round(C.convert(1,'cup','g','flour').q),125);
+    eq('2 tbsp butter is ¼ stick',C.convert(2,'tbsp','stick','butter').q,.25);
+    eq('Volume to volume is exact',Math.round(C.convert(1,'cup','ml','milk').q),237);
+    eq('Fractions print nicely',[C.fmt(1.5,'cup'),C.fmt(.33,'cup'),C.fmt(.75,'tsp')],['1½ cups','⅓ cup','¾ tsp']);
+    eq('Steps scale amounts, not times or temperatures',C.scaleText('Add 2 cups broth, simmer 11 minutes at 350°F.',.5),'Add 1 cup broth, simmer 11 minutes at 350°F.');
+    eq('Kinds pick the right unit list',[C.kindOf('whole milk','cup'),C.kindOf('all purpose flour','cup'),C.kindOf('butter','tbsp'),C.kindOf('yellow onion','each')],['liquid','powder','butter','produce']);
+    eq('Protein groups',[C.proteinOf(['boneless chicken thighs']),C.proteinOf(['ground beef']),C.proteinOf(['salmon fillet']),C.proteinOf(['paneer'])],['Chicken','Beef','Fish and seafood','Everything else']);
     }}
     {const H=window.HouseCore;if(H&&H.fracText){
     grp('6.2 portions in words (WP36)');
