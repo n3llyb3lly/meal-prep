@@ -82,6 +82,25 @@ module.exports = [
     expect: { name: 'No-Bake Cheesecake', serv: 8, total: 255, meal: 'snack', tags: ['nocook'],
       lines: { '2 (8 oz) packages cream cheese, softened': ['cream_cheese_block', 16], '1 (14 oz) can sweetened condensed milk': ['condensed_milk', 1], '1 cup heavy cream': ['heavy_cream', 1] } } },
 
+  { site: 'indianhealthyrecipes.com paneer butter masala (WP Recipe Maker, doubled parentheses)', url: 'https://www.indianhealthyrecipes.com/paneer-butter-masala-restaurant-style/',
+    // Lines as the app showed them on Nelson's phone (2026-10-18), plus the rest of the card from the page.
+    html: page('Paneer Butter Masala Recipe (Restaurant Style)', ld({ '@context': 'https://schema.org', '@graph': [{ '@type': 'Recipe', name: 'Paneer Butter Masala Recipe (Restaurant Style)',
+      recipeYield: ['4', '4 servings'], prepTime: 'PT15M', cookTime: 'PT30M', totalTime: 'PT40M', recipeCategory: ['Main'], recipeCuisine: ['Indian'], keywords: 'paneer butter masala, paneer makhani',
+      recipeIngredient: ['1 tablespoon (15 ml) oil', '2 green cardamoms ( (or ¼ to ⅓ tsp ground cardamom, elaichi))', '1 cup (130 grams) onions ((sliced or diced from 1 medium yellow or 2 small red onions))',
+        '1 inch (10 grams) ginger ((peeled &amp; sliced or use 1½ to 2 teaspoon ginger garlic paste, read notes))', '5 to 6 garlic cloves ((large, 12 grams, skip if using ginger garlic paste))',
+        '2 cups (350 grams) tomatoes ((chopped, or up to 420 grams for more tomato flavor))', '15 cashews ((whole, 30 grams, or up to 18, or use almonds))', '1 teaspoon sea salt',
+        '1 teaspoon jaggery or sugar ((optional))', '¾ to 1 teaspoon Kashmiri red chili powder ((or paprika))', '¾ to 1 teaspoon garam masala', '1 teaspoon coriander powder ((optional))',
+        '1 cup (240 ml) water ((cold, for blending))', '2 tablespoons (30 grams) unsalted butter', '1 small bay leaf ((tej patta, optional))', '2 inch Ceylon cinnamon piece ((or 1 inch dalchini, optional))',
+        '3 cloves ((laung, optional))', '250 to 300 grams (9 to 10 oz) paneer ((I cut mine to ¾ inch))', '½ tablespoon kasuri methi (dried fenugreek leaves) ((crushed))',
+        '3 to 4 tablespoons (45 to 60 ml) heavy cream', '1 to 2 tablespoons coriander leaves ((chopped, for garnish))'] }] })),
+    expect: { name: 'Paneer Butter Masala Recipe (Restaurant Style)', serv: 4, total: 40, tags: ['indian'], basics: 2,
+      lines: { '1 tablespoon (15 ml) oil': ['oil', 1], '2 green cardamoms (or ¼ to ⅓ tsp ground cardamom, elaichi)': ['cardamom', 2], '1 cup (130 grams) onions (sliced or diced from 1 medium yellow or 2 small red onions)': ['onion', 0.287],
+        '5 to 6 garlic cloves (large, 12 grams, skip if using ginger garlic paste)': ['garlic', 5.5], '1 teaspoon jaggery or sugar (optional)': ['sugar', 1], '1 teaspoon coriander powder (optional)': ['coriander', 1],
+        '2 tablespoons (30 grams) unsalted butter': ['butter', 2], '1 small bay leaf (tej patta, optional)': ['bay_leaves', 1], '2 inch Ceylon cinnamon piece (or 1 inch dalchini, optional)': ['cinnamon_sticks', 1],
+        '3 cloves (laung, optional)': ['cloves', 3], '½ tablespoon kasuri methi (dried fenugreek leaves) (crushed)': ['kasuri_methi', 1.5], '3 to 4 tablespoons (45 to 60 ml) heavy cream': ['heavy_cream', 0.219],
+        '1 to 2 tablespoons coriander leaves (chopped, for garnish)': ['cilantro', 0.094], '250 to 300 grams (9 to 10 oz) paneer (I cut mine to ¾ inch)': [null, null] },
+      optional: ['1 small bay leaf (tej patta, optional)', '3 cloves (laung, optional)', '1 teaspoon jaggery or sugar (optional)'] } },
+
   { site: 'page with no recipe block', url: 'https://old.example/grandmas-meatloaf.html', noBlock: true,
     html: `<html><head><title>Grandma's Meatloaf</title></head><body><nav>Home | Recipes</nav><h1>Grandma's Meatloaf</h1><p>Serves 6. Ready in 1 hour 10 minutes.</p>
       <p>This is the one my grandma made every Sunday, and it's so good.</p><h2>Ingredients</h2><ul><li>2 lbs ground beef</li><li>1 cup bread crumbs</li><li>2 eggs</li>

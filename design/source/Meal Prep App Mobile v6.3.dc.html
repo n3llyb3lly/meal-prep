@@ -3746,11 +3746,11 @@ class Component extends DCLogic {
   openWebEditor(rec){const S=this.state,RC=window.RecipeCore,P=this.P();const b=RC.build(rec.ings,this.webMatchOpts());const total=Math.max(1,Math.round(+rec.total||30));
     const d={name:rec.name||'',meal:MEALS.includes(rec.meal)?rec.meal:(S.libMeal||'dinner'),serv:Math.max(1,Math.min(24,Math.round(+rec.serv||4))),total:String(total),hands:String(Math.min(total,Math.round(+rec.hands||15))),
       keeps:3,reheats:true,tags:(rec.tags||[]).filter(t=>TAG_ORDER.includes(t)),link:rec.link||'',fromWeb:true,keeper:false,basics:b.basics,
-      ings:b.rows.map(r=>({k:uid(),iid:r.iid,q:r.q!=null?String(r.q):'',aw:r.text,o:!!r.optional,web:{item:r.item,how:r.how,cand:((r.cands||[]).find(c=>c.iid&&c.iid!==r.iid&&P[c.iid]&&c.sc>=.6)||{}).iid||null}}))};
+      ings:b.rows.map(r=>({k:uid(),iid:r.iid,...(()=>{const v=RC.display(r.q,P[r.iid]);return {q:v.q,u:v.u&&P[r.iid]&&v.u!==P[r.iid].unit?v.u:undefined};})(),aw:r.text,o:!!r.optional,web:{item:r.item,how:r.how,cand:((r.cands||[]).find(c=>c.iid&&c.iid!==r.iid&&P[c.iid]&&c.sc>=.6)||{}).iid||null}}))};
     this.setState({webRec:null,recEd:{mode:'web',id:null,d,arm:null,dirty:true,back:null},sheet:null});}
   webPick(k,iid){const P=this.P(),RC=window.RecipeCore;this.setState(s=>{if(!s.recEd)return null;const d=s.recEd.d;
     return {recEd:{...s.recEd,dirty:true,arm:null,d:{...d,ings:d.ings.map(x=>{if(x.k!==k)return x;const p=P[iid];const a=p?RC.amountFor(RC.parseLine(x.aw),p):{q:null};
-      return {...x,iid,u:undefined,q:a.q!=null?String(a.q):'',web:x.web?{...x.web,picked:true}:x.web};})}}};});}
+      const v=RC.display(a.q,p);return {...x,iid,u:v.u&&p&&v.u!==p.unit?v.u:undefined,q:v.q,web:x.web?{...x.web,picked:true}:x.web};})}}};});}
   webPickItem(k){this.openItemSheet('recipe',p=>this.webPick(k,p.id));}
   webRecVals(){const w=this.state.webRec;if(!w)return {wrOpen:false,wrLines:[]};const lines=w.lines||[];const n=lines.filter(l=>l.pick).length;
     return {wrOpen:true,wrStart:w.phase==='start',wrLoading:w.phase==='loading',wrPick:w.phase==='pick',wrUrl:w.url,onWrUrl:ev=>this.webRecSet({url:ev.target.value,err:''}),wrRead:()=>this.webRecFetch(),

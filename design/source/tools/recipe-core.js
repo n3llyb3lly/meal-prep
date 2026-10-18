@@ -38,12 +38,14 @@ const UNIT_WORDS=[
   ['l',/^(liters?|litres?|l)$/],['pint',/^(pints?|pts?\.?)$/],['quart',/^(quarts?|qts?\.?)$/],['gallon',/^(gallons?|gal\.?)$/],
   ['pinch',/^(pinch(es)?)$/],['dash',/^(dash(es)?)$/],['clove',/^(cloves?)$/],['can',/^(cans?|tins?)$/],['jar',/^(jars?)$/],['bottle',/^(bottles?)$/],
   ['pack',/^(packages?|pkgs?\.?|packets?|packs?|boxes|box|bags?|envelopes?|containers?|tubs?|cartons?|blocks?)$/],['bunch',/^(bunch(es)?)$/],['stick',/^(sticks?)$/],
-  ['slice',/^(slices?)$/],['head',/^(heads?)$/],['sprig',/^(sprigs?)$/],['stalk',/^(stalks?|ribs?)$/],['handful',/^(handfuls?)$/],['piece',/^(pieces?)$/],['each',/^(whole|each)$/]];
+  ['slice',/^(slices?)$/],['head',/^(heads?)$/],['sprig',/^(sprigs?)$/],['stalk',/^(stalks?|ribs?)$/],['handful',/^(handfuls?)$/],['piece',/^(pieces?)$/],['inch',/^(inch(es)?|in\.)$/],['each',/^(whole|each)$/]];
 function unitOf(w){const k=String(w||'').toLowerCase();for(const [u,re] of UNIT_WORDS)if(re.test(k))return u;return null;}
 // Metric and large sizes become units MealCore converts: weight in oz, volume in cups/tsp.
 const TO_MC={g:[1/28.3495,'oz'],kg:[35.274,'oz'],ml:[1/4.92892,'tsp'],l:[202.884,'tsp'],pint:[2,'cup'],quart:[4,'cup'],gallon:[16,'cup'],pinch:[1/16,'tsp'],dash:[1/8,'tsp'],stick:null};
 function toMC(q,u){const t=TO_MC[u];return t?{q:q*t[0],unit:t[1]}:{q,unit:u};}
 const EACH=new Set(['each','piece','head']);
+// A piece measured in inches (ginger, cinnamon) is one piece.
+const INCHY=new Set(['inch']);
 const COUNTY=new Set(['each','clove','can','jar','bottle','pack','bunch','slice','head','sprig','stalk','piece','stick']);
 
 // ---------- one ingredient line ----------
@@ -55,42 +57,71 @@ const SIZE_ADJ=/^(large|medium|small|extra[- ]large|jumbo|heaping|level|scant|ge
 // Pantry basics: never bought for a recipe, never matched to an item, never on the list.
 const BASIC_RE=/^(?:(?:kosher|sea|table|fine|flaky|coarse)\s+)?salt(?:\s+and\s+(?:freshly\s+)?(?:ground\s+)?(?:black\s+)?pepper)?$|^(?:freshly\s+|fresh\s+)?(?:ground\s+|cracked\s+)?(?:black\s+)?pepper$|^(?:salt|pepper)\s+(?:and|&)\s+(?:salt|pepper)$|^(?:(?:hot|cold|warm|boiling|ice|lukewarm|tap|filtered)\s+)?water$|^ice(?:\s+cubes)?$/i;
 function isBasic(item){return BASIC_RE.test(String(item||'').replace(/[.,;:]+$/,'').trim());}
-const AMT_PAREN=new RegExp(`(${N1})\\s*(?:-\\s*)?([a-z]+(?:\\s?oz)?)\\.?`,'gi');
-function parenAmts(s){const out=[];let m;AMT_PAREN.lastIndex=0;while((m=AMT_PAREN.exec(s))){const u=unitOf(m[2].replace(/\s+/g,' '))||unitOf(m[2]);const q=num1(m[1]);if(u&&q!=null)out.push({q,unit:u});}return out;}
+// Parentheses, nested or not closed ("((tej patta, optional))", "( (or ¼ tsp ground"), come out whole: the text
+// without them, and each top-level group's inside with any inner parentheses dropped.
+function pullParens(s){let out='',cur='',depth=0;const groups=[];
+  for(const ch of String(s)){if(ch==='('){if(depth===0)cur='';else cur+=' ';depth++;continue;}
+    if(ch===')'){if(depth===0)continue;depth--;if(depth===0){groups.push(cur);out+=' ';}else cur+=' ';continue;}
+    if(depth>0)cur+=ch;else out+=ch;}
+  if(depth>0&&cur.trim())groups.push(cur);
+  return {rest:out.replace(/\s+/g,' ').trim(),groups:groups.map(g=>g.replace(/\s+/g,' ').replace(/^[\s,;]+|[\s,;]+$/g,'').trim()).filter(Boolean)};}
+// "130 grams", "about 4 oz", "≈1 clove", "9 to 10 oz": an amount and nothing else.
+function amountOnly(seg){const s=String(seg||'').replace(/^(?:about|approx\.?|approximately|roughly|around|~|≈)\s*/i,'').trim();const rq=readQty(s);if(!rq||rq.word)return null;
+  const rest=s.slice(rq.len).trim();const m=rest.match(/^(fl\.?\s?oz\.?|fluid ounces?|[a-z]+\.?)\s*(?:each)?$/i);const u=m&&unitOf(m[1].replace(/\s+/g,' '));return u?{q:rq.q,unit:u}:null;}
+// The pieces of a parenthesis: amount-only pieces are other ways of saying the amount; "or ..." pieces are
+// alternatives and never count; anything else is a note.
+function readGroup(g){const amts=[],notes=[];for(const seg of g.split(/\s*[,;]\s*/)){const x=seg.trim();if(!x)continue;
+    if(/^or\b|^use\b|^skip\b|^read\b/i.test(x)){notes.push(x);continue;}const a=amountOnly(x);if(a)amts.push(a);else notes.push(x);}
+  return {amts,notes};}
+// A count word at the end of the item ("garlic cloves", "cinnamon piece") is the unit when the line had none.
+const TAIL_UNIT=/\s+(cloves?|pieces?|sprigs?|stalks?|inch(?:es)?)$/i;
 
 function parseLine(raw){
-  let t=decode(raw).replace(/^[\s•●▪▢☐□*·–—-]+/,'').replace(/\s+/g,' ').trim();const text=t;const notes=[];let optional=false;
-  if(/^optional\s*:\s*/i.test(t)){optional=true;t=t.replace(/^optional\s*:\s*/i,'');}
-  if(/\(\s*optional\s*\)|,?\s*\boptional\b/i.test(t)){optional=true;t=t.replace(/\(\s*optional\s*\)|,?\s*\boptional\b/ig,' ').replace(/\s+/g,' ').trim();}
+  // Recipe plugins often wrap a note that already has parentheses in a second pair: "((tej patta, optional))".
+  let t=decode(raw).replace(/^[\s•●▪▢☐□*·–—-]+/,'').replace(/\(\s*\(/g,'(').replace(/\)\s*\)/g,')').replace(/\s+/g,' ').trim();const text=t;const notes=[];let optional=false;
+  if(/\boptional\b/i.test(t)){optional=true;t=t.replace(/^optional\s*:\s*/i,'').replace(/[,;]?\s*\boptional\b\s*:?/ig,' ').replace(/\s+/g,' ').trim();}
   let q=null,range=false;const rq=readQty(t);if(rq){q=rq.q;range=rq.range;t=t.slice(rq.len).trim();}
   let size=null;const alts=[];
-  // "1 (15 oz) can", "1 (15-ounce) can", "2 15-oz cans"
-  let m=t.match(/^\(([^)]*)\)\s*/);if(m){const a=parenAmts(m[1]);if(a.length)size=a[0];else notes.push(m[1].trim());t=t.slice(m[0].length);}
+  // A size right after the amount: "1 (15 oz) can", "1 (15-ounce) can", "2 15-oz cans".
+  let m=t.match(/^\(([^()]*)\)\s*/);if(m){const a=amountOnly(m[1].replace(/-/g,' '));if(a){size=a;t=t.slice(m[0].length);}}
   if(!size&&(m=t.match(new RegExp(`^(${N1})\\s*-?\\s*(ounces?|oz|pounds?|lbs?|grams?|g|ml|fl\\.? ?oz)\\.?\\s+(?=[a-z])`,'i')))){const u=unitOf(m[2].replace(/\s+/g,' '));if(u&&COUNTY.has(unitOf(t.slice(m[0].length).split(/\s+/)[0])||'')){size={q:num1(m[1]),unit:u};t=t.slice(m[0].length);}}
+  // Every other parenthesis, wherever it is: second amounts, sizes for count units, or notes.
+  const pp=pullParens(t);t=pp.rest;const pamts=[];for(const g of pp.groups){const r=readGroup(g);pamts.push(...r.amts);notes.push(...r.notes);}
   let unit=null;if(q!=null||rq==null){m=t.match(/^(fl\.?\s?oz\.?|fluid ounces?|[a-z]+\.?)(?=\s|$|,)/i);if(m){const u=unitOf(m[1].replace(/\s+/g,' '));if(u){unit=u;t=t.slice(m[0].length).trim();}}}
   if(q==null&&unit){q=1;}
   t=t.replace(/^of\s+/i,'');
   let sa;while((sa=t.match(SIZE_ADJ))){notes.push(sa[1].toLowerCase());t=t.slice(sa[0].length);}
-  // A size after the unit: "1 can (15 oz) black beans"
-  // (for a weight or volume, a second way of saying the amount: "½ kg (1.1 lbs) chicken")
-  if((m=t.match(/^\(([^)]*)\)\s*/))){const a=parenAmts(m[1]);if(a.length&&!size&&(unit==null||COUNTY.has(unit)))size=a[0];else if(a.length)alts.push(...a);else notes.push(m[1].trim());t=t.slice(m[0].length);}
-  // Everything after the first comma is notes; parentheses are notes too, and may hold a second amount.
+  // For a can or package the parenthesis is its size ("1 can (15 oz)"); otherwise it is the same amount said another way.
+  for(const a of pamts){if(!size&&unit&&COUNTY.has(unit)&&!COUNTY.has(a.unit))size=a;else alts.push(a);}
+  // Everything after the first comma is notes.
   let item=t,rest='';const ci=t.indexOf(',');if(ci>=0){item=t.slice(0,ci);rest=t.slice(ci+1).trim();}
-  item=item.replace(/\(([^)]*)\)/g,(x,inner)=>{const a=parenAmts(inner);if(a.length)alts.push(...a);else notes.push(inner.trim());return ' ';});
-  rest=rest.replace(/\(([^)]*)\)/g,(x,inner)=>{const a=parenAmts(inner);if(a.length)alts.push(...a);return ' '+inner+' ';});
-  const full=item.replace(/\s+/g,' ').replace(/^[\s,;-]+|[\s,;.-]+$/g,'').trim();
-  item=item.replace(PREP_RE,x=>{notes.push(x.toLowerCase());return ' ';}).replace(/\s+(or|and)\s*$/i,'').replace(/\s+/g,' ').replace(/^[\s,;-]+|[\s,;.-]+$/g,'').trim();
+  item=item.replace(/\s+/g,' ').replace(/^[\s,;:-]+|[\s,;:.-]+$/g,'').trim();
+  // "3 cloves" (the spice) leaves no item: the unit word was the item.
+  if(!item&&unit==='clove'){item='cloves';unit=null;}
+  if(unit==null&&(m=item.match(TAIL_UNIT))&&item.length>m[0].length){unit=unitOf(m[1])||(/^inch/i.test(m[1])?'inch':null);if(unit!=='piece')item=item.slice(0,m.index).trim();}
+  const full=item;
+  item=item.replace(PREP_RE,x=>{notes.push(x.toLowerCase());return ' ';}).replace(/\s+(or|and|&)\s*$/i,'').replace(/\s+/g,' ').replace(/^[\s,;:&-]+|[\s,;:.&-]+$/g,'').trim();
   if(rest)notes.push(rest.replace(/\s+/g,' ').trim());
-  const note=notes.filter(Boolean).join(', ');
-  if(/\bto taste\b/i.test(text)&&q==null)notes.push('to taste');
-  return {text,q:q==null?null:r3(q),range,unit,size,alts,item,full:full!==item?full:'',notes:note,optional,basic:isBasic(item)||(q==null&&isBasic(item.replace(/\s+to taste$/i,'')))};}
+  if(/\bto taste\b/i.test(text)&&q==null&&!notes.includes('to taste'))notes.push('to taste');
+  const note=[...new Set(notes.filter(Boolean))].join(', ');
+  // "jaggery or sugar": each choice is tried in turn when matching.
+  const ors=/\s+or\s+/i.test(item)?item.split(/\s+or\s+/i).map(s=>s.trim()).filter(Boolean):[];
+  return {text,q:q==null?null:r3(q),range,unit,size,alts,item,full:full!==item?full:'',ors,notes:note,optional,basic:isBasic(item)||(q==null&&isBasic(item.replace(/\s+to taste$/i,'')))};}
 
 // ---------- matching ----------
-const FORMS=new Set(['powder','paste','flake','sauce','juice','seed','oil','extract','dried','salt','stick','chip','spread','soup','mix','seasoning','syrup','jam','puree','vinegar','sprout']);
+const FORMS=new Set(['ground','powder','paste','flake','sauce','juice','seed','oil','extract','dried','salt','stick','chip','spread','soup','mix','seasoning','syrup','jam','puree','vinegar','sprout']);
 // The key a pick is learned under: lower case, singular ("red bell peppers" and "red bell pepper" are one).
 const learnKey=t=>sing(t);
-const KINDS=new Set(['green','diced','crushed','whipped','grape','cherry','sun','ground','frozen','canned','smoked','roasted','sweetened','condensed','evaporated','dark','light','instant','baby','red','white','purple','powdered','brown','block']);
+const KINDS=new Set(['green','diced','crushed','whipped','grape','cherry','sun','frozen','canned','smoked','roasted','sweetened','condensed','evaporated','dark','light','instant','baby','red','white','purple','powdered','brown','block']);
 const sing=s=>norm(s).split(' ').map(w=>w.length>3&&/(oes|ches|shes|sses|xes)$/.test(w)?w.slice(0,-2):w.length>3&&/[^s]s$/.test(w)?w.slice(0,-1):w).join(' ');
+// Recipe words for things the catalog names differently. The synonym is tried before the line's own words.
+const SYN=[[/^(?:ceylon\s+)?cinnamon\s+(?:piece|stick|bark|quill)s?$|^cinnamon\s+sticks?$/,'cinnamon sticks'],[/^(?:fresh\s+)?coriander\s+(?:leaves|leaf)$|^(?:fresh\s+)?coriander\s+cilantro$|^cilantro\s+leaves$/,'fresh cilantro'],
+  [/^cloves?$|^whole\s+cloves?$/,'whole cloves'],[/^(?:dried\s+)?bay\s+lea(?:f|ves)$/,'dried bay leaves'],[/^(?:green\s+)?cardamoms?(?:\s+pods?)?$/,'green cardamom pods'],
+  [/^scallions?$|^spring\s+onions?$/,'green onions'],[/^kashmiri\s+(?:red\s+)?chil(?:l)?i\s+powder$/,'paprika'],[/^(?:cooking|vegetable|neutral|canola)\s+oil$|^oil$/,'cooking oil'],
+  [/^(?:all[- ]purpose|plain)\s+flour$/,'all purpose flour'],[/^(?:heavy|whipping|double)\s+cream$/,'heavy whipping cream'],[/^unsalted\s+butter$|^salted\s+butter$/,'butter'],[/^(?:raw\s+|whole\s+)?cashews?(?:\s+nuts?)?$/,'raw cashews']];
+function synonym(t){const n=norm(t);for(const [re,v] of SYN)if(re.test(n))return v;
+  // "coriander powder" is what the catalog calls ground coriander; chili and garlic powder keep their names.
+  const m=n.match(/^(coriander|cumin|turmeric|cinnamon|cardamom|clove|nutmeg|ginger|fennel|mustard)\s+powder$/);return m?'ground '+m[1]:'';}
 // opts.fuzzy(text) -> [{p,sc}] sorted best first: the app passes its receipt matcher (fuzzy over name and Aldi name).
 // opts.learned: {learnKey(item text): item id} from earlier picks; opts.alias(text) -> item id or null.
 // Same acceptance rule as receipts: score .7 or more and .08 clear of the next.
@@ -99,11 +130,13 @@ function matchLine(p,opts){opts=opts||{};const key=norm(p.item);if(!key)return {
   const a=opts.alias?opts.alias(p.item):null;if(a)return {iid:a,how:'alias',sc:1,cands:[]};
   // Recipe-side ranking on top of the shared matcher: an item named exactly like the line wins, and an item whose
   // name adds a form or kind the line doesn't ask for (powder, paste; green, diced) drops back ("1 onion" is not onion powder).
+  // An item whose unit the line's amount converts to gets a small lift ("1 tsp cinnamon" is ground, not sticks).
   const rank=(fz,t)=>{const tw=new Set(sing(t).split(' '));return fz.map(x=>{const nm=sing(x.p.name);let sc=x.sc;if(nm===sing(t))sc+=.2;
-    for(const w of nm.split(' '))if(!tw.has(w))sc-=FORMS.has(w)?.3:KINDS.has(w)?.15:0;return {...x,sc};}).sort((a,b)=>b.sc-a.sc);};
+    for(const w of nm.split(' '))if(!tw.has(w))sc-=FORMS.has(w)?.3:KINDS.has(w)?.15:0;if(p.q!=null&&amountFor(p,x.p).q!=null)sc+=.1;return {...x,sc};}).sort((a,b)=>b.sc-a.sc);};
   // The words before prep notes come first ("diced tomatoes" is the canned item, "tomatoes" the fresh one).
   const ok=fz=>fz[0]&&fz[0].sc>=.7&&(!fz[1]||fz[0].sc-fz[1].sc>=.08||fz[1].p.id===fz[0].p.id);let last=[];
-  for(const t of [p.full,p.item].filter(Boolean)){const fz=rank((opts.fuzzy?opts.fuzzy(t):[])||[],t);if(!last.length)last=fz;
+  const tries=[...new Set([synonym(p.full),synonym(p.item),p.full,p.item,...(p.ors||[]).flatMap(o=>[synonym(o),o])].filter(Boolean))];
+  for(const t of tries){const fz=rank((opts.fuzzy?opts.fuzzy(t):[])||[],t);if(!last.length)last=fz;
     if(ok(fz))return {iid:fz[0].p.id,how:'guess',sc:fz[0].sc,cands:fz.slice(0,4).map(x=>({iid:x.p.id,sc:x.sc}))};}
   return {iid:null,how:'none',sc:last[0]?last[0].sc:0,cands:last.slice(0,4).map(x=>({iid:x.p.id,sc:x.sc}))};}
 
@@ -116,9 +149,22 @@ function amountFor(p,item){const u=item&&item.unit;if(!u)return {q:null,why:'no 
   for(const c of tries){const cu=c.unit||'each';
     if(cu===u)return {q:r3(c.q),from:cu};
     if(EACH.has(cu)&&EACH.has(u))return {q:r3(c.q),from:cu};
+    if(INCHY.has(cu)&&(EACH.has(u)||u==='stick'))return {q:1,from:cu};
+    // Fresh herbs are sold by the bunch; a bunch is about a cup chopped.
+    if(u==='bunch'&&M&&M.convert){const n=toMC(c.q,cu);const cups=M.convert(n.q,n.unit,'cup');if(cups!=null)return {q:r3(cups),from:cu};}
     const n=toMC(c.q,cu);if(n.unit===u)return {q:r3(n.q),from:cu};
     if(M&&M.convert){const v=M.convert(n.q,n.unit,u);if(v!=null)return {q:r3(v),from:cu};}}
   return {q:null,why:`${fmtAmt(p)} can't be turned into ${u}`};}
+// How the editor shows an amount: in the item's unit or a smaller one of the same kind, rounded to what a
+// person measures (4.5 oz, not 0.287 lb; 3½ tbsp, not 0.219 cup). Returns {q, u} with q as a string.
+function display(q,item){const u=item&&item.unit,M=MC();if(!(q>0)||!u||!M||!M.kindOf)return {q:q>0?String(+(+q).toFixed(2)):'',u:u||''};
+  const step=(v,s)=>Math.max(s,Math.round(v/s)*s),out=(v,unit)=>({q:String(+v.toFixed(3)),u:unit});const kind=M.kindOf(u),ok=M.unitsFor(u);
+  if(kind==='weight'){const oz=M.convert(q,u,'oz');if(u==='lb'&&q>=1)return out(Math.round(q*100)/100,'lb');return out(oz<10?step(oz,.5):Math.round(oz),'oz');}
+  if(kind==='volume'){const tsp=M.convert(q,u,'tsp');
+    if(ok.includes('cup')&&tsp>=12-1e-9)return out(step(tsp/48,.125),'cup');
+    if(ok.includes('tbsp')&&tsp>=3-1e-9)return out(step(tsp/3,.5),'tbsp');
+    return out(step(tsp,tsp<.5?.125:.25),'tsp');}
+  return out(Math.round(q*100)/100,u);}
 function fmtAmt(p){const q=p.q==null?'':String(+p.q.toFixed(2));return [q,p.unit&&p.unit!=='each'?p.unit:''].filter(Boolean).join(' ')||'this amount';}
 
 // ---------- recipe blocks (schema.org) ----------
@@ -166,6 +212,6 @@ function build(lines,opts){opts=opts||{};const P=opts.P||{};const rows=[],basics
 function cost(rows,P,serv,people){serv=Math.max(1,+serv||1);let whole=0;for(const r of rows||[]){const p=r.iid&&P[r.iid];if(!p||!(r.q>0)||p.staple||r.optional)continue;whole+=r.q*(+p.price||0)/(+p.pkg||1);}
   const portions=Math.max(1,Math.round(+people||serv));return {whole:Math.round(whole*100)/100,household:Math.round(whole*portions/serv*100)/100,portions};}
 
-const api={learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
+const api={display,learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
 if(typeof window!=='undefined')window.RecipeCore=api;if(typeof module!=='undefined')module.exports=api;
 })();
