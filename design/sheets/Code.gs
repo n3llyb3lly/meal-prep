@@ -8,7 +8,7 @@
  *            Ingredients and Receipt aliases sheets, in the same layout as catalog.json.
  *  - doPost: the app sends changes made on the phone. Each one is applied once, logged in
  *            "Change log", and answered (applied / already applied / sheet kept / refused).
- *  - A "Meal Prep" menu in the spreadsheet: check the data, set up sheets and dropdowns,
+ *  - A "Meal Prep" menu in the spreadsheet: check the data, set up sheets and dropdowns, fetch recipe photos and steps,
  *    set the app key, and show the app address.
  *  - onEdit: when you edit a row of Items or Recipes (or a recipe's Ingredients), it stamps
  *    last_changed and changed_by = sheet. That is how "the sheet wins" is decided.
@@ -307,6 +307,10 @@ function buildCatalog_(prev) {
       keeps: num_(r.keeps_days) != null ? num_(r.keeps_days) : 1, reheats: yn_(r.reheats) === 'Y', freezes: yn_(r.freezes) === 'Y',
       changed: iso_(r.last_changed), active: active
     };
+    // Optional (Fetch photos and steps): left out when empty, so older phones and the catalog fingerprint don't change.
+    var photo = str_(r.photo_url), steps = stepsCell_(r.steps);
+    if (/^https:\/\/\S+$/i.test(photo)) rec.photo = photo;
+    if (steps.length) rec.steps = steps;
     R[id] = rec; recipes.push(rec);
   });
 
@@ -512,12 +516,14 @@ function doGet(e) {
  *   {"ok":true,"results":[{"id":"c_…","status":"applied|duplicate|conflict|rejected|error","message":"…","sheet":{…}}],
  *    "idMap":{"u_greek_yogurt_tub":"greek_yogurt_tub","edit:d_tacos":"d_tacos_mine"},"version":"…"}
  *   {"key":"SECRET","action":"recipe.fetch","url":"https://…"}  -> see recipeFetch_
+ *   {"key":"SECRET","action":"recipe.fetchAll"}  -> fills photo_url and steps for every recipe, see fetchSteps_
  */
 function doPost(e) {
   var body;
   try { body = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) { return json_({ ok: false, error: 'bad-json', message: 'The request was not valid JSON.' }); }
   if (!keyOk_(body.key)) return json_({ ok: false, error: 'refused', message: 'Wrong or missing key.' });
   if (body.action === 'recipe.fetch') return json_(recipeFetch_(body.url));
+  if (body.action === 'recipe.fetchAll') return json_(startFetchAll_(20000));
   var changes = Array.isArray(body.changes) ? body.changes.slice(0, MAX_BATCH) : [];
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) return json_({ ok: false, error: 'busy', message: 'The sheet is busy. Try again in a minute.' });
@@ -556,11 +562,169 @@ function recipeFetch_(url) {
   return { ok: true, url: url, title: title, text: text.slice(0, 60000) };
 }
 
+// ---------------------------------------------------------------- photos and steps (Meal Prep > Fetch photos and steps)
+
+// For each Recipes row with a link and no steps, the script reads the page's schema.org Recipe block and writes the
+// photo link and the steps (a JSON array of strings, as the site wrote them) into photo_url and steps. The catalog
+// then carries them as recipe.photo and recipe.steps. The visible page is never scraped: a page with no block gets
+// fetch_note = no-recipe-data. The same rules are in design/source/tools/recipe-core.js for "+ From the web".
+var RECIPE_FETCH_HEADERS = ['photo_url', 'steps', 'fetched_at', 'fetch_note'];
+var FETCH_BATCH = 20;                 // rows fetched between sheet writes
+var FETCH_BUDGET_MS = 270000;         // stop well before the 6-minute limit, then continue from a trigger
+var FETCH_GAP_MS = 1000;              // between two fetches to the same site
+var FETCH_DONE_NOTES = ['no-recipe-data', 'no-steps'];   // not tried again until the link changes or the note is cleared
+var HTML_ENT_ = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', frac12: '½', frac14: '¼', frac34: '¾', frac13: '⅓', frac23: '⅔', frac18: '⅛', deg: '°', ndash: '–', mdash: '—', rsquo: "'", lsquo: "'", rdquo: '"', ldquo: '"', eacute: 'é', egrave: 'è', ntilde: 'ñ', hellip: '…' };
+var STEP_AD_ = /jump to (?:the )?recipe|print (?:the )?recipe|pin (?:it|this|for later)|advertisement|sponsored|subscribe|newsletter|sign up|click here|affiliate|watch the video|rate this recipe|leave a (?:comment|review|rating)|tag @|follow (?:me|us) on|tried this recipe|share (?:a|your) photo|this post may contain|as an amazon associate/i;
+var STEP_HEAD_ = /^(?:for (?:the )?.{1,40}|to (?:make|serve|assemble|finish) .{1,40}|instructions|directions|method|steps|preparation|notes?|assembly|garnish|to serve)$/i;
+
+function decodeHtml_(s) {
+  return String(s == null ? '' : s).replace(/<[^>]*>/g, ' ').replace(/&(#x[0-9a-f]+|#\d+|[a-z0-9]+);/gi, function (m, e) {
+    if (e[0] === '#') { var c = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : +e.slice(1); return c ? String.fromCodePoint(c) : m; }
+    var v = HTML_ENT_[e.toLowerCase()]; return v == null ? m : v;
+  }).replace(/\s+/g, ' ').trim();
+}
+function cleanStep_(raw) {
+  var s = decodeHtml_(decodeHtml_(raw)).replace(/\s+([.,;:!?)])/g, '$1').replace(/\(\s+/g, '(').trim();
+  s = s.replace(/^(?:step\s*)?\d{1,2}\s*[.):-]\s+(?=\S)/i, '').replace(/^step\s*\d{1,2}\s*$/i, '');
+  s = s.replace(/\s*\b(?:jump to (?:the )?recipe|print (?:the )?recipe|jump to video)\b[\s:!.]*/gi, ' ').trim();
+  if (STEP_AD_.test(s)) s = (s.match(/[^.!?]+(?:[.!?]+|$)/g) || []).map(function (x) { return x.trim(); }).filter(function (x) { return x && !STEP_AD_.test(x); }).join(' ');
+  if (!s || !/[a-z]/i.test(s)) return '';
+  if (s.length <= 60 && /:$/.test(s)) return '';
+  var bare = s.replace(/[:!]+$/, '').trim();
+  if (bare.length <= 50 && !/[.,;]/.test(bare) && (STEP_HEAD_.test(bare) || (bare === bare.toUpperCase() && /[A-Z]{3}/.test(bare) && bare.split(' ').length <= 6))) return '';
+  return s.slice(0, 1200);
+}
+function splitSteps_(t) {
+  var parts = String(t || '').split(/<\/?(?:li|p|br|ol|ul|h[1-6]|div)\b[^>]*>|\r?\n+/i).map(function (x) { return x.trim(); }).filter(String);
+  if (parts.length === 1) { var n = decodeHtml_(parts[0]).split(/\s+(?=(?:step\s*)?\d{1,2}[.)]\s+[A-Z])/i); if (n.length > 1) parts = n; }
+  return parts;
+}
+function stepsOf_(n) {
+  var out = [];
+  function add(t) { splitSteps_(t).forEach(function (p) { var c = cleanStep_(p); if (c && c !== out[out.length - 1]) out.push(c); }); }
+  function walk(v, d) {
+    if (v == null || d > 6 || out.length >= 80) return;
+    if (typeof v === 'string') { add(v); return; }
+    if (Array.isArray(v)) { v.forEach(function (x) { walk(x, d + 1); }); return; }
+    if (typeof v !== 'object') return;
+    var kids = v.itemListElement || v.steps || v.step;
+    if (kids && typeof kids === 'object') walk(kids, d + 1); else walk(v.text != null ? v.text : v.name != null ? v.name : v.description, d + 1);
+  }
+  walk(n && n.recipeInstructions, 0);
+  return out.slice(0, 80);
+}
+function photoOf_(n, url) {
+  var v = n && n.image;
+  for (var i = 0; i < 3 && v && typeof v === 'object'; i++) v = Array.isArray(v) ? v[0] : (v.url || v.contentUrl || v['@id'] || '');
+  var s = String(v || '').trim();
+  if (/^\/\//.test(s)) s = 'https:' + s;
+  else if (/^\/[^/]/.test(s)) { var h = String(url || '').match(/^https:\/\/[^/]+/i); s = h ? h[0] + s : ''; }
+  return /^https:\/\/[^\s"<>]+$/i.test(s) && s.length <= 2000 ? s : '';
+}
+function isRecipeLd_(n) {
+  var t = n && n['@type'], re = /^(schema:)?Recipe$/i;
+  return Array.isArray(t) ? t.some(function (x) { return re.test(x); }) : re.test(String(t || ''));
+}
+// The first schema.org Recipe in a page's JSON-LD blocks, including @graph arrays. null if there is none.
+function findRecipeLd_(html) {
+  var re = /<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi, m, hit = null, seen = [];
+  function walk(n) {
+    if (hit || !n || typeof n !== 'object' || seen.indexOf(n) >= 0) return; seen.push(n);
+    if (Array.isArray(n)) { n.forEach(walk); return; }
+    if (isRecipeLd_(n)) { hit = n; return; }
+    ['@graph', 'mainEntity', 'mainEntityOfPage', 'itemListElement', 'item', 'hasPart'].forEach(function (k) { if (n[k]) walk(n[k]); });
+  }
+  while (!hit && (m = re.exec(String(html || '')))) {
+    var o; try { o = JSON.parse(m[1].trim().replace(/^\s*<!--|-->\s*$/g, '')); } catch (e) { continue; }
+    walk(o);
+  }
+  return hit;
+}
+// {found, photo, steps} for one page.
+function recipeSteps_(html, url) {
+  var n = findRecipeLd_(html);
+  if (!n) return { found: false, photo: '', steps: [] };
+  return { found: true, photo: photoOf_(n, url), steps: stepsOf_(n) };
+}
+// The steps cell (JSON text) as an array of strings; anything unreadable is no steps.
+function stepsCell_(v) {
+  if (blank_(v)) return [];
+  try { var a = JSON.parse(String(v)); return Array.isArray(a) ? a.map(function (x) { return str_(x); }).filter(String) : []; } catch (e) { return []; }
+}
+function needsFetch_(r) {
+  return /^https?:\/\//i.test(str_(r.link)) && blank_(r.steps) && FETCH_DONE_NOTES.indexOf(str_(r.fetch_note)) < 0;
+}
+
+/** Meal Prep > Fetch photos and steps. Starts from the top; long catalogs carry on by themselves from a trigger. */
+function menuFetchSteps() {
+  var r = startFetchAll_(FETCH_BUDGET_MS);
+  SpreadsheetApp.getUi().alert(r.message);
+}
+// recipe.fetchAll from the phone, or the menu. Runs what fits in budgetMs, then hands the rest to a trigger.
+function startFetchAll_(budgetMs) {
+  ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS, []);
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty('FETCH_NEXT_ROW', '2'); props.setProperty('FETCH_STATS', JSON.stringify({ steps: 0, missed: [] }));
+  return fetchSteps_(budgetMs);
+}
+/** The time trigger's entry point. Carries on where the last run stopped. */
+function fetchStepsRun() { fetchSteps_(FETCH_BUDGET_MS); }
+
+function fetchSteps_(budgetMs) {
+  var t0 = Date.now(), props = PropertiesService.getScriptProperties(), lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) { scheduleFetch_(); return { ok: true, done: false, message: 'The sheet is busy. Fetching will carry on in a minute.' }; }
+  try {
+    var t = table_(SHEETS.recipes); if (!t) return { ok: false, error: 'no-recipes', message: 'No "Recipes" sheet found.' };
+    if (RECIPE_FETCH_HEADERS.some(function (h) { return t.col[h] == null; })) { ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS, []); t = table_(SHEETS.recipes); }
+    var stats; try { stats = JSON.parse(props.getProperty('FETCH_STATS') || ''); } catch (e) { } if (!stats) stats = { steps: 0, missed: [] };
+    var rows = t.objects(), next = Math.max(2, parseInt(props.getProperty('FETCH_NEXT_ROW') || '2', 10) || 2), last = {}, n = 0;
+    for (var i = next - 2; i < rows.length; i++) {
+      if (Date.now() - t0 > budgetMs) { props.setProperty('FETCH_NEXT_ROW', String(rows[i]._row)); props.setProperty('FETCH_STATS', JSON.stringify(stats)); scheduleFetch_();
+        return { ok: true, done: false, steps: stats.steps, missed: stats.missed, message: 'Fetched ' + stats.steps + ' so far. The rest carry on by themselves in a minute.' }; }
+      var r = rows[i]; if (!str_(r.recipe_id) || !needsFetch_(r)) continue;
+      var link = str_(r.link), host = (link.match(/^https?:\/\/([^\/?#]+)/i) || [])[1] || '';
+      var wait = last[host] ? FETCH_GAP_MS - (Date.now() - last[host]) : 0; if (wait > 0) Utilities.sleep(wait);
+      var res = fetchOne_(link); last[host] = Date.now();
+      t.set(r._row, 'photo_url', res.photo || ''); t.set(r._row, 'steps', res.steps.length ? JSON.stringify(res.steps) : '');
+      t.set(r._row, 'fetched_at', new Date()); t.set(r._row, 'fetch_note', res.note || '');
+      if (res.steps.length) stats.steps++; else stats.missed.push([str_(r.recipe_id), res.note]);
+      if (++n % FETCH_BATCH === 0) SpreadsheetApp.flush();
+    }
+    props.deleteProperty('FETCH_NEXT_ROW'); props.deleteProperty('FETCH_STATS'); clearFetchTriggers_();
+    SpreadsheetApp.flush(); try { currentCatalog_(); } catch (e) { }
+    var miss = stats.missed.map(function (x) { return x[0] + ' (' + x[1] + ')'; });
+    return { ok: true, done: true, steps: stats.steps, missed: stats.missed,
+      message: 'Done. ' + stats.steps + ' recipe' + (stats.steps === 1 ? '' : 's') + ' got steps.' + (miss.length ? '\n\nNo steps for ' + miss.length + ': ' + miss.slice(0, 30).join(', ') + (miss.length > 30 ? ', …' : '') : '') };
+  } finally { lock.releaseLock(); }
+}
+// {photo, steps, note}. note: no-recipe-data, no-steps, http-403, fetch-failed.
+function fetchOne_(url) {
+  var res;
+  try { res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true, headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 14) MealPrep' } }); }
+  catch (err) { return { photo: '', steps: [], note: 'fetch-failed' }; }
+  var code = res.getResponseCode(); if (code >= 400) return { photo: '', steps: [], note: 'http-' + code };
+  var x = recipeSteps_(String(res.getContentText() || '').slice(0, 3000000), url);
+  if (!x.found) return { photo: '', steps: [], note: 'no-recipe-data' };
+  return { photo: x.photo, steps: x.steps, note: x.steps.length ? '' : 'no-steps' };
+}
+function scheduleFetch_() { clearFetchTriggers_(); ScriptApp.newTrigger('fetchStepsRun').timeBased().after(60000).create(); }
+function clearFetchTriggers_() {
+  ScriptApp.getProjectTriggers().forEach(function (tr) { if (tr.getHandlerFunction() === 'fetchStepsRun') ScriptApp.deleteTrigger(tr); });
+}
+// Clears photo_url, steps, fetched_at and fetch_note on rows r0..r1, so the next fetch reads the new link.
+function clearFetched_(sh, headers, r0, r1) {
+  RECIPE_FETCH_HEADERS.forEach(function (h) {
+    var c = headers.indexOf(h); if (c < 0) return;
+    sh.getRange(r0, c + 1, r1 - r0 + 1).setValues(Array.from({ length: r1 - r0 + 1 }, function () { return ['']; }));
+  });
+}
+
 // ---------------------------------------------------------------- applying phone changes
 
 // Everything one request needs, read once.
 function context_() {
   var log = ensureSheet_(SHEETS.log, LOG_HEADERS), idm = ensureSheet_(SHEETS.idmap, IDMAP_HEADERS);
+  ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS, []);
   var ctx = { items: table_(SHEETS.items), recipes: table_(SHEETS.recipes), ingredients: table_(SHEETS.ingredients), aliases: table_(SHEETS.aliases), log: table_(SHEETS.log), idm: table_(SHEETS.idmap), idMap: {} };
   ctx.done = {}; ctx.log.objects().forEach(function (r) { if (r.change_id) ctx.done[String(r.change_id)] = r; });
   ctx.map = {}; ctx.idm.objects().forEach(function (r) { if (r.phone_id) ctx.map[String(r.phone_id)] = String(r.sheet_id); });
@@ -1027,6 +1191,11 @@ function writeRecipe_(ctx, id, d, extra, existing) {
     hands_on_min: d.hands == null ? '' : d.hands, keeps_days: d.keeps == null ? '' : d.keeps, reheats: d.reheats === false ? 'N' : 'Y',
     freezes: d.freezes == null ? '' : (d.freezes ? 'Y' : 'N'), link: d.link || '', active: 'Y', last_changed: new Date(), changed_by: 'phone'
   };
+  // Photo and steps from "+ From the web". A new link without them is fetched again by Fetch photos and steps.
+  var steps = (Array.isArray(d.steps) ? d.steps : []).map(cleanStep_).filter(String).slice(0, 80), photo = /^https:\/\/\S+$/i.test(str_(d.photo)) ? str_(d.photo) : '';
+  if (steps.length) { fields.photo_url = photo; fields.steps = JSON.stringify(steps); fields.fetched_at = new Date(); fields.fetch_note = ''; }
+  else if (existing && str_(existing.link) !== fields.link) { fields.photo_url = ''; fields.steps = ''; fields.fetched_at = ''; fields.fetch_note = ''; }
+  else if (photo && !(existing && str_(existing.photo_url))) fields.photo_url = photo;
   if (existing) {
     for (var h in fields) if (h !== 'recipe_id' && ctx.recipes.col[h] != null) ctx.recipes.set(existing._row, h, fields[h]);
     if (d.notes != null && ctx.recipes.col.notes != null) ctx.recipes.set(existing._row, 'notes', d.notes);
@@ -1066,6 +1235,8 @@ function onEdit(e) {
       sh.getRange(r, lcol + 1).setValue(new Date());
       if (ccol >= 0) sh.getRange(r, ccol + 1).setValue('sheet');
     }
+    // A new link on Recipes: clear the fetched photo and steps so the next Fetch photos and steps reads the new page.
+    if (key === norm_(SHEETS.recipes)) { var lk = headers.indexOf('link'); if (lk >= 0 && lk + 1 >= c0 && lk + 1 <= c1) clearFetched_(sh, headers, Math.max(2, r0), r0 + n - 1); }
     // After the move to Offers, a price typed on Items goes to the item's Aldi offer, so both stay in step.
     if (key === norm_(SHEETS.items) && migrated_()) {
       var pc = ['price', 'price_date', 'price_source'].map(function (h) { return headers.indexOf(h); });
@@ -1096,6 +1267,7 @@ function onOpen() {
     .addItem('Move prices to Offers', 'menuMoveToOffers')
     .addItem('Add starter household items', 'menuAddHousehold')
     .addItem('Suggest food types', 'menuSuggestFoodTypes')
+    .addItem('Fetch photos and steps', 'menuFetchSteps')
     .addSeparator()
     .addItem('Set the app key', 'menuSetKey')
     .addItem('Show the app address and key', 'menuShowAddress')
@@ -1154,6 +1326,8 @@ function menuSetup() {
   ensureColumns_(SHEETS.items, ['flavor'], notes);
   if (!sheet_(SHEETS.variants)) { ensureSheet_(SHEETS.variants, VARIANT_HEADERS); notes.push('Added the Variants tab.'); }
   var vn = colRange_(SHEETS.variants, 'numbers'); if (vn) vn.setNumberFormat('@');
+  // Version 6.4: recipe photos and steps (Meal Prep > Fetch photos and steps)
+  ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS, notes);
   // Learning step 4: the Learned tab
   if (!sheet_(SHEETS.learned)) { ensureSheet_(SHEETS.learned, LEARNED_HEADERS); notes.push('Added the Learned tab.'); }
   var lk = colRange_(SHEETS.learned, 'key'); if (lk) lk.setNumberFormat('@'); var lv = colRange_(SHEETS.learned, 'value'); if (lv) lv.setNumberFormat('@');

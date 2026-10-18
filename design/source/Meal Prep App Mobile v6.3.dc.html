@@ -3654,7 +3654,7 @@ class Component extends DCLogic {
   saveRec(andTrip){const S=this.state,e=S.recEd;if(!e)return;const b=this.recBuild();if(b.err){this.flash(b.err);return;}const r=b.r,at=new Date().toISOString();
     const reopen=id=>e.back&&e.back.rid===id?e.back:{rid:id,serv:S.people*this.multFor({...r,id}),kicker:`Library · ${ML[r.meal]}`};
     if(e.mode==='web'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
-      const d=e.d,RC=window.RecipeCore;const nr={...r,id,source:'From the web',created:at,editedAt:at,...(d.basics&&d.basics.length?{basics:d.basics}:{})};
+      const d=e.d,RC=window.RecipeCore;const nr={...r,id,source:'From the web',created:at,editedAt:at,...(d.basics&&d.basics.length?{basics:d.basics}:{}),...(d.photo?{photo:d.photo}:{}),...(d.steps&&d.steps.length?{steps:d.steps}:{})};
       // Items the person picked for unmatched or wrong lines are used first next time.
       const LC=window.LearnCore,lc=LC&&LC.clone?LC.clone(S.learn):null;const ra={...(S.recipeAliases||{})};for(const x of d.ings)if(x.web&&x.web.picked&&x.iid){const k=RC.learnKey(x.web.item);if(!k)continue;ra[k]=x.iid;if(lc)LC.record(lc,'name','recipe:'+k,'@'+x.iid,'user-edit');}
       const obp=nr.keeper&&this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
@@ -3664,7 +3664,7 @@ class Component extends DCLogic {
     if(e.mode==='new'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
       const nr={...r,id,source:'My recipe',created:at,editedAt:at};const obp=this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
       this.commit(`Added recipe ${r.name}`,{ownRecipes:[...(S.ownRecipes||[]),nr],recEd:null,sheet:reopen(id),...obp});this.flash(`Saved ${r.name}. It's in the library.`);return;}
-    if(e.mode==='own'){const was=(S.ownRecipes||[]).find(x=>x.id===e.id)||{};const ownRecipes=(S.ownRecipes||[]).map(x=>x.id===e.id?{...x,...r,editedAt:at}:x);const nr=ownRecipes.find(x=>x.id===e.id);
+    if(e.mode==='own'){const was=(S.ownRecipes||[]).find(x=>x.id===e.id)||{};const ownRecipes=(S.ownRecipes||[]).map(x=>{if(x.id!==e.id)return x;const y={...x,...r,editedAt:at};if((x.link||'')!==(r.link||'')){delete y.photo;delete y.steps;}return y;});const nr=ownRecipes.find(x=>x.id===e.id);
       // A web recipe that was kept on the phone goes to the sheet when it's marked as a keeper.
       const ob=!this.linked()||!nr||(nr.fromWeb&&!nr.keeper)?null:nr.fromWeb&&!was.keeper?[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,e.id))]:this.obPatch(S.outbox,'recipe.add',e.id,()=>this.recData(nr,e.id));
       this.commit(`Edited ${r.name}`,{ownRecipes,recEd:null,sheet:reopen(e.id),...(ob?{outbox:ob}:{})});this.flash(`Saved ${r.name}`);return;}
@@ -3745,7 +3745,7 @@ class Component extends DCLogic {
     return {P,fuzzy:t=>fuzzy(t,items),learned:this.state.recipeAliases||{},alias:t=>{const a=this.aliasOf(t);return a&&a!=='__ignore'&&P[a]?a:null;}};}
   openWebEditor(rec){const S=this.state,RC=window.RecipeCore,P=this.P();const b=RC.build(rec.ings,this.webMatchOpts());const total=Math.max(1,Math.round(+rec.total||30));
     const d={name:rec.name||'',meal:MEALS.includes(rec.meal)?rec.meal:(S.libMeal||'dinner'),serv:Math.max(1,Math.min(24,Math.round(+rec.serv||4))),total:String(total),hands:String(Math.min(total,Math.round(+rec.hands||15))),
-      keeps:3,reheats:true,tags:(rec.tags||[]).filter(t=>TAG_ORDER.includes(t)),link:rec.link||'',fromWeb:true,keeper:false,basics:b.basics,
+      keeps:3,reheats:true,tags:(rec.tags||[]).filter(t=>TAG_ORDER.includes(t)),link:rec.link||'',fromWeb:true,keeper:false,basics:b.basics,photo:rec.photo||'',steps:rec.steps||[],
       ings:b.rows.map(r=>({k:uid(),iid:r.iid,...(()=>{const v=RC.display(r.q,P[r.iid]);return {q:v.q,u:v.u&&P[r.iid]&&v.u!==P[r.iid].unit?v.u:undefined};})(),aw:r.text,o:!!r.optional,web:{item:r.item,how:r.how,cand:((r.cands||[]).find(c=>c.iid&&c.iid!==r.iid&&P[c.iid]&&c.sc>=.6)||{}).iid||null}}))};
     this.setState({webRec:null,recEd:{mode:'web',id:null,d,arm:null,dirty:true,back:null},sheet:null});}
   webPick(k,iid){const P=this.P(),RC=window.RecipeCore;this.setState(s=>{if(!s.recEd)return null;const d=s.recEd.d;
@@ -4083,7 +4083,7 @@ class Component extends DCLogic {
   recBase(id){const c=this.cat&&this.cat.recipes.find(x=>x.id===id);return c?{changed:c.changed||null}:{};}
   itemData(u,nl){const o={};for(const k of ['id','name','cat','pack','unit','pkg','price','src','priceDate','staple','storage','fridge','freezer','pantry','soldBy','family','tracking','aldi'])o[k]=u[k]??null;o.nums=Object.keys(nl||{}).filter(n=>!n.includes(':')&&nl[n]===u.id);o.brand=u.brand||'';o.flavor=u.flavor||'';o.unsorted=!!u.unsorted;o.node=u.node||null;o.store=u.store0||'aldi';
     const oe=(this.state.offerEdits||{})[u.id]||{};o.offers=Object.keys(oe).filter(s=>!oe[s].removed).map(s=>({store:s,price:oe[s].price,pack:oe[s].pack||null,unit:oe[s].unit||u.unit,pkg:oe[s].pkg||u.pkg,nums:Object.keys(nl||{}).filter(k=>k.startsWith(s+':')&&nl[k]===u.id).map(k=>splitKey(k)[1]),priceDate:oe[s].priceDate||null,src:oe[s].src||'edited'}));return o;}
-  recData(r,id){const o={id:id||null};for(const k of ['meal','name','tags','serv','ing','total','hands','keeps','reheats','link','notes'])o[k]=r[k]??null;if(!id)delete o.id;return o;}
+  recData(r,id){const o={id:id||null};for(const k of ['meal','name','tags','serv','ing','total','hands','keeps','reheats','link','notes'])o[k]=r[k]??null;if(r.photo)o.photo=r.photo;if(r.steps&&r.steps.length)o.steps=r.steps;if(!id)delete o.id;return o;}
   recEditChg(orig,r){if(/^my (recipe|version)$/i.test(orig.source||''))return this.chg('recipe.update',this.recData({...orig,...r},orig.id),{changed:orig.changed||null});
     return this.chg('recipe.edit',{orig:orig.id,recipe:this.recData({...orig,...r})},this.recBase(orig.id+'_mine'));}
   obPatch(ob,type,id,fn){const i=(ob||[]).findIndex(c=>c.type===type&&c.data&&c.data.id===id);if(i<0)return null;const out=[...ob];out[i]={...out[i],data:fn(out[i].data)};return out;}

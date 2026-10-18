@@ -189,9 +189,36 @@ function guessMeta(n){const cat=norm(txt(n.recipeCategory)),cui=norm(txt(n.recip
   else if(/\b(bake|baked|roast|roasted|sheet pan|casserole|oven)\b/.test(kw))tags.push('oven');else if(/\b(stir fry|skillet|one pot|one pan|stovetop|saute)\b/.test(kw))tags.push('stovetop');
   if(/\b(spicy|chipotle|jalapeno|sriracha|curry)\b/.test(kw))tags.push('spicy');
   return {meal,tags:[...new Set(tags)]};}
+// ---------- photo and steps ----------
+// The photo is kept as a link (https only); steps are kept as the site wrote them. The app scales amounts in steps
+// when it shows them, so nothing is rewritten here. Code.gs (recipeSteps_) has the same rules for the catalog fetch.
+function photoOf(n,url){let v=n&&n.image;for(let i=0;i<3&&v&&typeof v==='object';i++)v=Array.isArray(v)?v[0]:(v.url||v.contentUrl||v['@id']||'');
+  let s=String(v||'').trim();if(/^\/\//.test(s))s='https:'+s;else if(/^\/[^/]/.test(s)){const h=String(url||'').match(/^https:\/\/[^/]+/i);s=h?h[0]+s:'';}
+  return /^https:\/\/[^\s"<>]+$/i.test(s)&&s.length<=2000?s:'';}
+const STEP_AD=/jump to (?:the )?recipe|print (?:the )?recipe|pin (?:it|this|for later)|advertisement|sponsored|subscribe|newsletter|sign up|click here|affiliate|watch the video|rate this recipe|leave a (?:comment|review|rating)|tag @|follow (?:me|us) on|tried this recipe|share (?:a|your) photo|this post may contain|as an amazon associate/i;
+const STEP_HEAD=/^(?:for (?:the )?.{1,40}|to (?:make|serve|assemble|finish) .{1,40}|instructions|directions|method|steps|preparation|notes?|assembly|garnish|to serve)$/i;
+function cleanStep(raw){let s=decode(decode(raw)).replace(/\s+([.,;:!?)])/g,'$1').replace(/\(\s+/g,'(').trim();
+  s=s.replace(/^(?:step\s*)?\d{1,2}\s*[.):-]\s+(?=\S)/i,'').replace(/^step\s*\d{1,2}\s*$/i,'');
+  s=s.replace(/\s*\b(?:jump to (?:the )?recipe|print (?:the )?recipe|jump to video)\b[\s:!.]*/gi,' ').trim();
+  if(STEP_AD.test(s))s=(s.match(/[^.!?]+(?:[.!?]+|$)/g)||[]).map(x=>x.trim()).filter(x=>x&&!STEP_AD.test(x)).join(' ');
+  if(!s||!/[a-z]/i.test(s))return '';
+  if(s.length<=60&&/:$/.test(s))return '';
+  // A heading on its own ("For the sauce", "TO SERVE") is not a step.
+  const bare=s.replace(/[:!]+$/,'').trim();
+  if(bare.length<=50&&!/[.,;]/.test(bare)&&(STEP_HEAD.test(bare)||(bare===bare.toUpperCase()&&/[A-Z]{3}/.test(bare)&&bare.split(' ').length<=6)))return '';
+  return s.slice(0,1200);}
+// A string with several steps in it: split on line breaks and list or paragraph tags, then on "1." / "Step 2" markers.
+function splitSteps(t){t=String(t||'');let parts=t.split(/<\/?(?:li|p|br|ol|ul|h[1-6]|div)\b[^>]*>|\r?\n+/i).map(x=>x.trim()).filter(Boolean);
+  if(parts.length===1){const n=decode(parts[0]).split(/\s+(?=(?:step\s*)?\d{1,2}[.)]\s+[A-Z])/i);if(n.length>1)parts=n;}return parts;}
+function stepsOf(n){const out=[];const add=t=>{for(const p of splitSteps(t)){const c=cleanStep(p);if(c&&c!==out[out.length-1])out.push(c);}};
+  const walk=(v,d)=>{if(v==null||d>6||out.length>=80)return;if(typeof v==='string'){add(v);return;}if(Array.isArray(v)){v.forEach(x=>walk(x,d+1));return;}if(typeof v!=='object')return;
+    const kids=v.itemListElement||v.steps||v.step;
+    if(kids&&(typeof kids==='object'))walk(kids,d+1);else walk(v.text!=null?v.text:v.name!=null?v.name:v.description,d+1);};
+  walk(n&&n.recipeInstructions,0);return out.slice(0,80);}
 function fromSchema(n,url){if(!n)return null;const tot=minutes(n.totalTime)||((minutes(n.prepTime)||0)+(minutes(n.cookTime)||0))||null;const g=guessMeta(n);
-  // Link only: the photo (n.image) is not kept, so backups stay small.
-  return {name:decode(txt(n.name)).slice(0,120),serv:servings(n.recipeYield||n.yield),total:tot,hands:minutes(n.prepTime),ings:ingList(n),link:String(url||n.url||'').trim(),meal:g.meal,tags:g.tags};}
+  // The photo is a link, not the image, so backups stay small.
+  const link=String(url||n.url||'').trim(),photo=photoOf(n,link),steps=stepsOf(n);
+  return {name:decode(txt(n.name)).slice(0,120),serv:servings(n.recipeYield||n.yield),total:tot,hands:minutes(n.prepTime),ings:ingList(n),link,meal:g.meal,tags:g.tags,...(photo?{photo}:{}),...(steps.length?{steps}:{})};}
 
 // ---------- page text and pasted lines ----------
 const LOOKS_ING=new RegExp(`^\\s*(?:[•▢☐*-]\\s*)?(?:${N1}|(?:a|an|one|two|three|four|half)\\s+(?:cups?|tablespoons?|teaspoons?|pinch|handful|can|clove|bunch|pound|lb|large|medium|small)\\b)`,'i');
@@ -212,6 +239,6 @@ function build(lines,opts){opts=opts||{};const P=opts.P||{};const rows=[],basics
 function cost(rows,P,serv,people){serv=Math.max(1,+serv||1);let whole=0;for(const r of rows||[]){const p=r.iid&&P[r.iid];if(!p||!(r.q>0)||p.staple||r.optional)continue;whole+=r.q*(+p.price||0)/(+p.pkg||1);}
   const portions=Math.max(1,Math.round(+people||serv));return {whole:Math.round(whole*100)/100,household:Math.round(whole*portions/serv*100)/100,portions};}
 
-const api={display,learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
+const api={display,learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,photoOf,stepsOf,cleanStep,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
 if(typeof window!=='undefined')window.RecipeCore=api;if(typeof module!=='undefined')module.exports=api;
 })();
