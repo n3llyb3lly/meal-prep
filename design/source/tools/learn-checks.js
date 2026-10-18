@@ -63,6 +63,17 @@ window.LearnChecks=function(){const LC=window.LearnCore,RC=window.ReceiptCore;co
     eq('A learned price pair settles a total with two possible fixes',[RC.solveTotal([1.27,2],3.77),(RC.solveTotal([1.27,2],3.77,null,new Set(['2~7']))||{}).to],[null,1.77]);}
   {let L=LC.empty();L=LC.record(L,'name','mild cheddar','@a','receipt-confirmed',t);L=LC.record(L,'name','mild chedclar','@a','receipt-confirmed',t);L=LC.record(L,'name','sharp cheddar','@b','receipt-confirmed',t);
     eq('Fuzzy matching gets 0.1 per learned alias of an item',LC.aliasCount(L,t),{a:2,b:1});}
+
+  grp('Learning stats in Diagnostics (learning step 5)');
+  {const S=replayState();const a=LC.statsOf(replay(S).rows,{date:'2026-10-10'}),b=LC.statsOf(replay(S).rows,{date:'2026-10-14'});
+    eq('Replaying the 10/10 receipt twice: the edit count drops',[a.edits,b.edits,b.edits<a.edits],[11,0,true]);
+    eq('First time: 49 items, 42 suggestions shown, 36 used as they were, 6 changed',[a.items,a.shown,a.accepted,a.edited],[49,42,36,6]);
+    eq('Second time: all 41 lines matched by item number',[b.byNum,b.byAlias,b.byFuzzy,b.shown],[41,0,0,0]);
+    eq('Word repairs are counted',a.ocr,2);
+    eq('Trend line for Diagnostics',LC.trend([{edits:27},{edits:9},{edits:3}]),'Edits per receipt 27 → 9 → 3');
+    eq('Only the last five receipts are in the trend',LC.trend([1,2,3,4,5,6].map(e=>({edits:e}))),'Edits per receipt 2 → 3 → 4 → 5 → 6');
+    eq('Seconds from Read to Add',LC.statsOf([],{readAt:'2026-10-10T15:00:00Z',addAt:'2026-10-10T15:01:35Z'}).secs,95);
+    eq('One line per receipt',LC.statsLine(b).startsWith('10/14 · 49 items · 41 by number'),true);}
   return out;};
 
 // A person logging the 10/10 receipt: the photo misreads five item numbers and two words, and they fix a few suggestions.
@@ -74,7 +85,7 @@ function replay(S){const LC=window.LearnCore,RC=window.ReceiptCore,F=RC.F1010,no
   let edits=0;const rows=g.map(x=>{const orig=x.text.replace('Mild Chedclar','Mild Cheddar').replace('Sov Sauce','Soy Sauce');const fr=F.rows.find(f=>f[1]===orig),good=String(fr[0]);const base=RC.suggest(fr[1]);const want={name:base.name,cat:base.cat,brand:base.brand,flavor:base.flavor,...(WANT[good]||{})};
     const sg=RC.suggest(x.text,{lookup:LC.lookup(S.L,now)});const m=LC.itemFor(S.L,{num:x.num,text:x.text,fixedText:sg.fixedText},'aldi',now);
     const r={good,text:x.text,fixedText:sg.fixedText,fixes:sg.changes,num:x.num||'',num0:x.num||'',from:x.from||'',rawNum:x.raw||'',corrected:!!x.corrected,learnedNum:!!x.corrected&&x.num===good,
-      total0:x.amount.toFixed(2),total:x.amount.toFixed(2),name0:sg.name,nCat0:sg.cat,nSub:sg.sub,brand0:sg.brand,flavor0:sg.flavor,iid0:m?m.iid:null,iid:m?m.iid:null,how:m?m.how:'none'};
+      count:x.weighed?1:x.qty,wt:x.weighed?String(x.wt):'',total0:x.amount.toFixed(2),total:x.amount.toFixed(2),name0:sg.name,nCat0:sg.cat,nSub:sg.sub,brand0:sg.brand,flavor0:sg.flavor,iid0:m?m.iid:null,iid:m?m.iid:null,how:m?m.how:'none'};
     if(r.num!==good)r.num=good;
     if(m){if(m.iid!=='u_'+good)r.iid='u_'+good;}
     else{if(!same(sg.name,want.name))r.nName=want.name;if(sg.cat!==want.cat)r.nCat=want.cat;r.nv={brand:want.brand,flavor:want.flavor};r.named=true;r.iid='u_'+good;r.how='named';S.names[r.iid]=want.name;}

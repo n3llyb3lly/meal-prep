@@ -107,8 +107,22 @@ function words(L,now){const V=new Set();for(const k in (L&&L.recs)||{}){if(!(k.s
 // How many printed texts point at each item. Fuzzy matching adds 0.1 for each.
 function aliasCount(L,now){const c={};for(const k in (L&&L.recs)||{}){if(!k.startsWith('name|')||k.startsWith('name|as:'))continue;const b=best(L,'name',k.slice(5),now);if(b&&isItem(b.value)&&b.weight>=BUILTIN){const id=b.value.slice(1);c[id]=(c[id]||0)+1;}}return c;}
 
+// ---- Step 5: how well the reader did on one receipt (kept in aldi-meal-prep:learnstats, outside undo) ----
+const SUG=['name','group','brand','flavor'];
+function statsOf(rows,o){o=o||{};const R=(rows||[]).filter(r=>r&&!r.gap);const st={at:o.date||today(),items:0,byNum:0,byAlias:0,byFuzzy:0,shown:0,accepted:0,edited:0,edits:0,ocr:0,undos:0,priceDigits:0,secs:null};
+  for(const r of R){st.items+=r.wt?1:Math.max(1,+r.count||1);if(r.how==='number')st.byNum++;else if(r.how==='alias'||r.how==='learned')st.byAlias++;else if(r.how==='guess')st.byFuzzy++;
+    const ed=editsOf(r);st.edits+=ed.length;if(r.how==='named'){st.shown++;if(ed.some(e=>SUG.includes(e[0])))st.edited++;else st.accepted++;}
+    st.ocr+=(r.fixes||[]).length;st.undos+=(r.fixUndo||[]).length;
+    for(const e of ed)if(e[0]==='price'){const a=e[1],b=e[2];if(a.length===b.length){for(let i=0;i<a.length;i++)if(a[i]!==b[i])st.priceDigits++;}else st.priceDigits+=Math.max(a.length,b.length);}}
+  if(o.readAt&&o.addAt){const s=(Date.parse(o.addAt)-Date.parse(o.readAt))/1000;if(s>=0)st.secs=Math.round(s);}
+  return st;}
+const md=d=>{const x=String(d||'').slice(5,10).split('-');return x.length===2?`${+x[0]}/${+x[1]}`:'';};
+function statsLine(s){return `${md(s.at)} · ${s.items} items · ${s.byNum} by number, ${s.byAlias} by name, ${s.byFuzzy} guessed · ${s.shown} suggestions: ${s.accepted} used, ${s.edited} changed · ${s.ocr} word repairs, ${s.undos} put back · ${s.priceDigits} price digits edited · ${s.edits} edits${s.secs!=null?` · ${s.secs} s from Read to Add`:''}`;}
+// The last five receipts, oldest first: "Edits per receipt 27 → 9 → 3".
+function trend(list,n){const L=(list||[]).slice(-(n||5));return L.length?`Edits per receipt ${L.map(s=>s.edits).join(' → ')}`:'Edits per receipt: no receipts yet';}
+
 // How many records of each kind, for Diagnostics.
 function counts(L){const c={};for(const k in (L&&L.recs)||{}){const kind=k.slice(0,k.indexOf('|'));c[kind]=(c[kind]||0)+1;}return c;}
 
-window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two,nk,digitPairs,editsOf,fromReceipt,knownNums,pairs,numLearn,itemFor,words,aliasCount};
+window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two,nk,digitPairs,editsOf,fromReceipt,knownNums,pairs,numLearn,itemFor,words,aliasCount,statsOf,statsLine,trend};
 })();

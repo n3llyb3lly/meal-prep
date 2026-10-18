@@ -1299,7 +1299,7 @@
         <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 14px">
           <button onClick="{{ toggleDiag }}" style="display:flex;align-items:center;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:0;min-height:52px"><span style="flex:1;font-weight:600;font-size:15px">Diagnostics <span style="color:var(--muted);font-weight:400">· {{ diagSum }}</span></span><span style="color:var(--muted)">{{ diagChev }}</span></button>
           <sc-if value="{{ diagOpen }}" hint-placeholder-val="{{ false }}">
-            <div style="font-size:12.5px;color:var(--muted);line-height:1.4;padding-bottom:6px">Errors, recent actions and budget inputs. Nothing leaves the phone unless you copy it.</div>
+            <div style="font-size:12.5px;color:var(--muted);line-height:1.4;padding-bottom:6px">Errors, recent actions, budget inputs and how the receipt reader is learning. Nothing leaves the phone unless you copy it.</div>
             <pre style="margin:0 0 8px;max-height:220px;overflow:auto;background:var(--page);border-radius:10px;padding:8px 10px;font:11.5px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:var(--ink)">{{ diagText }}</pre>
             <div style="display:flex;gap:8px;padding-bottom:10px"><button onClick="{{ copyDiag }}" style="height:42px;padding:0 14px;border-radius:10px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:13.5px">Copy</button><button onClick="{{ clearDiag }}" style="height:42px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:13.5px">Clear errors</button></div>
           </sc-if>
@@ -3792,6 +3792,8 @@ class Component extends DCLogic {
     const diag=['Errors ('+errs.length+')',...(errs.length?errs.map(e=>`${e.at.slice(0,16).replace('T',' ')} · ${e.screen} · ${e.msg}`):['none']),'',
       'Recent actions',...((S.history||[]).slice(0,20).map(h=>`${String(h.at).slice(5,16).replace('T',' ')} · ${h.label}`)),'',
       'Budget inputs',`weekly ${S.budget} · days ${days} · carry ${S.tripCarry||0} · override ${S.tripBudget==null?'none':S.tripBudget} · trip ${S.tripStart||'none'} to ${this.tripEnd()}`,'',
+      ...(()=>{const LC=window.LearnCore;if(!LC)return [];const ls=this.lsGet('learnstats',[]);const c=LC.counts(S.learn);
+        return ['Receipt learning (on this phone)',LC.trend(ls),...ls.slice(-10).reverse().map(x=>LC.statsLine(x)),`Learned: ${Object.keys(c).sort().map(k=>`${c[k]} ${k}`).join(', ')||'nothing yet'}`,''];})(),
       'Google Sheet',this.linked()?(()=>{const st=S.sheetStatus||{};const ls=S.lastSend;return `${String(S.sheetLink.url).split('?')[0]} · read ${st.at?st.at.slice(0,16).replace('T',' '):'never'} · version ${st.version||'?'}${st.error?' · '+st.error:''} · outbox ${(S.outbox||[]).length} · last send ${ls?ls.at.slice(5,16).replace('T',' ')+' '+ls.text:'none'}`;})():'not connected','',
       `App ${APP_VERSION} · build ${S.build||'?'} · catalog ${this.cat?this.cat.catalogVersion:'?'} · data ${SCHEMA}`].join('\n');
     return {moreMain:!sub||!['household','cost','calendar','backup','items','prices','sheet','sort','help'].includes(sub),subHousehold:sub==='household',subCalendar:sub==='calendar',subBackup:sub==='backup',subItems:sub==='items',subPrices:sub==='prices',subHelp:sub==='help',
@@ -4454,7 +4456,7 @@ class Component extends DCLogic {
     for(const gp of (extra&&extra.gaps)||[]){const at=rows.findIndex(r=>r.lineIdx===gp.after);rows.splice(Math.min(rows.length,(gp.row??rows.length)),0,{rid:uid(),gap:true,missing:gp.missing,crop:gp.crop||null,text:gp.text||'',iid:'__gap',count:1,total:'0.00'});}
     const am=pr.items.map(x=>x.amount);const fix=pr.subtotal!=null?RC.solveTotal(am,pr.subtotal,pr.items.map(x=>x.conf?x.conf.price:100),window.LearnCore&&S.learn?window.LearnCore.pairs(S.learn,'price',this.today()):null):null;
     let solve=null;if(fix){const it=pr.items[fix.i];const row=rows.find(r=>r.num===it.num&&!r.gap);solve={rid:row&&row.rid,from:fix.from,to:fix.to,line:fix.i+1};}
-    this.saveDraft({...d,...this.facts(d,pr,store),tab:'table',rows,solve,countRead:RC.itemCount(g),photoNote:extra&&extra.note||''});
+    this.saveDraft({...d,...this.facts(d,pr,store),tab:'table',rows,solve,countRead:RC.itemCount(g),photoNote:extra&&extra.note||'',readAt:new Date().toISOString()});
     const n=rows.filter(r=>!r.gap&&r.iid&&r.how!=='guess').length;this.flash(`${this.storeName(store)} receipt: ${RC.itemCount(g)} items read${n?`, ${n} matched`:''}.`);}
   readText63(txt){const RC=window.ReceiptCore;if(!RC)return false;const S=this.state,d=S.receiptDraft;const det=detectStoreLocal(txt);const store=d.store||det||S.lastStore||this.mainStore();if(store!=='aldi'&&det!=='aldi')return false;
     const pr=RC.parseLines(String(txt||'').split(/\r?\n/),{known:this.knownNums('aldi'),learn:this.numLearn('aldi')});if(!pr.items.length)return false;this.rcFromParsed(pr,pr.store||store);return true;}
@@ -4598,6 +4600,7 @@ class Component extends DCLogic {
       if(!vid)continue;if(vid.startsWith('b_')&&!(vars[r.iid]||[]).some(v=>v.vid===vid)){const p=P2[r.iid];vars[r.iid]=[...(vars[r.iid]||[]),{vid,brand:p&&p.brand||'',flavor:'',nums:{}}];}
       const v=(vars[r.iid]||[]).find(z=>z.vid===vid);if(v){if(r.num){v.nums[st]=[...new Set([...(v.nums[st]||[]),r.num])];nv[nkey(st,r.num)]=vid;}v.last={price:r2(parseFloat(r.unitP)||0),date,store:st};}r._vid=vid;}
     const LC=window.LearnCore;const learn=LC?LC.fromReceipt(S.learn,fin,{store:st,date,names:id=>P2[id]&&P2[id].name}):S.learn;
+    if(LC)this.lsSet('learnstats',[...this.lsGet('learnstats',[]),LC.statsOf(fin,{date,readAt:d.readAt,addAt:new Date().toISOString()})].slice(-50));
     const keepImg=this._keepImg;this._keepImg=null;
     this.relayer({learn,ownItems:own,outbox:ob,nameDict:dict,brandDict:bdict,variants:vars,numVar:nv,receiptDraft:{...d,rows:fin.map(r=>{const {_vid,...rest}=r;return {...rest,vid:_vid||r.vid||null};})}},()=>{
       const before=new Set(Object.values(this.state.inv||{}).flat().map(b=>b.bid));this.importDraft();
