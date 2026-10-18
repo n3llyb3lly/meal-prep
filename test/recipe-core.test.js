@@ -59,7 +59,7 @@ test('matching uses the receipt matcher, ranks exact names first and keeps forms
 test('a pick made once is used next time', () => {
   const before = RC.build(['1 red bell pepper, sliced'], opts).rows[0];
   assert.strictEqual(before.state, 'unmatched');
-  const after = RC.build(['2 red bell peppers'], { ...opts, learned: { [RC.norm('red bell pepper')]: 'peppers', [RC.norm('red bell peppers')]: 'peppers' } }).rows[0];
+  const after = RC.build(['2 red bell peppers'], { ...opts, learned: { [RC.learnKey('Red bell pepper')]: 'peppers' } }).rows[0];
   assert.deepStrictEqual([after.iid, after.how, after.q], ['peppers', 'learned', 2]);
 });
 

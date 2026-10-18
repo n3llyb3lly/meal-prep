@@ -87,13 +87,15 @@ function parseLine(raw){
 
 // ---------- matching ----------
 const FORMS=new Set(['powder','paste','flake','sauce','juice','seed','oil','extract','dried','salt','stick','chip','spread','soup','mix','seasoning','syrup','jam','puree','vinegar','sprout']);
+// The key a pick is learned under: lower case, singular ("red bell peppers" and "red bell pepper" are one).
+const learnKey=t=>sing(t);
 const KINDS=new Set(['green','diced','crushed','whipped','grape','cherry','sun','ground','frozen','canned','smoked','roasted','sweetened','condensed','evaporated','dark','light','instant','baby','red','white','purple','powdered','brown','block']);
 const sing=s=>norm(s).split(' ').map(w=>w.length>3&&/(oes|ches|shes|sses|xes)$/.test(w)?w.slice(0,-2):w.length>3&&/[^s]s$/.test(w)?w.slice(0,-1):w).join(' ');
 // opts.fuzzy(text) -> [{p,sc}] sorted best first: the app passes its receipt matcher (fuzzy over name and Aldi name).
-// opts.learned: {normalized text: item id} from earlier picks; opts.alias(text) -> item id or null.
+// opts.learned: {learnKey(item text): item id} from earlier picks; opts.alias(text) -> item id or null.
 // Same acceptance rule as receipts: score .7 or more and .08 clear of the next.
 function matchLine(p,opts){opts=opts||{};const key=norm(p.item);if(!key)return {iid:null,how:'none',sc:0,cands:[]};
-  const L=opts.learned||{};if(L[key])return {iid:L[key],how:'learned',sc:1,cands:[]};
+  const L=opts.learned||{},lk=learnKey(p.item);if(L[lk])return {iid:L[lk],how:'learned',sc:1,cands:[]};
   const a=opts.alias?opts.alias(p.item):null;if(a)return {iid:a,how:'alias',sc:1,cands:[]};
   // Recipe-side ranking on top of the shared matcher: an item named exactly like the line wins, and an item whose
   // name adds a form or kind the line doesn't ask for (powder, paste; green, diced) drops back ("1 onion" is not onion powder).
@@ -164,6 +166,6 @@ function build(lines,opts){opts=opts||{};const P=opts.P||{};const rows=[],basics
 function cost(rows,P,serv,people){serv=Math.max(1,+serv||1);let whole=0;for(const r of rows||[]){const p=r.iid&&P[r.iid];if(!p||!(r.q>0)||p.staple||r.optional)continue;whole+=r.q*(+p.price||0)/(+p.pkg||1);}
   const portions=Math.max(1,Math.round(+people||serv));return {whole:Math.round(whole*100)/100,household:Math.round(whole*portions/serv*100)/100,portions};}
 
-const api={decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
+const api={learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
 if(typeof window!=='undefined')window.RecipeCore=api;if(typeof module!=='undefined')module.exports=api;
 })();
