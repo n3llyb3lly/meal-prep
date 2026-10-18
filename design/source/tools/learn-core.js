@@ -36,15 +36,19 @@ function prefer(L,kind,key,builtin,now){const b=best(L,kind,key,now);if(b&&b.wei
 // A lookup the receipt rules can call without knowing about this file.
 function lookup(L,now){return (kind,key)=>{const b=best(L,kind,key,now);return b&&b.weight>=BUILTIN?b.value:null;};}
 
-// Fold the older keys into one store. Runs once per migration level; the old keys stay as they are.
-function migrate(L,s,now){L=L&&L.recs?L:empty();s=s||{};now=day(now)||today();if((L.mv||0)>=1)return L;L=clone(L);
-  for(const a of s.aliases||[])if(a&&a.text&&a.item&&a.item!=='__ignore')record(L,'name',norm(a.text),'@'+a.item,'receipt-confirmed',now);
-  for(const k in s.numLinks||{})record(L,'number',k,'@'+s.numLinks[k],'receipt-confirmed',now);
-  for(const k in s.nameDict||{})record(L,'word','abbr:'+k,s.nameDict[k],'user-edit',now);
-  for(const k in s.brandDict||{})record(L,'brand','n:'+k,s.brandDict[k],'user-edit',now);
-  for(const iid in s.variants||{})for(const v of s.variants[iid]||[]){if(v.brand)record(L,'brand','@'+iid,v.brand,'receipt-confirmed',(v.last&&v.last.date)||now);if(v.flavor)record(L,'flavor','@'+iid,v.flavor,'receipt-confirmed',(v.last&&v.last.date)||now);}
-  for(const k in s.numVar||{})record(L,'number','var:'+k,s.numVar[k],'receipt-confirmed',now);
-  L.mv=1;return L;}
+// Fold the older keys into one store, once per migration level. The old keys stay as they are.
+// Level 1: aliases, item numbers, abbreviations, brands, variants. Level 2 (step 6): prices from the price history.
+function migrate(L,s,now){L=L&&L.recs?L:empty();s=s||{};now=day(now)||today();if((L.mv||0)>=2)return L;L=clone(L);
+  if(!(L.mv>=1)){
+    for(const a of s.aliases||[])if(a&&a.text&&a.item&&a.item!=='__ignore')record(L,'name',norm(a.text),'@'+a.item,'receipt-confirmed',now);
+    for(const k in s.numLinks||{})record(L,'number',k,'@'+s.numLinks[k],'receipt-confirmed',now);
+    for(const k in s.nameDict||{})record(L,'word','abbr:'+k,s.nameDict[k],'user-edit',now);
+    for(const k in s.brandDict||{})record(L,'brand','n:'+k,s.brandDict[k],'user-edit',now);
+    for(const iid in s.variants||{})for(const v of s.variants[iid]||[]){if(v.brand)record(L,'brand','@'+iid,v.brand,'receipt-confirmed',(v.last&&v.last.date)||now);if(v.flavor)record(L,'flavor','@'+iid,v.flavor,'receipt-confirmed',(v.last&&v.last.date)||now);}
+    for(const k in s.numVar||{})record(L,'number','var:'+k,s.numVar[k],'receipt-confirmed',now);
+    L.mv=1;}
+  for(const iid in s.priceHistory||{})for(const h of [...(s.priceHistory[iid]||[])].sort((a,b)=>a.date<b.date?-1:1))if(!h.sale&&!h.discount&&h.paid>0)record(L,'price',(h.store||'aldi')+'|'+iid,(+h.paid).toFixed(2),'receipt-confirmed',h.date||now);
+  L.mv=2;return L;}
 // ---- Step 2: learn from a logged receipt ----
 const nk=(store,num)=>{num=String(num||'').trim();return !store||store==='aldi'?num:store+':'+num;};
 const isItem=v=>typeof v==='string'&&v[0]==='@';
@@ -66,7 +70,7 @@ function editsOf(r){const e=[];if(!r||r.gap)return e;
 // Record what a finished receipt taught. rows: review rows after import (iid set). ctx: {store, date, names: iid → item name}.
 // '-' stands for "no brand" or "no flavor" when the person cleared a suggestion.
 function fromReceipt(L0,rows,ctx){ctx=ctx||{};const L=clone(L0);const st=ctx.store||'aldi',at=day(ctx.date)||today();const RC=(typeof window!=='undefined'&&window.ReceiptCore)||null;
-  const nameOf=id=>typeof ctx.names==='function'?ctx.names(id):(ctx.names||{})[id];
+  const nameOf=id=>typeof ctx.names==='function'?ctx.names(id):(ctx.names||{})[id];const seen={};
   for(const r of rows||[]){if(!r||r.gap||!r.iid)continue;const ed=editsOf(r);const has=k=>ed.find(x=>x[0]===k);const t=norm(r.text),ft=norm(r.fixedText||r.text);
     const linkSrc=has('item')||r.how==='picked'?'user-edit':r.how==='guess'?'suggestion-accepted':'receipt-confirmed';
     if(t){record(L,'name',t,'@'+r.iid,linkSrc,at,r.iid0?'@'+r.iid0:null);if(ft&&ft!==t)record(L,'name',ft,'@'+r.iid,linkSrc,at);}
@@ -80,6 +84,9 @@ function fromReceipt(L0,rows,ctx){ctx=ctx||{};const L=clone(L0);const st=ctx.sto
     for(const [w,f] of r.fixes||[]){const lw=String(w).toLowerCase(),lf=String(f).toLowerCase();
       if(undo.has(lw)||(!fin.includes(lf)&&fin.includes(lw)))record(L,'word','ocr:'+lw,lw,'user-edit',at,lf);
       else if(fin.includes(lf))record(L,'word','ocr:'+lw,lf,'receipt-confirmed',at);}
+    if(!seen[r.iid]){seen[r.iid]=1;const q=Math.max(1,+r.count||1);const paid=r.wt?+r.unitP:(+r.total||0)/q;
+      const sameSize=r.size0==null||String(r.size)===String(r.size0);if(paid>0&&!r.sale&&!r.disc&&sameSize)record(L,'price',st+'|'+r.iid,paid.toFixed(2),'receipt-confirmed',at);
+      const sz=r.how==='named'?(r.nSize?r.nSize.amt:null):r.wt?null:r.size;if(sz!=null&&sz!==''&&sz!=='other')record(L,'size',st+'|'+r.iid,String(sz),r.size0!=null&&String(r.size)!==String(r.size0)?'user-edit':'receipt-confirmed',at);}
     if(r.how!=='named')continue;
     const name=String(r.nName??r.name0??'').trim();const keys=[...new Set(['t:'+t,'n:'+norm(name),'w2:'+two(name),'n:'+norm(r.name0)])].filter(k=>k.length>2);
     const src=k=>has(k)?'user-edit':'suggestion-accepted';
@@ -121,8 +128,23 @@ function statsLine(s){return `${md(s.at)} · ${s.items} items · ${s.byNum} by n
 // The last five receipts, oldest first: "Edits per receipt 27 → 9 → 3".
 function trend(list,n){const L=(list||[]).slice(-(n||5));return L.length?`Edits per receipt ${L.map(s=>s.edits).join(' → ')}`:'Edits per receipt: no receipts yet';}
 
+// ---- Step 6: habits, package sizes and usual prices ----
+const median=a=>{const b=[...a].sort((x,y)=>x-y);const m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2;};
+// Usual price: the median of the last 5 receipts at this store, once there are 3 or more.
+function usual(L,iid,store){const r=get(L,'price',(store||'aldi')+'|'+iid);if(!r||!r.recent||r.recent.length<3)return null;
+  return {price:Math.round(median(r.recent.map(x=>+x[0]))*100)/100,n:r.recent.length,last:r.last};}
+// The package size, once the same size was seen on the last two receipts. Then the app stops asking.
+function sizeSeen(L,iid,store){const r=get(L,'size',(store||'aldi')+'|'+iid);const a=r&&r.recent||[];if(a.length<2||a[a.length-1][0]!==a[a.length-2][0])return null;return a[a.length-1][0];}
+// How often something is bought, from the dates it was bought: {n, every (median days between), last, due, dueIn}.
+function habit(dates,now){const d=[...new Set((dates||[]).map(day).filter(Boolean))].sort();if(d.length<2)return {n:d.length,every:null,last:d[d.length-1]||null,due:null,dueIn:null};
+  const gaps=[];for(let i=1;i<d.length;i++)gaps.push(age(d[i-1],d[i]));const every=Math.max(1,Math.round(median(gaps)));const last=d[d.length-1];
+  const due=new Date(Date.parse(last)+every*DAY).toISOString().slice(0,10);return {n:d.length,every,last,due,dueIn:Math.round((Date.parse(due)-Date.parse(day(now)||today()))/DAY)};}
+// Items worth keeping stocked: bought at least 3 times, about every 3 weeks or more often. hist: iid → [dates or {date}].
+function stockIdeas(hist,now,skip){const out=[];for(const iid in hist||{}){if(skip&&skip(iid))continue;const h=habit((hist[iid]||[]).map(x=>x&&x.date||x),now);if(h.n>=3&&h.every&&h.every<=21)out.push({iid,...h});}
+  return out.sort((a,b)=>a.every-b.every||b.n-a.n);}
+
 // How many records of each kind, for Diagnostics.
 function counts(L){const c={};for(const k in (L&&L.recs)||{}){const kind=k.slice(0,k.indexOf('|'));c[kind]=(c[kind]||0)+1;}return c;}
 
-window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two,nk,digitPairs,editsOf,fromReceipt,knownNums,pairs,numLearn,itemFor,words,aliasCount,statsOf,statsLine,trend};
+window.LearnCore={W,BUILTIN,HALF,KINDS,empty,clone,record,values,best,get,prefer,lookup,migrate,counts,decay,norm,two,nk,digitPairs,editsOf,fromReceipt,knownNums,pairs,numLearn,itemFor,words,aliasCount,statsOf,statsLine,trend,median,usual,sizeSeen,habit,stockIdeas};
 })();

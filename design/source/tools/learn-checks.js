@@ -74,6 +74,26 @@ window.LearnChecks=function(){const LC=window.LearnCore,RC=window.ReceiptCore;co
     eq('Only the last five receipts are in the trend',LC.trend([1,2,3,4,5,6].map(e=>({edits:e}))),'Edits per receipt 2 → 3 → 4 → 5 → 6');
     eq('Seconds from Read to Add',LC.statsOf([],{readAt:'2026-10-10T15:00:00Z',addAt:'2026-10-10T15:01:35Z'}).secs,95);
     eq('One line per receipt',LC.statsLine(b).startsWith('10/14 · 49 items · 41 by number'),true);}
+
+  grp('Habits, package sizes and usual prices (learning step 6)');
+  {const eggs=['2026-10-01','2026-10-07','2026-10-13','2026-10-19'];const h=LC.habit(eggs,'2026-10-20');
+    eq('Eggs bought every 6 days, next due Oct 25',[h.n,h.every,h.due,h.dueIn],[4,6,'2026-10-25',5]);
+    eq('Bought 3 or more times, about every 3 weeks: suggested to keep stocked',LC.stockIdeas({eggs,flour:['2026-09-01','2026-10-01'],tea:['2026-06-01','2026-08-01','2026-10-01']},'2026-10-20').map(x=>[x.iid,x.every]),[['eggs',6]]);
+    eq('Items already stocked are not suggested',LC.stockIdeas({eggs},'2026-10-20',id=>id==='eggs').length,0);}
+  {const row=(sz,d)=>({text:'Eggs',iid:'eggs',iid0:'eggs',how:'number',num:'1',num0:'1',size:sz,size0:12,count:1,total:'2.19',total0:'2.19',_d:d});
+    let L=LC.fromReceipt(LC.empty(),[row(12)],{date:'2026-10-01'});eq('One package size seen: still asks',LC.sizeSeen(L,'eggs','aldi'),null);
+    L=LC.fromReceipt(L,[row(12)],{date:'2026-10-07'});eq('Same size seen twice: stops asking',LC.sizeSeen(L,'eggs','aldi'),'12');
+    L=LC.fromReceipt(L,[row(18)],{date:'2026-10-13'});eq('A different size asks again',LC.sizeSeen(L,'eggs','aldi'),null);}
+  {const rc=(p,d,x)=>({text:'Eggs',iid:'eggs',iid0:'eggs',how:'number',num:'1',num0:'1',count:1,total:p,total0:p,...(x||{})});let L=LC.empty();
+    L=LC.fromReceipt(L,[rc('2.19')],{date:'2026-09-01'});L=LC.fromReceipt(L,[rc('2.29')],{date:'2026-09-08'});eq('Two receipts: no usual price yet',LC.usual(L,'eggs','aldi'),null);
+    L=LC.fromReceipt(L,[rc('1.49',0,{sale:true})],{date:'2026-09-15'});eq('Sale prices are left out',LC.usual(L,'eggs','aldi'),null);
+    L=LC.fromReceipt(L,[rc('2.09'),rc('2.09')],{date:'2026-09-22'});eq('Three receipts: the median is your price',LC.usual(L,'eggs','aldi'),{price:2.19,n:3,last:'2026-09-22'});
+    for(const [p,d] of [['2.49','2026-09-29'],['2.59','2026-10-06'],['2.69','2026-10-13']])L=LC.fromReceipt(L,[rc(p)],{date:d});
+    eq('Only the last 5 receipts count',LC.usual(L,'eggs','aldi').price,2.49);
+    eq('Each store has its own usual price',LC.usual(L,'eggs','walmart'),null);}
+  {const L=LC.migrate(null,{priceHistory:{eggs:[{date:'2026-09-01',store:'aldi',paid:2.19},{date:'2026-09-08',store:'aldi',paid:1.49,sale:true},{date:'2026-09-15',store:'aldi',paid:2.29},{date:'2026-09-22',store:'aldi',paid:2.09}]}},t);
+    eq('Earlier receipts in the price history count on the first load',LC.usual(L,'eggs','aldi'),{price:2.19,n:3,last:'2026-09-22'});}
+  {const S=replayState();replay(S);replay(S);replay(S);eq('After logging the 10/10 receipt three times, Mild cheddar has a usual price',LC.usual(S.L,'u_383412','aldi').price,1.75);}
   return out;};
 
 // A person logging the 10/10 receipt: the photo misreads five item numbers and two words, and they fix a few suggestions.

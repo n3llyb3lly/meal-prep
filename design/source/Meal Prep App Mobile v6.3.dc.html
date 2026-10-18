@@ -746,6 +746,12 @@
           </sc-if>
         </div>
       </sc-for>
+          <sc-if value="{{ hasStockIdeas }}" hint-placeholder-val="{{ false }}">
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 12px">
+              <div style="font:700 16px 'Bricolage Grotesque',sans-serif;padding:8px 0 2px">From your receipts</div>
+              <sc-for list="{{ stockIdeas }}" as="x" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)"><span style="flex:1;min-width:0;font-size:14.5px;line-height:1.4">{{ x.text }}</span><button onClick="{{ x.yes }}" style="flex:none;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--primary);background:var(--primary);color:var(--on-accent);font-weight:600;font-size:13.5px">Keep stocked</button><button onClick="{{ x.no }}" style="flex:none;min-height:40px;padding:0 8px;border:0;background:transparent;color:var(--muted);font-weight:600;font-size:13.5px">No</button></div></sc-for>
+            </div>
+          </sc-if>
           <button onClick="{{ addStock }}" style="height:46px;border-radius:12px;border:1px solid var(--primary-ink);background:var(--surface);color:var(--primary-ink);font-weight:600;font-size:14.5px">+ Keep something else stocked</button>
           <sc-if value="{{ hasHabits }}" hint-placeholder-val="{{ false }}">
             <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 12px">
@@ -2329,6 +2335,7 @@
           <button onClick="{{ icClose }}" aria-label="Close" style="width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px">×</button>
         </div>
         <div style="overflow-y:auto;padding:0 20px 12px;display:flex;flex-direction:column;gap:12px">
+          <sc-if value="{{ icHasUsual }}" hint-placeholder-val="{{ false }}"><div style="background:var(--good-tint);color:var(--good-ink);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4">{{ icUsual }}</div></sc-if>
           <label style="display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px">Name<input value="{{ icName }}" onChange="{{ onIcName }}" style="height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;font-weight:400;background:var(--surface);color:var(--ink);outline:none"></input></label>
           <label style="display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px">Brand<input value="{{ icBrand }}" onChange="{{ onIcBrand }}" placeholder="For example, Great Value" style="height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;font-weight:400;background:var(--surface);color:var(--ink);outline:none"></input></label>
           <div style="display:flex;flex-direction:column;gap:5px"><span style="font-weight:600;font-size:14px">Group</span>
@@ -2835,6 +2842,8 @@ class Component extends DCLogic {
     prices=[...prices,...(L.ownItems||[])].map(p=>!p.own&&pe[p.id]&&(!p.priceDate||String(pe[p.id].at).slice(0,10)>=p.priceDate)?{...p,price:pe[p.id].price,src:pe[p.id].via||'edited',editedAt:pe[p.id].at,catPrice:p.price,catSrc:p.src}:p);
     const ie=L.itemEdits||{},oe=L.offerEdits||{};prices=prices.map(p=>effItem(p,ie[p.id],oe[p.id]));
     {const ms=L.mainStore||'aldi',is=L.itemStore||{};prices=prices.map(p=>{const want=is[p.id]||ms;if(!p.offers||p.store===want)return p;const o=p.offers.find(x=>x.store===want);if(!o||!(o.price>0))return p;const f=unitF(o.unit,p.unit)||1;const pkg=Math.round((o.pkg||p.pkg)*f*1000)/1000;return {...p,store:want,price:o.price,pkg,pack:o.pack||p.pack,priceDate:o.priceDate||p.priceDate,unitCost:pkg>0?o.price/pkg:p.unitCost};});}
+    {const LC=window.LearnCore;if(LC&&L.learn)prices=prices.map(p=>{const u=LC.usual(L.learn,p.id,p.store||'aldi');if(!u||p.soldBy==='weight'&&!(p.pkg===1))return p;const e=pe[p.id];if(e&&e.via!=='receipt'&&String(e.at).slice(0,10)>u.last)return p;
+      return {...p,price:u.price,src:'receipt',usual:u.n,editedAt:u.last+'T12:00:00.000Z',catPrice:p.catPrice??p.price,unitCost:p.pkg>0?u.price/p.pkg:p.unitCost};});}
     const nodes=[...(C.nodes||[]),...(L.ownNodes||[])];const favs={...(C.favorites||{}),...(L.favorites||{})};
     const kids={},byNode={},Pm={},Nm={};for(const n of nodes){Nm[n.id]=n;(kids[n.parent||'']=kids[n.parent||'']||[]).push(n.id);}for(const p of prices){Pm[p.id]=p;if(p.node&&!p.retired)(byNode[p.node]=byNode[p.node]||[]).push(p);}
     const under=nid=>{const out=[],st=[nid],seen=new Set();while(st.length){const x=st.pop();if(seen.has(x))continue;seen.add(x);out.push(...(byNode[x]||[]));st.push(...(kids[x]||[]));}return out;};
@@ -3099,7 +3108,7 @@ class Component extends DCLogic {
     const rows=d.rows.map(r=>{const c=this.rowCalc(r,P);const p=c&&c.p;const ign=r.iid==='__ignore';
       const set=k=>e=>this.setRow(r.rid,{[k]:e.target.value});
       const sizes=p&&!c.w?[{v:p.pkg,l:p.pack||fmtQ(p.pkg,p.unit)},...((p.altSizes||[]).filter(s=>s!==p.pkg).map(s=>({v:s,l:fmtQ(s,p.unit)}))),{v:'other',l:'Other size'}]:[];
-      const how={alias:'matched before',number:'matched by number',guess:'best guess, check it',cart:'',picked:'',none:''}[r.how]||'';
+      const how={alias:'matched before',learned:'matched from your earlier receipts',number:'matched by number',guess:'best guess, check it',cart:'',picked:'',none:''}[r.how]||'';
       const name=ign?'Not food, ignored':p?p.name:'Choose the item';
       const usual=p&&!p.own&&p.price>0?`usual ${money(p.price)}${c.w?'/lb':p.pack&&p.pack!=='each'?` for ${p.pack}`:''}`:'';
       const MC=window.MealCore;const known=sizes.filter(x=>x.v!=='other');const sz=r.size==='other'?'other':(known.some(x=>String(x.v)===String(r.size))?r.size:(p?p.pkg:r.size));
@@ -3117,7 +3126,7 @@ class Component extends DCLogic {
         hasAmount:!!p,isWeight:!!(c&&c.w),isPack:!!(c&&!c.w),wt:r.wt,onWt:set('wt'),
         wtUnits:['lb','oz'].map(u=>({label:u,...sel(r.wtUnit===u),pick:()=>this.setRow(r.rid,{wtUnit:u})})),
         countText:String(Math.max(1,+r.count||1)),cDec:()=>this.setRow(r.rid,{count:Math.max(1,(+r.count||1)-1)}),cInc:()=>this.setRow(r.rid,{count:(+r.count||1)+1}),
-        sizes:sizes.map(x=>({label:x.l,...sel(String(sz)===String(x.v)),pick:()=>this.setRow(r.rid,{size:x.v})})),hasSizes:sizes.length>1,
+        sizes:sizes.map(x=>({label:x.l,...sel(String(sz)===String(x.v)),pick:()=>this.setRow(r.rid,{size:x.v})})),hasSizes:sizes.length>1&&!r.sizeSettled,
         showOther:r.size==='other',other:r.other,onOther:set('other'),otherUnit:p?p.unit:'',
         ...(()=>{const n0=Math.max(1,+r.count||1);const wq=v=>{const x=parseFloat(v)||0;return r.wtUnit==='oz'?x/16:x;};const q0=c?(c.w?wq(r.wt):n0):1;
           const up=r.unitP!=null&&r.unitP!==''?r.unitP:(r.total!==''&&r.total!=null&&q0>0?r2((parseFloat(r.total)||0)/q0).toFixed(2):'');const upn=parseFloat(up);
@@ -3739,7 +3748,10 @@ class Component extends DCLogic {
         remText:'Remove',remBg:'var(--surface)',remColor:'var(--bad-ink)',
         remove:()=>{this.commit(`Removed ${p.name} from always stocked`,{itemSettings:{...(S.itemSettings||{}),[id]:{...s,on:false,listed:false}},isArm:null});}};});
     const on=rows.filter(r=>r.on);const inHouse=ids.filter(id=>S.itemSettings[id].on&&this.qty(id)>1e-6).length;
-    return {stockRows:rows,stockCoverText:`Always stocked: ${inHouse} of ${on.length} in the house`,
+    const LC=window.LearnCore;const ideas=LC?LC.stockIdeas(S.priceHistory||{},this.today(),id=>{const x=(S.itemSettings||{})[id];return !P[id]||P[id].retired||!!(x&&(x.listed||x.noSug));}).slice(0,3):[];
+    const stockIdeas=ideas.map(h=>{const nm=shortName(P[h.iid].name).toLowerCase();return {text:`Keep ${nm} stocked? You buy ${/s$/.test(nm)?'them':'it'} every ${h.every} day${h.every===1?'':'s'}.`,
+      yes:()=>this.setStock(h.iid,{on:true,listed:true,par:1,rate:h.every}),no:()=>this.setStock(h.iid,{on:false,listed:false,noSug:true})};});
+    return {stockIdeas,hasStockIdeas:stockIdeas.length>0,stockRows:rows,stockCoverText:`Always stocked: ${inHouse} of ${on.length} in the house`,
       addStock:()=>this.openItemSheet('stock',p=>this.setStock(p.id,{on:true,listed:true,par:1,rate:this.isStaple(p)?30:4}))};}
   extrasVals(P,R,t0){const S=this.state;const ids=Object.keys(S.itemSettings||{}).filter(id=>S.itemSettings[id]&&S.itemSettings[id].on&&P[id]);
     const low=[],chips=[],outN=[];for(const id of ids){const p=P[id];const pk=this.qty(id)/(p.pkg||1);const cover=pk*this.rateOf(id);
@@ -3914,7 +3926,8 @@ class Component extends DCLogic {
     const setD=patch=>{const x=this.state.itemCard;this.setState({itemCard:{...x,arm:false,d:{...x.d,...patch}}});};const setO=(i,patch)=>{const x=this.state.itemCard;setD({offers:x.d.offers.map((o,j)=>j===i?{...o,...patch}:o)});};
     const stores=(this.cat&&this.cat.stores)||DEFAULT_STORES;const path=this.nodePath(d.node).map(n=>n.name).join(' › ');const nd=this.nodeById(d.node);
     const fu=u=>u==='each'||u==='ct'?'each':u;
-    return {icOpen:true,icTitle:p.name,icName:d.name,onIcName:e=>setD({name:e.target.value}),icBrand:d.brand,onIcBrand:e=>setD({brand:e.target.value}),
+    const icUsual=p.usual?`Your price: ${money(p.price)}, the middle of your last ${p.usual} receipts at ${this.storeName(p.store||'aldi')}${p.catPrice!=null?` (catalog ${money(p.catPrice)})`:''}.`:'';
+    return {icOpen:true,icUsual,icHasUsual:!!icUsual,icTitle:p.name,icName:d.name,onIcName:e=>setD({name:e.target.value}),icBrand:d.brand,onIcBrand:e=>setD({brand:e.target.value}),
       icPath:path||'Not in a group yet',icPathColor:path?'var(--ink)':'var(--muted)',icChangePath:()=>this.openTree('card',c.id,nd?(nd.parent||null):null),
       icCanFav:!!nd,icFavText:nd?`My favorite for ${nd.name.toLowerCase()}`:'',icFavTrack:d.fav?'var(--good)':'var(--line)',icFavKnob:d.fav?20:0,icToggleFav:()=>setD({fav:!d.fav}),
       icOffers:d.offers.map((o,i)=>{const pu=perUnit({price:parseFloat(o.price),pkg:parseFloat(o.amt),unit:o.unit},o.unit,1);return {store:this.storeName(o.store),price:o.price,onPrice:e=>setO(i,{price:e.target.value}),amt:o.amt,onAmt:e=>setO(i,{amt:e.target.value}),
@@ -4445,7 +4458,8 @@ class Component extends DCLogic {
     const p=iid&&iid!=='__ignore'?this.atStore(P[iid],store):null;const w=!!x.weighed||(!!p&&this.isWeighed(p));const qn=w?(x.wt||(p?p.pkg:1)):Math.max(1,Math.round(x.qty||1));
     const name0=sg.name;const sz=RC.parseSize(sg.fixedText);const g={cat:sg.cat,sub:sg.sub};
     const vid=iid&&x.num?((S.numVar||{})[nkey(store,x.num)]||null):null;
-    return {rid:uid(),iid,iid0:iid,text:x.text,fixedText:sg.fixedText,num:x.num||'',num0:x.num||'',total0:r2(x.amount).toFixed(2),how,count:!w?qn:1,size:p?p.pkg:1,other:'',wt:w?String(qn):'',wtUnit:x.wtUnit||'lb',total:r2(x.amount).toFixed(2),unitP:(w&&x.unitP?r2(x.unitP):r2(x.amount/(qn||1))).toFixed(2),
+    const ss=LC&&S.learn&&p&&!w?LC.sizeSeen(S.learn,iid,store):null;const size=ss!=null&&+ss>0?+ss:(p?p.pkg:1);
+    return {rid:uid(),iid,iid0:iid,text:x.text,fixedText:sg.fixedText,num:x.num||'',num0:x.num||'',total0:r2(x.amount).toFixed(2),how,count:!w?qn:1,size,size0:size,sizeSettled:ss!=null,other:'',wt:w?String(qn):'',wtUnit:x.wtUnit||'lb',total:r2(x.amount).toFixed(2),unitP:(w&&x.unitP?r2(x.unitP):r2(x.amount/(qn||1))).toFixed(2),
       sale:x.disc?true:null,discAuto:!!x.disc,disc:x.disc?String(x.disc):'',showDisc:false,name0,nCat0:g.cat,nSub:g.sub,nSize:sz?{label:sz.label,amt:sz.base.amt,unit:sz.base.unit}:null,
       vid,brand0:sg.brand,brandFrom:sg.brandFrom,sugLearned:sg.learned||[],flavor0:sg.flavor,variety0:sg.variety,fixes:sg.changes,sugConf:sg.conf,priceDoubt:(()=>{if(!p||!(p.price>0)||w)return false;const a=r2(x.amount/(qn||1)).toFixed(2),b=r2(p.price).toFixed(2);if(a===b||a.length!==b.length)return false;let d=0,ok=true;const pp=LC&&S.learn?LC.pairs(S.learn,'price',t0):null;for(let i=0;i<a.length;i++)if(a[i]!==b[i]){d++;if(!RC.confusable(a[i],b[i],pp))ok=false;}return d===1&&ok&&(x.conf?x.conf.price<92:false);})(),conf:x.conf||null,corrected:!!x.corrected,from:x.from||'',unclear:!!x.unclear,rawNum:x.raw||'',crop:x.crop||null,tax:x.tax||'',printed:x.printed||null};}
   facts(d,pr,store){const u=d.userSet||{};const o={};const set=(k,v)=>{if(v!=null&&v!==''&&!u[k])o[k]=String(v);};
@@ -4635,7 +4649,7 @@ class Component extends DCLogic {
     if(!day)return {...settings,eveOn:false,eveChips:[],eveAmts:[]};
     const wd=kdate(t0).getDay();const ids=Object.keys(S.inv||{}).filter(id=>P[id]&&!P[id].staple&&this.qty(id)>0);
     const cands=ids.map(id=>{const log=((S.usageLog||{})[id]||[]).filter(e=>e.d&&!e.empty);const same=log.filter(e=>kdate(e.d).getDay()===wd);const bs=this.batches(id);
-      return {id,wd:log.map(e=>kdate(e.d).getDay()),lastWd:same.length?same[same.length-1].d:null,opened:bs.some(b=>b.q<(b.q0||b.q)-1e-6),dueIn:this.invDaysLeft(id)};});
+      return {id,wd:log.map(e=>kdate(e.d).getDay()),lastWd:same.length?same[same.length-1].d:null,opened:bs.some(b=>b.q<(b.q0||b.q)-1e-6),dueIn:(()=>{const a=this.invDaysLeft(id);const LC=window.LearnCore;const h=LC?LC.habit(((S.priceHistory||{})[id]||[]).map(x=>x.date),t0):null;const b=h&&h.n>=3&&h.dueIn!=null?Math.max(0,h.dueIn):null;return a==null?b:b==null?a:Math.min(a,b);})()};});
     const ranked=H.rankChips(cands,wd,t0,8);const open=S.eveOpen;const logged=S.eveLogged&&S.eveLogged.d===day?S.eveLogged.names:[];
     const done=()=>{const x=this.lsGet('eve',{});x[day]={...(x[day]||{}),done:true};this.lsSet('eve',x);this.setState({eveOpen:null,eveLogged:null});if(!logged.length)this.flash('Thanks. Nothing else logged.');};
     return {...settings,eveOn:true,eveChips:ranked.map(c=>{const on=open===c.id;return {label:shortName(P[c.id].name),open:on,pick:()=>this.setState({eveOpen:on?null:c.id}),bg:on?'var(--primary)':'var(--page)',color:on?'var(--on-accent)':'var(--ink)',border:on?'var(--primary)':'var(--line)'};}),
@@ -4816,7 +4830,7 @@ class Component extends DCLogic {
     const TB=this.tripBudget(),TD=this.tripDays(),tEnd=this.tripEnd(),tStart=S.tripStart||t0;const stockLines=this.stockPlan(P,need,shop);const hhLines=this.essLines();const hhCost=r2(hhLines.reduce((a,l)=>a+l.cost,0));const stockCost=r2(stockLines.reduce((a,l)=>a+l.cost,0)+hhCost);const spent=this.spent(),avail=Math.max(0,TB-spent),ok=shop.total+stockCost<=avail+1e-9;
     const gmap={};const ms=S.prices.some(p=>(p.offers||[]).some(o=>o.store!=='aldi'));shop.buy.forEach(l=>{(gmap[l.it.cat]=gmap[l.it.cat]||[]).push(l)});if(stockLines.length)gmap['Always stocked']=stockLines;if(hhLines.length)gmap['Household']=hhLines;
     const cats=[...CAT_ORDER,'Always stocked',...Object.keys(gmap).filter(c=>!CAT_ORDER.includes(c)&&c!=='Always stocked')];
-    const shopGroups=cats.filter(c=>gmap[c]).map(c=>({cat:c,lines:gmap[c].sort((a,b)=>a.it.name.localeCompare(b.it.name)).map(l=>({name:l.it.name,short:packLabel(l.it,l.packs)+(l.stock?' · always stocked':l.restock?' · marked out':''),store:l.it.store||'aldi',...this.cheapRow(l),estMark:l.it.src==='estimate'?' *':'',
+    const shopGroups=cats.filter(c=>gmap[c]).map(c=>({cat:c,lines:gmap[c].sort((a,b)=>(((S.priceHistory||{})[b.it.id]||[]).length-((S.priceHistory||{})[a.it.id]||[]).length)||a.it.name.localeCompare(b.it.name)).map(l=>({name:l.it.name,short:packLabel(l.it,l.packs)+(l.stock?' · always stocked':l.restock?' · marked out':''),store:l.it.store||'aldi',...this.cheapRow(l),estMark:l.it.src==='estimate'?' *':'',
       detail:(l.stock?`Buy ${packLabel(l.it,l.packs)}. Keeps you stocked for ${l.days} day${l.days===1?'':'s'}${l.have>0?`; you have ${this.shareText(l.it,l.have)}`:''}.${l.note?' '+l.note:''}`:l.restock?`Buy ${packLabel(l.it,l.packs)}. Marked out in your kitchen.`:`Buy ${packLabel(l.it,l.packs)}. Menu uses ${fmtQ(l.need,l.it.unit)}${l.have>0?`, you have ${fmtQ(l.have,l.it.unit)}`:''}.`)+(l.it.src==='edited'?` Price edited ${mdDate(dkey(new Date(l.it.editedAt)))}.`:''),
       cost:money(l.cost),unitPrice:l.packs>1?`${money(l.it.price)} each`:'',buy:()=>l.hh?this.buyEss(l):this.buyLine(l),
       editing:S.editPrice===l.id,notEditing:S.editPrice!==l.id,edit:()=>l.hh?this.setState({essSheet:{key:l.key}}):this.setState({editPrice:l.id,priceDraft:String(l.it.price)})}))}));
@@ -4977,7 +4991,7 @@ class Component extends DCLogic {
       copyAliasCsv:()=>this.copyText(this.csv([['receipt_text','item_id'],...(S.aliases||[]).filter(a=>!String(a.item).startsWith('u_')).map(a=>[a.text,a.item==='__ignore'?'ignore':a.item])]),'Receipt aliases'),
       hasMsg:!!S.msg,msgText:S.msg?S.msg.text:'',msgBg:S.msg&&S.msg.ok?'var(--good-tint)':'var(--bad-tint)',msgColor:S.msg&&S.msg.ok?'var(--good-ink)':'var(--bad-ink)',
       search:S.search,onSearch:e=>this.setState({search:e.target.value}),
-      priceRows:plist.slice(0,40).map(p=>{const ed=p.src==='edited'||p.src==='receipt';const [b,c,l]=srcStyle(p.src);const hl=((S.priceHistory||{})[p.id]||[]).slice(-1)[0];return {hasSrc:['edited','receipt','estimate'].includes(p.src),name:p.name,pack:`${p.pack||''}${p.staple?' · staple':''}${ed&&p.catPrice!=null?` · catalog ${money(p.catPrice)}`:''}${hl?` · last paid ${money(hl.paid)} ${mdDate(hl.date)}${hl.sale?' (sale)':''}`:''}`,price:money(p.price),
+      priceRows:plist.slice(0,40).map(p=>{const ed=p.src==='edited'||p.src==='receipt';const [b,c,l]=p.usual?['var(--good-tint)','var(--good-ink)','your price']:srcStyle(p.src);const hl=((S.priceHistory||{})[p.id]||[]).slice(-1)[0];return {hasSrc:['edited','receipt','estimate'].includes(p.src),name:p.name,pack:`${p.pack||''}${p.staple?' · staple':''}${ed&&p.catPrice!=null?` · catalog ${money(p.catPrice)}`:''}${hl?` · last paid ${money(hl.paid)} ${mdDate(hl.date)}${hl.sale?' (sale)':''}`:''}`,price:money(p.price),
         src:ed?`${l} ${mdDate(dkey(new Date(p.editedAt)))}`:l,srcBg:b,srcColor:c,canRevert:ed,revert:()=>this.revertPrice(p.id)};}),
       priceMore:plist.length>40?`Showing 40 of ${plist.length}. Search to find more.`:`${plist.length} item${plist.length===1?'':'s'}`,
       sheetOpen,sh,closeSheet:()=>this.setState({sheet:null}),...this.recEdVals(),...this.myRecVals(),
