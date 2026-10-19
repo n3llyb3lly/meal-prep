@@ -9,7 +9,8 @@
  *  - doPost: the app sends changes made on the phone. Each one is applied once, logged in
  *            "Change log", and answered (applied / already applied / sheet kept / refused).
  *  - A "Meal Prep" menu in the spreadsheet: check the data, set up sheets and dropdowns, fetch recipe photos and steps
- *    (which also guesses each recipe's kind), suggest side pairings, set the app key, and show the app address.
+ *    (which also guesses each recipe's kind), suggest side pairings, mark cooking basics as staples, set the app key, and show the app address.
+ *  - Drive backups (6.6): the app saves its data to a "Meal Prep backups" folder in your Google Drive.
  *  - onEdit: when you edit a row of Items or Recipes (or a recipe's Ingredients), it stamps
  *    last_changed and changed_by = sheet. That is how "the sheet wins" is decided.
  *
@@ -506,6 +507,71 @@ function toV1_(c) {
   };
 }
 
+// ---------------------------------------------------------------- staples and shelf life (6.6, Meal Prep > Mark staples and shelf life)
+
+// Cooking basics the cook sheet treats as "you have it" (one collapsed line, never on the list by default). The app
+// has the same words as a fallback (STAPLE_RE / NOT_STAPLE in v6.6); the sheet is the source of truth.
+// Fresh garlic, onions and other perishables never match: only rows stored in the pantry are marked.
+var STAPLE_RE_ = /\b(?:olive|vegetable|canola|avocado|sesame|coconut|cooking|frying|peanut|sunflower|grapeseed)\s+oil\b|\bcooking spray\b|\boil spray\b|\bvinegar\b|\bsalt\b|\b(?:black|white)\s+pepper\b|\bpeppercorns?\b|\bsugar\b|\bflour\b|\bbaking (?:soda|powder)\b|\bcorn ?starch\b|\bsoy sauce\b|\bvanilla extract\b|\bseasoning\b|\bspice\b|\b(?:ground|dried)\s+(?:basil|oregano|thyme|rosemary|parsley|dill|sage|marjoram|tarragon|bay|chives|mint|fenugreek|cumin|coriander|ginger|cinnamon|nutmeg|cloves|allspice|cardamom|mustard|turmeric|cayenne|chipotle|ancho|fennel|achiote|annatto|(?:black |white |red )?pepper)\b|\b(?:chili|curry|garlic|onion|ginger|mustard|cayenne)\s+powder\b|\b(?:paprika|cumin|cinnamon|oregano|turmeric|nutmeg|cayenne|allspice|cardamom|coriander|bay leaves|garam masala|ras el hanout|red pepper flakes|italian seasoning|old bay|saz[oó]n)\b/i;
+var NOT_STAPLE_ = /\b(?:chips?|crisps|crackers?|popcorn|pretzels?|nuts?|snacks?|tortillas?|bread|buns?|rolls?|snap|free|cookies?|cake|muffin|brownie|cereal|candy|gum|(?<!baking )soda|drink|masa|tea|coffee|butter|cheese|fresh|frozen|salted caramel|salt water taffy|dressing|marinade|wings?)\b/i;
+
+// Shelf-life days for shelf-stable food, used only where the pantry_days cell is blank. Same table as
+// FirstCore.shelfGuess in the app. First match wins; no match leaves the cell blank, and the app then shows the item
+// under "No date" instead of marking it expired.
+var SHELF_GUESS_ = [
+  [60, /\b(?:summer sausage|salami|pepperoni|beef sticks?|meat sticks?|snack sticks?|jerky)\b/i],
+  [90, /\bcrackers?\b|\bgraham\b|\b(?:granola|protein|cereal|snack|breakfast|fruit|nut|energy|fiber|oat) bars?\b/i],
+  [365, /\b(?:canned|can|cans|tinned)\b|\bin (?:water|juice|oil|syrup|brine|tomato sauce)\b|\b(?:tuna|chickpeas|garbanzo|black beans|kidney beans|pinto beans|cannellini|navy beans|refried beans|baked beans|diced tomatoes|crushed tomatoes|whole tomatoes|tomato sauce|tomato paste|evaporated milk|condensed milk|coconut milk|soup|chili beans|sweet corn|green beans|vienna sausages?|spam)\b/i],
+  [180, /\b(?:marinara|pasta sauce|spaghetti sauce|alfredo|pizza sauce|salsa|queso dip|enchilada sauce|curry paste|pesto|jarred|jar)\b/i],
+  [180, /\b(?:sparkling water|seltzer|(?<!baking )soda|cola|juice|bottled water|spring water|lemonade|sports drink|energy drink|iced tea|coconut water)\b/i],
+  [365, /\b(?:spaghetti|penne|rotini|rigatoni|ziti|macaroni|linguine|fettuccine|farfalle|lasagna|angel hair|orzo|egg noodles|lo mein|ramen|pasta|rice|couscous|quinoa)\b/i]
+];
+var NOT_SHELF_ = /\b(?:fresh|refrigerated|frozen|deli|tortellini|ravioli|gnocchi|rice vinegar|rice wine|rice cakes?|rice milk|chips|tortillas?|cereal|kombucha|cold brew|milk(?! chocolate))\b/i;
+
+function shelfGuess_(name) {
+  name = String(name || '');
+  if (NOT_SHELF_.test(name) && !/\b(?:evaporated|condensed|coconut) milk\b/i.test(name)) return null;
+  for (var i = 0; i < SHELF_GUESS_.length; i++) if (SHELF_GUESS_[i][1].test(name)) return SHELF_GUESS_[i][0];
+  return null;
+}
+function isStaple_(name) { name = String(name || ''); return STAPLE_RE_.test(name) && !NOT_STAPLE_.test(name); }
+
+// What "Mark staples and shelf life" would change: [{row, id, name, field, from, to}]. Only N -> Y and blank -> days;
+// a Y is never cleared and a filled cell is never changed. Retired rows and household rows are skipped.
+function staplePlan_() {
+  var tI = table_(SHEETS.items), tC = table_(SHEETS.categories), CATS = {}, out = [];
+  if (!tI) return out;
+  if (tC) tC.objects().forEach(function (r) { var n = str_(r.category).toLowerCase(); if (n) CATS[n] = str_(r.storage).toLowerCase(); });
+  tI.objects().forEach(function (r) {
+    var id = str_(r.item_id), name = str_(r.name) || id; if (!id || yn_(r.retired) === 'Y' || str_(r.group)) return;
+    var cat = str_(r.category).toLowerCase(); if (cat === HOUSE_CATEGORY.toLowerCase()) return;
+    var storage = str_(r.storage).toLowerCase() || CATS[cat] || 'pantry';
+    if (storage !== 'pantry') return;
+    if (yn_(r.staple) !== 'Y' && tI.col.staple != null && isStaple_(name)) out.push({ row: r._row, id: id, name: name, field: 'staple', from: str_(r.staple) || '(blank)', to: 'Y' });
+    if (tI.col.pantry_days != null && blank_(r.pantry_days)) { var d = shelfGuess_(name); if (d) out.push({ row: r._row, id: id, name: name, field: 'pantry_days', from: '(blank)', to: d }); }
+  });
+  return out;
+}
+
+function menuStaples() {
+  var ui = SpreadsheetApp.getUi(), plan = staplePlan_();
+  if (!plan.length) { ui.alert('Nothing to change. Every cooking basic is already a staple and no shelf-stable row is missing its pantry days.'); return; }
+  var ss = SpreadsheetApp.getActive(), sh = ss.getSheetByName('Staple changes') || ss.insertSheet('Staple changes');
+  sh.clear();
+  var rows = [['Items row', 'item_id', 'name', 'column', 'was', 'becomes']].concat(plan.map(function (p) { return [p.row, p.id, p.name, p.field, p.from, p.to]; }));
+  sh.getRange(1, 1, rows.length, 6).setValues(rows); sh.setFrozenRows(1); sh.getRange(1, 1, 1, 6).setFontWeight('bold');
+  var st = plan.filter(function (p) { return p.field === 'staple'; }).length;
+  var r = ui.alert('Staples and shelf life', st + ' row(s) become staples and ' + (plan.length - st) + ' blank pantry_days cell(s) get filled. The list is in the "Staple changes" sheet. Apply them now?', ui.ButtonSet.YES_NO);
+  if (r !== ui.Button.YES) return;
+  var tI = table_(SHEETS.items);
+  plan.forEach(function (p) {
+    tI.set(p.row, p.field, p.to);
+    if (tI.col.last_changed != null) tI.set(p.row, 'last_changed', new Date());
+    if (tI.col.changed_by != null) tI.set(p.row, 'changed_by', 'sheet');
+  });
+  ui.alert('Done. ' + plan.length + ' cell(s) changed. Phones pick them up with the next catalog.');
+}
+
 // ---------------------------------------------------------------- the web app
 
 function json_(obj) { return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
@@ -546,6 +612,8 @@ function doGet(e) {
  *    "idMap":{"u_greek_yogurt_tub":"greek_yogurt_tub","edit:d_tacos":"d_tacos_mine"},"version":"…"}
  *   {"key":"SECRET","action":"recipe.fetch","url":"https://…"}  -> see recipeFetch_
  *   {"key":"SECRET","action":"recipe.fetchAll"}  -> fills photo_url and steps for every recipe, see fetchSteps_
+ *   {"key":"SECRET","action":"backup.save|backup.list|backup.fetch", …}  -> Drive backups, see backup_
+ *   any other action -> {ok:false, error:"unknown action"}
  */
 function doPost(e) {
   var body;
@@ -553,6 +621,9 @@ function doPost(e) {
   if (!keyOk_(body.key)) return json_({ ok: false, error: 'refused', message: 'Wrong or missing key.' });
   if (body.action === 'recipe.fetch') return json_(recipeFetch_(body.url));
   if (body.action === 'recipe.fetchAll') return json_(startFetchAll_(20000));
+  if (/^backup\.(save|list|fetch)$/.test(String(body.action))) return json_(backup_(body));
+  // Before 6.6 an unknown action fell through to the changes below and came back {ok:true, results:[]}.
+  if (body.action != null) return json_({ ok: false, error: 'unknown action', message: 'This script does not know "' + String(body.action).slice(0, 40) + '". Update your Google script.' });
   var changes = Array.isArray(body.changes) ? body.changes.slice(0, MAX_BATCH) : [];
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) return json_({ ok: false, error: 'busy', message: 'The sheet is busy. Try again in a minute.' });
@@ -564,6 +635,139 @@ function doPost(e) {
     try { var c = currentCatalog_(); version = c.catalog && c.catalog.catalogVersion; } catch (err) { }
     return json_({ ok: true, results: results, idMap: ctx.idMap, version: version });
   } finally { lock.releaseLock(); }
+}
+
+// ---------------------------------------------------------------- Drive backups (6.6: backup.save, backup.list, backup.fetch)
+
+// The phone sends its whole saved state in 350,000-character base64 parts. Each part is kept as its own file in
+// "Meal Prep backups/_parts" until the last one arrives; then they are joined into one JSON file in "Meal Prep backups"
+// and old backups are thinned out (backupKeep_). The app strips the key before sending; a backup that still
+// contains it is refused. Neither the data nor the key is ever logged.
+//   file content: {id, at, enc, size, meta, data}   file description: the same without data, plus len (data length)
+var BACKUP_FOLDER = 'Meal Prep backups';
+var BACKUP_PARTS = '_parts';
+var BACKUP_CHUNK = 350000;           // characters in one part, both ways
+var BACKUP_MAX_PARTS = 60;           // about 21 MB of base64
+var BACKUP_KEEP = { daily: 7, weekly: 4 };   // Nelson's choice; same as FirstCore.backupKeep in the app
+var BACKUP_ENCS = ['gzip-base64', 'base64'];
+var BACKUP_NAME_RE = /^[A-Za-z0-9._-]{1,120}\.json$/;
+var BACKUP_ID_RE = /^[A-Za-z0-9_-]{1,80}$/;
+
+function backup_(body) {
+  try {
+    if (body.action === 'backup.save') return backupSave_(body);
+    if (body.action === 'backup.list') return backupList_();
+    return backupFetch_(body);
+  } catch (err) { return { ok: false, error: 'backup-failed', message: 'Google Drive said: ' + String(err && err.message || err).slice(0, 200) }; }
+}
+
+function backupFolder_(sub) {
+  var P = PropertiesService.getScriptProperties(), id = P.getProperty('BACKUP_FOLDER_ID'), f = null;
+  if (id) { try { f = DriveApp.getFolderById(id); if (f.isTrashed()) f = null; } catch (err) { f = null; } }
+  if (!f) {
+    var it = DriveApp.getFoldersByName(BACKUP_FOLDER);
+    while (it.hasNext()) { var c = it.next(); if (!c.isTrashed()) { f = c; break; } }
+    if (!f) f = DriveApp.createFolder(BACKUP_FOLDER);
+    P.setProperty('BACKUP_FOLDER_ID', f.getId());
+  }
+  if (!sub) return f;
+  var s = f.getFoldersByName(sub);
+  return s.hasNext() ? s.next() : f.createFolder(sub);
+}
+
+function filesIn_(folder) { var out = [], it = folder.getFiles(); while (it.hasNext()) { var f = it.next(); if (!f.isTrashed()) out.push(f); } return out; }
+function trashNamed_(folder, name) { filesIn_(folder).forEach(function (f) { if (f.getName() === name) f.setTrashed(true); }); }
+
+function backupSave_(b) {
+  var part = b.part, parts = b.parts, data = b.data;
+  if (!BACKUP_ID_RE.test(String(b.id || ''))) return { ok: false, error: 'bad-id', message: 'The backup has no usable id.' };
+  if (!BACKUP_NAME_RE.test(String(b.name || ''))) return { ok: false, error: 'bad-name', message: 'The backup file name is not allowed.' };
+  if (BACKUP_ENCS.indexOf(b.enc) < 0) return { ok: false, error: 'bad-enc', message: 'enc must be gzip-base64 or base64.' };
+  if (!(parts >= 1 && parts <= BACKUP_MAX_PARTS && parts % 1 === 0 && part >= 0 && part < parts && part % 1 === 0)) return { ok: false, error: 'bad-part', message: 'part and parts do not add up.' };
+  if (typeof data !== 'string' || data.length > BACKUP_CHUNK || !/^[A-Za-z0-9+/=]*$/.test(data)) return { ok: false, error: 'bad-data', message: 'Each part must be base64 of at most ' + BACKUP_CHUNK + ' characters.' };
+  var tmp = backupFolder_(BACKUP_PARTS), pname = b.id + '.part' + part;
+  trashNamed_(tmp, pname);      // a part sent again replaces the first copy
+  tmp.createFile(pname, data, 'text/plain');
+  if (part !== parts - 1) return { ok: true, action: 'backup.save', part: part, parts: parts };
+
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) return { ok: false, error: 'busy', message: 'Another backup is being written. Try again in a minute.' };
+  try {
+    var mine = {}, prefix = b.id + '.part';
+    filesIn_(tmp).forEach(function (f) { var n = f.getName(); if (n.indexOf(prefix) === 0) mine[n.slice(prefix.length)] = f; });
+    var chunks = [];
+    for (var i = 0; i < parts; i++) {
+      if (!mine[i]) return { ok: false, error: 'missing-part', message: 'Part ' + (i + 1) + ' of ' + parts + ' never arrived. Back up again.' };
+      chunks.push(mine[i].getBlob().getDataAsString());
+    }
+    var joined = chunks.join(''), dropParts = function () { for (var k in mine) mine[k].setTrashed(true); };
+    var text;
+    try {
+      var bytes = Utilities.base64Decode(joined);
+      text = b.enc === 'gzip-base64' ? Utilities.ungzip(Utilities.newBlob(bytes, 'application/x-gzip')).getDataAsString() : Utilities.newBlob(bytes).getDataAsString();
+    } catch (err) { dropParts(); return { ok: false, error: 'bad-data', message: 'The backup could not be read back. Back up again.' }; }
+    var key = PropertiesService.getScriptProperties().getProperty('APP_KEY');
+    if (key && (text.indexOf(key) >= 0 || JSON.stringify(b.meta || null).indexOf(key) >= 0)) { dropParts(); return { ok: false, error: 'has-key', message: 'The backup still contains the app key, so it was not saved.' }; }
+    var at = Date.now(), info = { id: b.id, at: at, enc: b.enc, size: +b.size || text.length, meta: b.meta == null ? null : b.meta };
+    var folder = backupFolder_();
+    trashNamed_(folder, b.name);
+    var file = folder.createFile(b.name, JSON.stringify(merge_(info, { data: joined })), 'application/json');
+    try { file.setDescription(JSON.stringify(merge_(info, { len: joined.length }))); } catch (err) { }   // list reads this instead of every file
+    dropParts();
+    // parts older than a day belong to uploads that never finished
+    filesIn_(tmp).forEach(function (f) { if (at - f.getDateCreated().getTime() > 864e5) f.setTrashed(true); });
+    var keep = b.keep && b.keep.daily >= 1 && b.keep.weekly >= 0 ? { daily: Math.min(31, b.keep.daily | 0), weekly: Math.min(52, b.keep.weekly | 0) } : BACKUP_KEEP;
+    var all = backupFiles_(folder), kept = backupKeep_(all, at, keep, tz_()), deleted = 0;
+    kept[file.getId()] = true;
+    all.forEach(function (x) { if (!kept[x.fileId]) { x.file.setTrashed(true); deleted++; } });
+    return { ok: true, action: 'backup.save', part: part, parts: parts, saved: true, name: b.name, fileId: file.getId(), deleted: deleted };
+  } finally { lock.releaseLock(); }
+}
+
+// Backups in the folder, newest first: {fileId, file, id, name, at, size, enc, meta, len}
+function backupFiles_(folder) {
+  return filesIn_(folder).filter(function (f) { return BACKUP_NAME_RE.test(f.getName()); }).map(function (f) {
+    var d = null;
+    try { d = JSON.parse(f.getDescription() || 'null'); } catch (err) { }
+    if (!d || d.len == null) { try { var c = JSON.parse(f.getBlob().getDataAsString()); d = { id: c.id, at: c.at, enc: c.enc, size: c.size, meta: c.meta, len: String(c.data || '').length }; } catch (err) { return null; } }
+    return { fileId: f.getId(), file: f, id: d.id || f.getId(), name: f.getName(), at: +d.at || f.getDateCreated().getTime(), size: d.size || null, enc: d.enc, meta: d.meta == null ? null : d.meta, len: d.len || 0 };
+  }).filter(Boolean).sort(function (a, b) { return b.at - a.at; });
+}
+
+/**
+ * Which backups to keep: the newest of each of the last keep.daily days (today counts as one), plus the newest of
+ * each of the last keep.weekly calendar weeks (Monday to Sunday; this week counts as one). Days are calendar days in
+ * the sheet's time zone. Fixed weeks, not "7-13 days ago": with a rolling window the file that would stand for a week
+ * is often deleted the day before it gets the job, so weekly copies go missing.
+ * files: [{fileId, at}] (any order). Returns {fileId: true} for the ones to keep.
+ */
+function backupKeep_(files, now, keep, tz) {
+  var dayN = function (ms) { var s = Utilities.formatDate(new Date(ms), tz || 'UTC', 'yyyy-MM-dd').split('-'); return Math.round(Date.UTC(+s[0], s[1] - 1, +s[2]) / 864e5); };
+  var weekN = function (d) { return Math.floor((d + 3) / 7); };   // day 0 (1 Jan 1970) was a Thursday
+  var today = dayN(now), byDay = {}, byWeek = {}, out = {};
+  files.slice().sort(function (a, b) { return b.at - a.at; }).forEach(function (f) {
+    var d = Math.min(today, dayN(f.at)), ago = today - d, w = weekN(today) - weekN(d);
+    if (ago < keep.daily && !byDay[ago]) { byDay[ago] = 1; out[f.fileId] = true; }
+    if (w < keep.weekly && !byWeek[w]) { byWeek[w] = 1; out[f.fileId] = true; }
+  });
+  return out;
+}
+
+function backupList_() {
+  var files = backupFiles_(backupFolder_()).map(function (x) {
+    return { id: x.id, fileId: x.fileId, name: x.name, at: x.at, size: x.size, enc: x.enc, meta: x.meta, parts: Math.max(1, Math.ceil(x.len / BACKUP_CHUNK)) };
+  });
+  return { ok: true, action: 'backup.list', files: files };
+}
+
+function backupFetch_(b) {
+  var want = String(b.id || ''), part = b.part == null ? 0 : b.part;
+  if (!want) return { ok: false, error: 'bad-id', message: 'Say which backup to fetch.' };
+  var hit = backupFiles_(backupFolder_()).filter(function (x) { return x.id === want || x.fileId === want; })[0];
+  if (!hit) return { ok: false, error: 'not-found', message: 'That backup is no longer in Google Drive.' };
+  var c = JSON.parse(hit.file.getBlob().getDataAsString()), data = String(c.data || ''), parts = Math.max(1, Math.ceil(data.length / BACKUP_CHUNK));
+  if (!(part >= 0 && part < parts && part % 1 === 0)) return { ok: false, error: 'bad-part', message: 'That backup has ' + parts + ' part(s).' };
+  return { ok: true, action: 'backup.fetch', id: hit.id, part: part, parts: parts, enc: c.enc, size: c.size, data: data.slice(part * BACKUP_CHUNK, (part + 1) * BACKUP_CHUNK) };
 }
 
 // ---------------------------------------------------------------- recipe pages (recipe.fetch)
@@ -1490,6 +1694,7 @@ function onOpen() {
     .addItem('Suggest food types', 'menuSuggestFoodTypes')
     .addItem('Fetch photos and steps', 'menuFetchSteps')
     .addItem('Suggest pairings', 'menuSuggestPairings')
+    .addItem('Mark staples and shelf life', 'menuStaples')
     .addSeparator()
     .addItem('Set the app key', 'menuSetKey')
     .addItem('Show the app address and key', 'menuShowAddress')
