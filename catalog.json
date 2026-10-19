@@ -1,7 +1,7 @@
 {
  "schemaVersion": 1,
- "catalogVersion": "2026.10.03-1501",
- "builtAt": "2026-10-03T20:01:36.123Z",
+ "catalogVersion": "2026.10.19-0600",
+ "builtAt": "2026-10-19T06:00:00.000Z",
  "categories": [],
  "items": [
   {
@@ -1490,7 +1490,7 @@
    "price": 7.79,
    "src": "photo",
    "priceDate": "2026-10-02",
-   "staple": false,
+   "staple": true,
    "storage": "pantry",
    "fridge": null,
    "freezer": null,
@@ -2663,7 +2663,7 @@
    "price": 5.95,
    "src": "inventory",
    "priceDate": "2026-10-02",
-   "staple": false,
+   "staple": true,
    "storage": "pantry",
    "fridge": null,
    "freezer": null,
