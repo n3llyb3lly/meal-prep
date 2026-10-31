@@ -11,6 +11,8 @@
  *  - A "Meal Prep" menu in the spreadsheet: check the data, set up sheets and dropdowns, fetch recipe photos and steps
  *    (which also guesses each recipe's kind), suggest side pairings, mark cooking basics as staples, set the app key, and show the app address.
  *  - Drive backups (6.6): the app saves its data to a "Meal Prep backups" folder in your Google Drive.
+ *  - Possible ingredients (script version 7): items a recipe needs that Aldi doesn't sell. Items > possible = Y,
+ *    price left blank, and where = the store you noted on the phone. A real price for one clears possible.
  *  - onEdit: when you edit a row of Items or Recipes (or a recipe's Ingredients), it stamps
  *    last_changed and changed_by = sheet. That is how "the sheet wins" is decided.
  *
@@ -31,6 +33,11 @@ var STORAGE = ['fridge', 'freezer', 'pantry', 'counter'];
 var TRACKING = ['quantity', 'staple', 'stocked'];
 var SOLD_BY = ['pack', 'weight'];
 var SCHEMA = 2;                 // newest catalog format; ?schema=1 (the default) serves the version 5.3 shape
+// The script's own version, sent in every reply as "script". The app sends possible ingredients (item.add with
+// possible, item.where) only to a script that reports 7 or more. Scripts before 7 send no number.
+var SCRIPT_VERSION = 7;
+// Version 7: possible ingredients. Added after the existing Items columns; nothing is reordered.
+var POSSIBLE_COLS = ['possible', 'where'];
 var LEVELS = { 1: 'Category', 2: 'Type', 3: 'Form', 4: 'Variety', 5: 'Style' };
 var OFFER_HEADERS = ['item', 'store', 'price', 'pack', 'unit', 'pkg', 'numbers', 'price_date', 'price_source', 'last_changed', 'changed_by'];
 var NODE_HEADERS = ['id', 'name', 'parent', 'level', 'last_changed', 'changed_by'];
@@ -223,6 +230,8 @@ function buildCatalog_(prev) {
     ['staple', 'retired'].forEach(function (k) { if (!blank_(r[k]) && ['Y', 'N'].indexOf(yn_(r[k])) < 0) E(line + ' (' + id + '): ' + k + ' must be Y or N.'); });
     var storage = str_(r.storage).toLowerCase() || null; if (storage && STORAGE.indexOf(storage) < 0) E(line + ' (' + id + '): storage "' + r.storage + '" isn\'t one of ' + STORAGE.join(', ') + '.');
     var price = num_(r.price), pkg = num_(r.package_qty);
+    if (!blank_(r.possible) && ['Y', 'N'].indexOf(yn_(r.possible)) < 0) E(line + ' (' + id + '): possible must be Y or N.');
+    var possible = !retired && yn_(r.possible) === 'Y';
     var catName = str_(r.category) || 'Pantry'; if (catR && !CATS[catName.toLowerCase()]) E(line + ' (' + id + '): category "' + catName + '" isn\'t on the Categories sheet.');
     var sb = str_(r.sold_by).toLowerCase(); if (!retired && !sb) noSold.push(id); else if (sb && SOLD_BY.indexOf(sb) < 0) E(line + ' (' + id + '): sold_by "' + r.sold_by + '" must be pack or weight.');
     var tr = str_(r.tracking_default).toLowerCase(); if (tr && TRACKING.indexOf(tr) < 0) E(line + ' (' + id + '): tracking_default "' + r.tracking_default + '" isn\'t one of ' + TRACKING.join(', ') + '.');
@@ -237,6 +246,8 @@ function buildCatalog_(prev) {
       brand: str_(r.brand) || null, node: str_(r.node) || null, offers: []
     };
     if (str_(r.flavor)) it.flavor = str_(r.flavor);
+    // Version 7: where to buy an item Aldi doesn't sell. Left out when blank, so other items keep their fingerprint.
+    if (str_(r.where)) it.where = str_(r.where);
     // 6.1: food types and household fields
     var ft = str_(r.food_types != null ? r.food_types : r.flags).toLowerCase().split(/[;,]/).map(function (x) { return x.trim().replace(/[\s-]+/g, '_'); }).filter(String);
     ft.forEach(function (f) { if (FOOD_TYPES.indexOf(f) < 0) E(line + ' (' + id + '): food type "' + f + '" isn\'t one of ' + FOOD_TYPES.join(', ') + '.'); });
@@ -265,11 +276,14 @@ function buildCatalog_(prev) {
     var mirror = rows.filter(function (o) { return o.store === 'aldi' && o.price > 0; })[0] || rows.filter(function (o) { return o.price > 0; })[0];
     if (mirror) { it.price = mirror.price; it.pack = mirror.pack; it.unit = mirror.unit; it.pkg = mirror.pkg; it.priceDate = mirror.priceDate; it.src = mirror.src; it.nums = mirror.nums; }
     else { it.nums = (rows.filter(function (o) { return o.store === 'aldi'; })[0] || { nums: MIG ? [] : it.nums }).nums; }
-    if (!retired && !(it.price > 0)) E(line + ' (' + id + '): price is missing, zero or not a number' + (MIG ? ' (add a price on the Offers tab).' : '.'));
+    // Version 7: a possible ingredient has no price until someone buys it. Once it has one, it is an ordinary item.
+    if (possible && it.price > 0) W(id + ': possible is Y but it has a price, so the app treats it as an ordinary item. Set possible to N.');
+    else if (possible) it.possible = true;
+    if (!retired && !it.possible && !(it.price > 0)) E(line + ' (' + id + '): price is missing, zero or not a number' + (MIG ? ' (add a price on the Offers tab).' : '.') + ' For an item Aldi doesn\'t sell, set possible to Y.');
     if (!retired && !(it.pkg > 0)) E(line + ' (' + id + '): package_qty is missing or zero.');
     if (it.node && !ND[it.node]) E(line + ' (' + id + '): node "' + it.node + '" isn\'t on the Nodes tab.');
     if (!retired && !it.staple && (storage === 'fridge' || storage === 'counter') && it.fridge == null && it.pantry == null) W(id + ': perishable with no shelf-life days.');
-    if (!retired && !it.group && (!it.priceDate || (new Date(today) - new Date(it.priceDate)) / 864e5 > 30)) W(id + ': price_date ' + (it.priceDate || 'missing') + ' is over 30 days old.');
+    if (!retired && !it.group && !it.possible && (!it.priceDate || (new Date(today) - new Date(it.priceDate)) / 864e5 > 30)) W(id + ': price_date ' + (it.priceDate || 'missing') + ' is over 30 days old.');
     it.offers.forEach(function (o) {
       o.nums.forEach(function (n) {
         if (!/^\d{4,14}$/.test(n)) E(line + ' (' + id + '): ' + (ST[o.store] ? ST[o.store].name : o.store) + ' number "' + n + '" isn\'t 4 to 14 digits.');
@@ -594,14 +608,14 @@ function keyOk_(given) {
 function doGet(e) {
   var p = (e && e.parameter) || {};
   if (!keyOk_(p.key)) return json_({ ok: false, error: 'refused', message: 'Wrong or missing key.' });
-  if (p.ping) return json_({ ok: true, app: 'meal-prep-sheet', at: new Date().toISOString() });
+  if (p.ping) return json_({ ok: true, app: 'meal-prep-sheet', script: SCRIPT_VERSION, at: new Date().toISOString() });
   var c = currentCatalog_();
   var problems = { errors: c.errors, warnings: c.warnings, stale: c.stale };
   if (!c.catalog) return json_({ ok: false, error: 'sheet-errors', message: 'The sheet has errors and there is no earlier good copy.', problems: problems });
-  if (p.have && p.have === c.catalog.catalogVersion) return json_({ ok: true, notModified: true, version: c.catalog.catalogVersion, problems: problems });
+  if (p.have && p.have === c.catalog.catalogVersion) return json_({ ok: true, notModified: true, version: c.catalog.catalogVersion, script: SCRIPT_VERSION, problems: problems });
   // Version 5.3 phones send no schema and get the version 1 shape. Version 6 sends schema=2.
   var cat = String(p.schema || '1') === '2' ? c.catalog : toV1_(c.catalog);
-  return json_({ ok: true, version: c.catalog.catalogVersion, schema: cat.schemaVersion, catalog: cat, problems: problems });
+  return json_({ ok: true, version: c.catalog.catalogVersion, schema: cat.schemaVersion, script: SCRIPT_VERSION, catalog: cat, problems: problems });
 }
 
 /**
@@ -609,7 +623,8 @@ function doGet(e) {
  *   {"key":"SECRET","device":"pixel","changes":[{"id":"c_…","type":"price.set","at":"…","data":{…},"base":{…}}, …]}
  * Reply:
  *   {"ok":true,"results":[{"id":"c_…","status":"applied|duplicate|conflict|rejected|error","message":"…","sheet":{…}}],
- *    "idMap":{"u_greek_yogurt_tub":"greek_yogurt_tub","edit:d_tacos":"d_tacos_mine"},"version":"…"}
+ *    "idMap":{"u_greek_yogurt_tub":"greek_yogurt_tub","edit:d_tacos":"d_tacos_mine"},"version":"…","script":7}
+ *   Every reply to a key that works carries "script" (SCRIPT_VERSION). Scripts before version 7 leave it out.
  *   {"key":"SECRET","action":"recipe.fetch","url":"https://…"}  -> see recipeFetch_
  *   {"key":"SECRET","action":"recipe.fetchAll"}  -> fills photo_url and steps for every recipe, see fetchSteps_
  *   {"key":"SECRET","action":"backup.save|backup.list|backup.fetch", …}  -> Drive backups, see backup_
@@ -633,7 +648,7 @@ function doPost(e) {
     SpreadsheetApp.flush();
     var version = null;
     try { var c = currentCatalog_(); version = c.catalog && c.catalog.catalogVersion; } catch (err) { }
-    return json_({ ok: true, results: results, idMap: ctx.idMap, version: version });
+    return json_({ ok: true, results: results, idMap: ctx.idMap, version: version, script: SCRIPT_VERSION });
   } finally { lock.releaseLock(); }
 }
 
@@ -1133,6 +1148,7 @@ function syncSides_() {
 function context_() {
   var log = ensureSheet_(SHEETS.log, LOG_HEADERS), idm = ensureSheet_(SHEETS.idmap, IDMAP_HEADERS);
   ensureColumns_(SHEETS.recipes, RECIPE_FETCH_HEADERS.concat(RECIPE_KIND_HEADERS), []);
+  ensureColumns_(SHEETS.items, POSSIBLE_COLS, []);
   var ctx = { items: table_(SHEETS.items), recipes: table_(SHEETS.recipes), ingredients: table_(SHEETS.ingredients), aliases: table_(SHEETS.aliases), log: table_(SHEETS.log), idm: table_(SHEETS.idmap), idMap: {} };
   ctx.done = {}; ctx.log.objects().forEach(function (r) { if (r.change_id) ctx.done[String(r.change_id)] = r; });
   ctx.map = {}; ctx.idm.objects().forEach(function (r) { if (r.phone_id) ctx.map[String(r.phone_id)] = String(r.sheet_id); });
@@ -1229,20 +1245,30 @@ var HANDLERS = {
     if (!d.id || !d.name) return { status: 'rejected', message: 'Item without an id or name.' };
     if (ctx.map[d.id]) { ctx.idMap[d.id] = resolve_(ctx, d.id); return { status: 'duplicate', target: ctx.idMap[d.id], message: 'Already in the sheet as ' + ctx.idMap[d.id] + '.' }; }
     var byName = null; for (var k in ctx.itemRow) if (nname_(ctx.itemRow[k].name) === nname_(d.name)) { byName = k; break; }
-    if (byName) { addIdMap_(ctx, d.id, byName, 'item'); return { status: 'applied', target: byName, message: d.name + ' is already in the sheet as ' + byName + '. Linked to it.' }; }
+    if (byName) {
+      addIdMap_(ctx, d.id, byName, 'item');
+      // A possible ingredient that is already there: keep the sheet's row, and fill in the store if the sheet has none.
+      var br = ctx.itemRow[byName];
+      if (truthy_(d.possible) && str_(d.where) && ctx.items.col.where != null && blank_(cell_(ctx.items, br, 'where'))) { ctx.items.set(br._row, 'where', str_(d.where)); stampRow_(ctx.items, br._row); }
+      return { status: 'applied', target: byName, message: d.name + ' is already in the sheet as ' + byName + '. Linked to it.' };
+    }
+    // Version 7: an ingredient from a recipe that Aldi doesn't sell. No price yet, so price, date and source stay blank.
+    var poss = truthy_(d.possible) && !(+d.price > 0);
     var base = String(d.id).replace(/^u_/, ''); if (!/^[a-z0-9_]+$/.test(base)) base = slug_(d.name) || 'item';
     var id = newId_(base, ctx.itemRow);
     var nums = (d.nums || []).filter(function (n) { return /^\d{4,8}$/.test(String(n)); });
     var row = ctx.items.append({
       item_id: id, name: d.name, category: d.cat || 'Other', package_label: d.pack || '', unit: d.unit || 'each', package_qty: d.pkg || 1,
-      price: d.price, price_source: d.src === 'estimate' ? 'estimate' : (d.src === 'receipt' ? 'receipt' : 'phone'), price_date: d.priceDate ? new Date(d.priceDate + 'T12:00:00') : new Date(),
+      price: poss ? '' : d.price, price_source: poss ? '' : (d.src === 'estimate' ? 'estimate' : (d.src === 'receipt' ? 'receipt' : 'phone')),
+      price_date: poss ? '' : (d.priceDate ? new Date(d.priceDate + 'T12:00:00') : new Date()),
       staple: d.staple ? 'Y' : 'N', storage: d.storage || '', fridge_days: d.fridge == null ? '' : d.fridge, freezer_days: d.freezer == null ? '' : d.freezer,
       pantry_days: d.pantry == null ? '' : d.pantry, family: d.family || '', sold_by: d.soldBy || 'pack', alt_sizes: '', tracking_default: d.tracking || '',
       aldi_product: d.aldi || '', aldi_numbers: nums.join('; '), retired: 'N', replaced_by: '',
-      notes: d.src === 'receipt' ? (d.unsorted ? 'Added from a receipt; not placed in the tree yet' : 'Added from a receipt') : 'Added on the phone',
+      notes: poss ? 'From a recipe; not sold at Aldi' : d.src === 'receipt' ? (d.unsorted ? 'Added from a receipt; not placed in the tree yet' : 'Added from a receipt') : 'Added on the phone',
+      possible: poss ? 'Y' : 'N', where: str_(d.where),
       last_changed: new Date(), changed_by: 'phone'
     });
-    ctx.itemRow[id] = { _row: row, item_id: id, name: d.name, aldi_numbers: nums.join('; '), price: d.price };
+    ctx.itemRow[id] = { _row: row, item_id: id, name: d.name, aldi_numbers: nums.join('; '), price: poss ? '' : d.price };
     if (ctx.items.col.brand != null && d.brand) ctx.items.set(row, 'brand', d.brand);
     if (ctx.items.col.flavor != null && d.flavor) ctx.items.set(row, 'flavor', d.flavor);
     var node = d.node ? resolve_(ctx, d.node) : ''; if (node && ctx.nodeRow[node] && ctx.items.col.node != null) ctx.items.set(row, 'node', node);
@@ -1257,7 +1283,18 @@ var HANDLERS = {
         price_date: o.priceDate ? dateVal_(o.priceDate) : '', price_source: o.src === 'estimate' ? 'estimate' : (o.src === 'receipt' ? 'receipt' : 'phone') });
     });
     addIdMap_(ctx, d.id, id, 'item');
-    return { status: 'applied', target: id, message: 'Added ' + d.name + ' as ' + id + '.' };
+    if (!poss && offers.some(function (o) { return +o.price > 0; })) clearPossible_(ctx, id);
+    return { status: 'applied', target: id, message: 'Added ' + d.name + ' as ' + id + (poss ? ' (a possible ingredient, no price yet)' : '') + '.' };
+  },
+
+  // Version 7: where to buy a possible ingredient, changed on the phone after it was added. data = {id, where}, base = {changed}?
+  'item.where': function (ctx, d, base) {
+    var id = resolve_(ctx, d.id), r = ctx.itemRow[id]; if (!r) return { status: 'rejected', target: id, message: 'No item ' + id + ' in the sheet.' };
+    if (sheetEditedSince_(ctx.items, r, base && base.changed)) return { status: 'conflict', target: id, sheet: { where: str_(cell_(ctx.items, r, 'where')) }, message: (r.name || id) + ' was changed in the sheet. The sheet\'s store was kept.' };
+    var w = str_(d.where).slice(0, 200);
+    if (sameVal_(cell_(ctx.items, r, 'where'), w)) return { status: 'applied', target: id, message: (r.name || id) + ': store was already ' + (w || 'blank') + '.' };
+    ctx.items.set(r._row, 'where', w); stampRow_(ctx.items, r._row);
+    return { status: 'applied', target: id, message: (r.name || id) + ': where to buy it is now ' + (w || 'blank') + '.' };
   },
 
   // Changed details of an item. data = {item, fields:{name, pack, pkg, …}}, base = {fields as the phone last saw them}
@@ -1309,6 +1346,7 @@ var HANDLERS = {
     ctx.items.set(r._row, 'price', +d.price);
     if (ctx.items.col.price_source != null) ctx.items.set(r._row, 'price_source', d.via === 'receipt' ? 'receipt' : 'edited');
     ctx.items.set(r._row, 'price_date', d.date ? new Date(d.date + 'T12:00:00') : new Date());
+    clearPossible_(ctx, id);
     stampRow_(ctx.items, r._row);
     return { status: 'applied', target: id, message: name + ' now $' + (+d.price).toFixed(2) + '.' };
   },
@@ -1553,6 +1591,7 @@ function offerPrice_(ctx, d, base, store, full) {
   if (full) { if (d.pack != null) f.pack = d.pack; if (d.unit != null) f.unit = d.unit; if (d.pkg != null) f.pkg = +d.pkg; }
   setOffer_(ctx, id, store, f);
   if (store === 'aldi') mirrorAldi_(ctx, id);
+  clearPossible_(ctx, id);
   return { status: 'applied', target: id, message: name + ' now $' + (+d.price).toFixed(2) + '.' };
 }
 
@@ -1597,6 +1636,12 @@ function sheetEditedSince_(t, r, seenIso) {
   if (String(r.changed_by || '') !== 'sheet' || !r.last_changed) return false;
   var lc = new Date(r.last_changed); if (isNaN(lc)) return false;
   return !seenIso || lc.getTime() > new Date(seenIso).getTime() + 1000;
+}
+
+// Version 7: an item with a real price (offer.set, price.set, a priced item.add) is no longer a possible ingredient.
+function clearPossible_(ctx, id) {
+  var r = ctx.itemRow[id]; if (!r || ctx.items.col.possible == null || yn_(cell_(ctx.items, r, 'possible')) !== 'Y') return false;
+  ctx.items.set(r._row, 'possible', 'N'); stampRow_(ctx.items, r._row); return true;
 }
 
 function badIngredients_(ctx, d) {
@@ -1760,6 +1805,8 @@ function menuSetup() {
   ensureColumns_(SHEETS.recipes, RECIPE_KIND_HEADERS, notes);
   if (!sheet_(SHEETS.pairings)) { ensureSheet_(SHEETS.pairings, PAIRING_HEADERS); notes.push('Added the Pairings tab. Meal Prep > Suggest pairings proposes rows for it.'); }
   ensurePairingLists_(); syncSides_();
+  // Version 7: possible ingredients (items Aldi doesn't sell) and where to buy them
+  ensureColumns_(SHEETS.items, POSSIBLE_COLS, notes);
 
   // Each rule: [sheet, column, kind, source, help]. kind "list" = dropdown from a range ([sheet, column] of the source).
   // A rule whose column or source can't be found is skipped and named in the message, instead of stopping the setup.
@@ -1770,7 +1817,9 @@ function menuSetup() {
     [IT, 'price_source', 'list', [LI, 'price_source']], [IT, 'staple', 'list', YN], [IT, 'retired', 'list', YN],
     [IT, 'storage', 'list', [LI, 'storage']], [IT, 'sold_by', 'list', [LI, 'sold_by']], [IT, 'tracking_default', 'list', [LI, 'tracking']],
     [IT, 'replaced_by', 'list', [IT, 'item_id']], [IT, 'changed_by', 'values', ['sheet', 'phone']],
-    [IT, 'price', 'gte', 0, 'Price must be 0 or more.'], [IT, 'package_qty', 'gt', 0, 'Package amount must be more than 0.'],
+    [IT, 'price', 'gte', 0, 'Price must be 0 or more. Leave it blank for a possible ingredient.'],
+    [IT, 'possible', 'list', YN, 'Y: a recipe needs it but Aldi doesn\'t sell it, so it has no price yet. A price from the phone sets it back to N.'],
+    [IT, 'where', 'any', null, 'Where to buy a possible ingredient (a store or website). Edited on the phone under Settings > Items.'], [IT, 'package_qty', 'gt', 0, 'Package amount must be more than 0.'],
     [IT, 'fridge_days', 'gte', 0], [IT, 'freezer_days', 'gte', 0], [IT, 'pantry_days', 'gte', 0],
     [IT, 'price_date', 'date', null, 'Use a date such as 2026-10-03.'],
     [IT, 'item_id', 'formula', function (c, all) { return '=AND(COUNTIF(' + all + ',' + c + ')=1,REGEXMATCH(' + c + ',"^[a-z0-9_]+$"))'; }, 'item_id must be unique and use only lowercase letters, numbers and _.'],
@@ -1818,6 +1867,7 @@ function menuSetup() {
     else if (x[2] === 'gt') b.requireNumberGreaterThan(x[3]);
     else if (x[2] === 'date') b.requireDate();
     else if (x[2] === 'checkbox') b.requireCheckbox();
+    else if (x[2] === 'any') { try { target.offset(-1, 0, 1).setNote(x[4]); n++; } catch (err) { skipped.push(x[0] + ' > ' + x[1] + ' (' + err.message + ')'); } return; }   // no rule, just a header note
     else if (x[2] === 'formula') { var letter = target.getA1Notation().replace(/\d+.*$/, ''); b.requireFormulaSatisfied(x[3](letter + '2', '$' + letter + '$2:$' + letter)); }
     if (x[4]) b.setHelpText(x[4]);
     try { target.setDataValidation(b.build()); n++; } catch (err) { skipped.push(x[0] + ' > ' + x[1] + ' (' + err.message + ')'); }

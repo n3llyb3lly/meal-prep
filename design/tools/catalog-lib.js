@@ -69,12 +69,16 @@ function build(X,wb,prev,today){
     for(const k of ['staple','retired'])if(!blank(r[k])&&!['Y','N'].includes(yn(r[k])))E(`${line} (${id}): ${k} must be Y or N.`);
     const storage=str(r.storage).toLowerCase()||null;if(storage&&!STORAGE.includes(storage))E(`${line} (${id}): storage "${r.storage}" isn't one of ${STORAGE.join(', ')}.`);
     const price=num(r.price),pkg=num(r.package_qty);
+    // Version 7 (sheet script): possible ingredients, items a recipe needs that Aldi doesn't sell. No price until bought.
+    if(!blank(r.possible)&&!['Y','N'].includes(yn(r.possible)))E(`${line} (${id}): possible must be Y or N.`);
+    const possible=!retired&&yn(r.possible)==='Y';
     const catName=str(r.category)||'Pantry';if(catR&&!CATS[catName.toLowerCase()])E(`${line} (${id}): category "${catName}" isn't on the Categories sheet.`);
     const sb=str(r.sold_by).toLowerCase();if(!retired&&!sb)noSold.push(id);else if(sb&&!SOLD_BY.includes(sb))E(`${line} (${id}): sold_by "${r.sold_by}" must be pack or weight.`);
     const tr=str(r.tracking_default).toLowerCase();if(tr&&!TRACKING.includes(tr))E(`${line} (${id}): tracking_default "${r.tracking_default}" isn't one of ${TRACKING.join(', ')}.`);
     const it={id,name:str(r.name)||id,cat:catName,family:str(r.family).toLowerCase()||null,soldBy:sb||null,altSizes:str(r.alt_sizes).split(/[;,]/).map(s=>+s.trim()).filter(n=>n>0),tracking:tr||null,pack:str(r.package_label),unit:str(r.unit)||'each',pkg:pkg||1,price:price||0,src:str(r.price_source),priceDate:dateStr(r.price_date),
       staple:yn(r.staple)==='Y',storage,fridge:num(r.fridge_days),freezer:num(r.freezer_days),pantry:num(r.pantry_days),aldi:str(r.aldi_product),nums:numList(r.aldi_numbers),retired,replacedBy:str(r.replaced_by)||null,brand:str(r.brand)||null,node:str(r.node)||null,offers:[]};
     if(str(r.flavor))it.flavor=str(r.flavor);
+    if(str(r.where))it.where=str(r.where);
     // 6.1: food types and household fields (same rules as the sheet script)
     const ft=str(r.food_types!=null?r.food_types:r.flags).toLowerCase().split(/[;,]/).map(x=>x.trim().replace(/[\s-]+/g,'_')).filter(Boolean);
     for(const f of ft)if(!FOOD_TYPES.includes(f))E(`${line} (${id}): food type "${f}" isn't one of ${FOOD_TYPES.join(', ')}.`);
@@ -93,11 +97,12 @@ function build(X,wb,prev,today){
     const mirror=rows.find(o=>o.store==='aldi'&&o.price>0)||rows.find(o=>o.price>0);
     if(mirror)Object.assign(it,{price:mirror.price,pack:mirror.pack,unit:mirror.unit,pkg:mirror.pkg,priceDate:mirror.priceDate,src:mirror.src,nums:mirror.nums});
     else it.nums=(rows.find(o=>o.store==='aldi')||{nums:MIG?[]:it.nums}).nums;
-    if(!retired&&!(it.price>0))E(`${line} (${id}): price is missing, zero or not a number${MIG?' (add a price on the Offers sheet)':''}.`);
+    if(possible&&it.price>0)W(`${id}: possible is Y but it has a price, so the app treats it as an ordinary item. Set possible to N.`);else if(possible)it.possible=true;
+    if(!retired&&!it.possible&&!(it.price>0))E(`${line} (${id}): price is missing, zero or not a number${MIG?' (add a price on the Offers sheet)':''}. For an item Aldi doesn't sell, set possible to Y.`);
     if(!retired&&!(it.pkg>0))E(`${line} (${id}): package_qty is missing or zero.`);
     if(it.node&&!ND[it.node])E(`${line} (${id}): node "${it.node}" isn't on the Nodes sheet.`);
     if(!retired&&!it.staple&&(storage==='fridge'||storage==='counter')&&it.fridge==null&&it.pantry==null)W(`${id}: perishable with no shelf-life days.`);
-    if(!retired&&!it.group&&(!it.priceDate||(new Date(today)-new Date(it.priceDate))/864e5>30))W(`${id}: price_date ${it.priceDate||'missing'} is over 30 days old.`);
+    if(!retired&&!it.group&&!it.possible&&(!it.priceDate||(new Date(today)-new Date(it.priceDate))/864e5>30))W(`${id}: price_date ${it.priceDate||'missing'} is over 30 days old.`);
     for(const o of it.offers)for(const n of o.nums){if(!/^\d{4,14}$/.test(n))E(`${line} (${id}): ${ST[o.store]?ST[o.store].name:o.store} number "${n}" isn't 4 to 14 digits.`);
       else if(ST[o.store]&&ST[o.store].num.digits.length&&!ST[o.store].num.digits.includes(n.length))W(`${id}: ${ST[o.store].name} number ${n} has ${n.length} digits; that store usually prints ${ST[o.store].num.digits.join(' or ')}.`);}
     items.push(it);});
@@ -215,7 +220,7 @@ function toRows(c){const yn=b=>b?'Y':'N',semi=a=>(a||[]).join('; ');
   for(const it of c.items){const a=(it.offers||[]).find(o=>o.store==='aldi');
     out.Items.push({item_id:it.id,name:it.name,brand:it.brand||'',flavor:it.flavor||'',node:it.node||'',category:it.cat,package_label:a?a.pack:it.pack,unit:a?a.unit:it.unit,package_qty:a?a.pkg:it.pkg,price:a?a.price:'',price_source:a?a.src:'',price_date:a?a.priceDate:'',
       staple:yn(it.staple),storage:it.storage||'',fridge_days:it.fridge,freezer_days:it.freezer,pantry_days:it.pantry,family:it.family||'',sold_by:it.soldBy||'',alt_sizes:semi(it.altSizes),tracking_default:it.tracking||'',aldi_product:it.aldi||'',aldi_numbers:'',retired:yn(it.retired),replaced_by:it.replacedBy||'',notes:'',
-      food_types:it.flags?it.flags.split(';').join('; '):'',group:it.group||'',unit_label:it.group?it.unit_label:'',units_per_package:it.group?it.units_per_package:'',typical_days:it.group?it.typical_days:'',scales_with_people:it.group?it.scales_with_people:''});
+      food_types:it.flags?it.flags.split(';').join('; '):'',group:it.group||'',unit_label:it.group?it.unit_label:'',units_per_package:it.group?it.units_per_package:'',typical_days:it.group?it.typical_days:'',scales_with_people:it.group?it.scales_with_people:'',possible:it.possible?'Y':'',where:it.where||''});
     for(const o of (it.offers||[]))out.Offers.push({item:it.id,store:o.store,price:o.price,pack:o.pack,unit:o.unit,pkg:o.pkg,numbers:semi(o.nums),price_date:o.priceDate||'',price_source:o.src||''});}
   for(const n in (c.favorites||{}))out.Favorites.push({node:n,item:c.favorites[n]});
   for(const r of c.recipes){out.Recipes.push({recipe_id:r.id,meal:r.meal,name:r.name,tags:(r.tags||[]).join(', '),servings:r.serv,total_min:r.total,hands_on_min:r.hands,keeps_days:r.keeps,reheats:yn(r.reheats),freezes:yn(r.freezes),link:r.link||'',source:[r.source,r.rating].filter(Boolean).join(' · '),notes:r.notes||'',active:'Y',
@@ -246,7 +251,7 @@ function validateCatalog(c,knownSchema){if(!c||typeof c!=='object')return 'Not a
 function headersOf(X,wb,name){const key=Object.keys(wb.Sheets).find(n=>norm(n)===norm(name));if(!key)return null;const h=(X.utils.sheet_to_json(wb.Sheets[key],{header:1})[0]||[]).map(norm).filter(Boolean);return h.length?h:null;}
 const nname=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const slug=s=>nname(s).replace(/ /g,'_').slice(0,40);
-const DEF_H={items:['item_id','name','brand','flavor','node','category','package_label','unit','package_qty','price','price_source','price_date','staple','storage','fridge_days','freezer_days','pantry_days','family','sold_by','alt_sizes','tracking_default','aldi_product','aldi_numbers','retired','replaced_by','notes','food_types','group','unit_label','units_per_package','typical_days','scales_with_people'],
+const DEF_H={items:['item_id','name','brand','flavor','node','category','package_label','unit','package_qty','price','price_source','price_date','staple','storage','fridge_days','freezer_days','pantry_days','family','sold_by','alt_sizes','tracking_default','aldi_product','aldi_numbers','retired','replaced_by','notes','food_types','group','unit_label','units_per_package','typical_days','scales_with_people','possible','where'],
   offers:['item','store','price','pack','unit','pkg','numbers','price_date','price_source','last_changed','changed_by'],nodes:['id','name','parent','level','last_changed','changed_by'],favorites:['node','item','last_changed'],
   variants:['item_id','variant_id','brand','flavor','store','numbers','last_price','last_date','last_changed','changed_by'],
   recipes:['recipe_id','meal','name','tags','servings','total_min','hands_on_min','keeps_days','reheats','freezes','link','source','notes','active','photo_url','steps','fetched_at','fetch_note'],ingredients:['recipe_id','item_id','qty','as_written','optional'],aliases:['receipt_text','item_id','store']};
@@ -281,7 +286,8 @@ function additions(X,wb,add,built){
     if(hit){idMap[u.id]=hit.id;if(hit.id!==u.id.replace(/^u_/,''))F(`Name collision: your item "${u.name}" matches catalog item "${hit.name}" (${hit.id}). Not added again; your recipes and aliases use ${hit.id}.`);else notes.push(`${u.name} is already in the spreadsheet.`);continue;}
     let id=u.id.replace(/^u_/,'')||slug(u.name);if(!/^[a-z0-9_]+$/.test(id))id=slug(u.name)||'item';let base=id,n=2;while(taken.has(id))id=base+'_'+(n++);taken.add(id);idMap[u.id]=id;
     items.push({item_id:id,name:u.name,brand:u.brand||'',flavor:u.flavor||'',node:mapNode(u.node),category:u.cat||'Other',package_label:u.pack||'',unit:u.unit||'each',package_qty:u.pkg||1,price:u.price,price_source:u.src==='estimate'?'estimate':u.src==='receipt'?'receipt':'phone',price_date:u.priceDate||String(add.exportedAt||'').slice(0,10),
-      staple:u.staple?'Y':'N',storage:u.storage||'',fridge_days:u.fridge??'',freezer_days:u.freezer??'',pantry_days:u.pantry??'',family:u.family||'',sold_by:u.soldBy||'pack',alt_sizes:'',tracking_default:u.tracking||'',aldi_product:'',aldi_numbers:MIG6?'':aldiNums(u),retired:'N',replaced_by:'',notes:u.src==='receipt'?(u.unsorted?'Added from a receipt; not placed in the tree yet':'Added from a receipt'):'Added on the phone'});
+      staple:u.staple?'Y':'N',storage:u.storage||'',fridge_days:u.fridge??'',freezer_days:u.freezer??'',pantry_days:u.pantry??'',family:u.family||'',sold_by:u.soldBy||'pack',alt_sizes:'',tracking_default:u.tracking||'',aldi_product:'',aldi_numbers:MIG6?'':aldiNums(u),retired:'N',replaced_by:'',notes:u.possible&&!(+u.price>0)?'From a recipe; not sold at Aldi':u.src==='receipt'?(u.unsorted?'Added from a receipt; not placed in the tree yet':'Added from a receipt'):'Added on the phone',
+      ...(u.possible&&!(+u.price>0)?{price:'',price_source:'',price_date:'',possible:'Y'}:{possible:'N'}),where:u.where||''});
     if(MIG6&&+u.price>0&&!(u.offers||[]).some(o=>(o.store||'aldi')==='aldi'))newOffers.push({item:id,store:'aldi',price:u.price,pack:u.pack||'',unit:u.unit||'each',pkg:u.pkg||1,numbers:aldiNums(u).replace(/;/g,'; '),price_date:u.priceDate||today,price_source:u.src==='estimate'?'estimate':'phone',last_changed:today,changed_by:'phone'});
     for(const o of (u.offers||[]))if((o.store||'aldi')!=='aldi'||MIG6)newOffers.push({...offerRow(o,u,id),store:o.store||'aldi'});}
   const known=new Set([...Object.keys(I),...items.map(x=>x.item_id)]);

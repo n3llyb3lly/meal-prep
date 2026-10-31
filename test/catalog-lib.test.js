@@ -63,3 +63,18 @@ test('Learned from the phone: the Learned sheet becomes catalog.learned, and the
   const prev = { ...b.catalog, learned: [['word', 'ocr:sov', 'soy', 1, '2026-10-10']] };
   assert.deepStrictEqual(plain(L.build(X, w, prev, '2026-10-18').diff.learnedNew), ['brand: n:mild cheddar → Tillamook']);
 });
+
+test('possible ingredients: no price error, possible and where in the catalog and back out to the Items rows', () => {
+  const w = wb(); w.Sheets.Items.push(item('star_anise', 'Star anise', { category: 'Pantry', price: '', price_source: '', price_date: '', possible: 'Y', where: 'Cub' }));
+  w.Sheets.Ingredients.push({ recipe_id: 'x_sundae', item_id: 'star_anise', qty: 1 });
+  const b = L.build(X, w, null, '2026-10-10');
+  assert.deepStrictEqual(plain(b.errors), []);
+  const it = plain(b.catalog.items).find(x => x.id === 'star_anise');
+  assert.deepStrictEqual([it.possible, it.where, it.price], [true, 'Cub', 0]);
+  assert.strictEqual(plain(b.catalog.items).find(x => x.id === 'cone').possible, undefined);
+  const rows = L.toRows(b.catalog).Items, r = rows.find(x => x.item_id === 'star_anise');
+  assert.deepStrictEqual(Object.keys(r).slice(-2), ['possible', 'where']);
+  assert.deepStrictEqual([r.possible, r.where], ['Y', 'Cub']);
+  const w2 = wb(); w2.Sheets.Items.push(item('oops', 'Oops', { price: '' }));
+  assert.ok(L.build(X, w2, null, '2026-10-10').errors.some(e => /oops.*possible to Y/.test(e)));
+});
