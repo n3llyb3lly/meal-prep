@@ -242,6 +242,20 @@ function build(lines,opts){opts=opts||{};const P=opts.P||{};const rows=[],basics
 function cost(rows,P,serv,people){serv=Math.max(1,+serv||1);let whole=0;for(const r of rows||[]){const p=r.iid&&P[r.iid];if(!p||!(r.q>0)||p.staple||r.optional)continue;whole+=r.q*(+p.price||0)/(+p.pkg||1);}
   const portions=Math.max(1,Math.round(+people||serv));return {whole:Math.round(whole*100)/100,household:Math.round(whole*portions/serv*100)/100,portions};}
 
-const api={display,learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,photoOf,cssSafeUrl,stepsOf,cleanStep,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
+// Substitutions a line offers: "jaggery or sugar", "(can use corn starch as a replacement)", "use passion fruit or pineapple juice if…".
+const ADJ1=/^(purple|black|white|red|green|yellow|orange|blue|brown|golden|light|dark|fresh|frozen|dried|sweet|hot|mild|large|small|whole|raw|plain|unsalted|salted|smoked|ground)$/i;
+const TAILW=/^(juice|pulp|puree|purée|powder|paste|sauce|oil|flour|milk|extract|seeds?|leaves|leaf|flakes|syrup|starch|broth|stock|vinegar|cream|cheese)$/i;
+function shareTail(parts){if(parts.length<2)return parts;const last=parts[parts.length-1].split(' ');const lw=last[last.length-1];
+  return parts.map((p,i)=>{if(i===parts.length-1)return p;const w=p.split(' ');if(w.length===1&&ADJ1.test(w[0])&&last.length>1)return [w[0],...last.slice(1)].join(' ');
+    if(TAILW.test(lw)&&last.length>1&&!w.some(x=>x.toLowerCase()===lw.toLowerCase()))return p+' '+lw;return p;});}
+function subsOf(text){const raw=decode(String(text||''));const out=[];const add=s=>{s=String(s||'').replace(/^(?:a|an|some|the|more)\s+/i,'').replace(/[\s,;:.]+$/,'').trim().toLowerCase();if(s.length>1&&s.split(' ').length<=5&&!/can'?t|cannot|find|taste/.test(s)&&!out.includes(s))out.push(s);};
+  const p=parseLine(raw);if(p.ors&&p.ors.length>1)shareTail(p.ors.map(s=>s.trim())).forEach(add);
+  const t=raw.replace(/[–—-]?\s*\baka\b[^–—)]*[–—]?/gi,' ').replace(/\s+/g,' ');
+  const RE=/(?:\b(?:or\s+)?(?:can\s+)?use|\bsubstitute(?:\s+with)?|\bsub(?:\s+with|\s+in)?|\bswap(?:\s+in|\s+for)?|\breplace\s+with|\bor\s+try)\s+([^().;:–—]+?)(?=\s+(?:if|as|instead|when|for|in\s+place|works?)\b|[().;:,–—]|$)/gi;let m;
+  while((m=RE.exec(t)))shareTail(m[1].split(/\s*,\s*|\s+or\s+/i).map(s=>s.trim()).filter(Boolean)).forEach(add);
+  const RO=/\(\s*or\s+([^)]+)\)/gi;while((m=RO.exec(t)))add(m[1]);
+  return out.slice(0,6);}
+
+const api={subsOf,display,learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,photoOf,cssSafeUrl,stepsOf,cleanStep,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
 if(typeof window!=='undefined')window.RecipeCore=api;if(typeof module!=='undefined')module.exports=api;
 })();

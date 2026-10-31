@@ -9,11 +9,12 @@
 - `tools/house-core.js` (window.HouseCore) holds the household, portion and gallery rules.
 - `tools/meal-core.js` (window.MealCore) holds the shared rules, units and tokens.
 - `tools/recipe-core.js` (window.RecipeCore) reads web recipes (a schema.org Recipe block, page text or pasted lines) and matches their ingredients to catalog items with the receipt matcher.
+- `tools/cook-core.js` (window.CookCore) holds units, grams per cup and recipe-line text used when cooking.
 - `tools/catalog-lib.js` is used by the catalog builder.
 - `Self Test.dc.html` is the self-test. Open it in a browser and every check should pass (264 in 6.6).
 
 ## Working on it in Claude Code
-1. Edit the files here, not `index.html`.
+1. Edit the files here, not `index.html`. Every `*-core.js` lives in `tools/`; when Claude Design exports a core, put it here, not in the repo root.
 2. To test, serve the folder (`npx serve design/source`) and open `Meal Prep App Mobile v6.3.dc.html` and `Self Test.dc.html`.
 3. To ship, either:
    - bring the changed files back into Claude Design and re-bundle `index.html` there, or
