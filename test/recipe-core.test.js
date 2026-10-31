@@ -140,3 +140,33 @@ test('durations and yields', () => {
   assert.deepStrictEqual([RC.minutes('PT1H30M'), RC.minutes('P0DT0H45M'), RC.minutes('PT0S'), RC.minutes('')], [90, 45, null, null]);
   assert.deepStrictEqual([RC.servings(['6', '6 servings']), RC.servings('Makes 12 cookies'), RC.servings(4), RC.servings(null)], [6, 12, 4, null]);
 });
+
+test('a line ending in a form word does not match an item packed in it', () => {
+  const m = l => RC.matchLine(RC.parseLine(l), opts).iid;
+  assert.notStrictEqual(m('1 cup pineapple juice'), 'pineapple_chunks', '"pineapple juice" is not "Pineapple chunks in juice"');
+  assert.strictEqual(m('1 (20 oz) can pineapple chunks in juice'), 'pineapple_chunks');
+  assert.strictEqual(m('1 cup pineapple chunks'), 'pineapple_chunks');
+  assert.ok(P.cornstarch, 'the catalog has corn starch');
+  assert.strictEqual(m('2 tbsp corn starch'), 'cornstarch');
+  assert.strictEqual(m('1 tbsp cornstarch'), 'cornstarch');
+  assert.deepStrictEqual([RC.onlyPacked('pineapple chunk in juice', 'juice'), RC.onlyPacked('pineapple juice', 'juice'), RC.onlyPacked('tuna with oil', 'oil')], [true, false, true]);
+});
+
+test('substitutions a line offers', () => {
+  const s = l => plain(RC.subsOf(l));
+  assert.deepStrictEqual(s("14 oz naranjilla or lulo pulp (thawed if frozen – use passion fruit or pineapple juice if you can't find naranjilla juice)"),
+    ['naranjilla pulp', 'lulo pulp', 'passion fruit juice', 'pineapple juice']);
+  assert.deepStrictEqual(s('1 cup purple or black corn flour (can use corn starch –aka maicena – as a replacement)'), ['purple corn flour', 'black corn flour', 'corn starch']);
+  assert.deepStrictEqual(s('12-14 oz panela or brown sugar (adjust to your taste)'), ['panela', 'brown sugar']);
+  assert.deepStrictEqual(s('4-5 all spice berries'), []);
+});
+
+test('possible ingredients are left out of the cost and counted as not priced', () => {
+  const PP = { ...P, u_star_anise: { id: 'u_star_anise', name: 'Star anise', unit: 'each', pkg: 1, price: 0, possible: true }, u_lulo: { id: 'u_lulo', name: 'Lulo pulp', unit: 'oz', pkg: 1, price: 0, possible: true } };
+  const rows = [{ iid: 'black_beans', q: P.black_beans.pkg }, { iid: 'u_star_anise', q: 4 }, { iid: 'u_lulo', q: 14 }, { iid: 'u_lulo', q: 2 }, { iid: 'u_star_anise', q: 1, optional: true }];
+  const c = RC.cost(rows, PP, 4, 4);
+  assert.strictEqual(c.whole, P.black_beans.price);
+  assert.deepStrictEqual([c.unpriced, plain(c.unpricedIds)], [2, ['u_star_anise', 'u_lulo']]);
+  assert.deepStrictEqual([RC.unpricedText(0), RC.unpricedText(1), RC.unpricedText(2)], ['', '+ 1 item not priced', '+ 2 items not priced']);
+  assert.strictEqual(RC.cost([{ iid: 'black_beans', q: 1 }], P, 4, 4).unpriced, 0);
+});

@@ -125,14 +125,19 @@ function synonym(t){const n=norm(t);for(const [re,v] of SYN)if(re.test(n))return
 // opts.fuzzy(text) -> [{p,sc}] sorted best first: the app passes its receipt matcher (fuzzy over name and Aldi name).
 // opts.learned: {learnKey(item text): item id} from earlier picks; opts.alias(text) -> item id or null.
 // Same acceptance rule as receipts: score .7 or more and .08 clear of the next.
+const TAIL_FORM=new Set(['juice','pulp','puree','oil','flour','milk','starch','paste']);
+// True when the item's name has the form word only after "in" or "with": "pineapple chunk in juice" for juice.
+function onlyPacked(nm,fw){const w=nm.split(' ');let after=false,seen=false;for(const x of w){if(x==='in'||x==='with'){after=true;continue;}if(x===fw){if(!after)return false;seen=true;}}return seen;}
 function matchLine(p,opts){opts=opts||{};const key=norm(p.item);if(!key)return {iid:null,how:'none',sc:0,cands:[]};
   const L=opts.learned||{},lk=learnKey(p.item);if(L[lk])return {iid:L[lk],how:'learned',sc:1,cands:[]};
   const a=opts.alias?opts.alias(p.item):null;if(a)return {iid:a,how:'alias',sc:1,cands:[]};
   // Recipe-side ranking on top of the shared matcher: an item named exactly like the line wins, and an item whose
   // name adds a form or kind the line doesn't ask for (powder, paste; green, diced) drops back ("1 onion" is not onion powder).
   // An item whose unit the line's amount converts to gets a small lift ("1 tsp cinnamon" is ground, not sticks).
-  const rank=(fz,t)=>{const tw=new Set(sing(t).split(' '));return fz.map(x=>{const nm=sing(x.p.name);let sc=x.sc;if(nm===sing(t))sc+=.2;
-    for(const w of nm.split(' '))if(!tw.has(w))sc-=FORMS.has(w)?.3:KINDS.has(w)?.15:0;if(p.q!=null&&amountFor(p,x.p).q!=null)sc+=.1;return {...x,sc};}).sort((a,b)=>b.sc-a.sc);};
+  // A line that ends in a form word (pineapple juice, corn starch) is not an item that only comes packed in it
+  // ("Pineapple chunks in juice", "Tuna in oil").
+  const rank=(fz,t)=>{const tl=sing(t).split(' '),tw=new Set(tl),fw=TAIL_FORM.has(tl[tl.length-1])?tl[tl.length-1]:null;return fz.map(x=>{const nm=sing(x.p.name);let sc=x.sc;if(nm===sing(t))sc+=.2;
+    for(const w of nm.split(' '))if(!tw.has(w))sc-=FORMS.has(w)?.3:KINDS.has(w)?.15:0;if(fw&&onlyPacked(nm,fw)&&!onlyPacked(tl.join(' '),fw))sc-=.5;if(p.q!=null&&amountFor(p,x.p).q!=null)sc+=.1;return {...x,sc};}).sort((a,b)=>b.sc-a.sc);};
   // The words before prep notes come first ("diced tomatoes" is the canned item, "tomatoes" the fresh one).
   const ok=fz=>fz[0]&&fz[0].sc>=.7&&(!fz[1]||fz[0].sc-fz[1].sc>=.08||fz[1].p.id===fz[0].p.id);let last=[];
   const tries=[...new Set([synonym(p.full),synonym(p.item),p.full,p.item,...(p.ors||[]).flatMap(o=>[synonym(o),o])].filter(Boolean))];
@@ -239,8 +244,15 @@ function build(lines,opts){opts=opts||{};const P=opts.P||{};const rows=[],basics
     rows.push({text:p.text,item:p.item,notes:p.notes,optional:p.optional,parsed:p,iid:it?m.iid:null,how:it?m.how:'none',sc:m.sc,cands:m.cands,q:a.q,why:a.q==null?a.why:'',state:!it?'unmatched':a.q==null?'amount':'ok'});}
   return {rows,basics};}
 // What the household's portions cost: proportional to the package, staples not counted (as in the editor).
-function cost(rows,P,serv,people){serv=Math.max(1,+serv||1);let whole=0;for(const r of rows||[]){const p=r.iid&&P[r.iid];if(!p||!(r.q>0)||p.staple||r.optional)continue;whole+=r.q*(+p.price||0)/(+p.pkg||1);}
-  const portions=Math.max(1,Math.round(+people||serv));return {whole:Math.round(whole*100)/100,household:Math.round(whole*portions/serv*100)/100,portions};}
+// Possible ingredients (not sold at Aldi, no price yet) are left out of the money and counted in unpriced instead,
+// so a recipe never looks cheap because part of it is free: "Adds $4.10 + 2 items not priced".
+function cost(rows,P,serv,people){serv=Math.max(1,+serv||1);let whole=0;const un=[];for(const r of rows||[]){const p=r.iid&&P[r.iid];if(!p||!(r.q>0)||p.staple||r.optional)continue;
+    if(unpriced(p)){if(!un.includes(p.id||r.iid))un.push(p.id||r.iid);continue;}whole+=r.q*(+p.price||0)/(+p.pkg||1);}
+  const portions=Math.max(1,Math.round(+people||serv));return {whole:Math.round(whole*100)/100,household:Math.round(whole*portions/serv*100)/100,portions,unpriced:un.length,unpricedIds:un};}
+// An item with no usable price: a possible ingredient, or any item whose price is missing or 0.
+function unpriced(p){return !!p&&(!!p.possible||!(+p.price>0));}
+// "+ 2 items not priced" (blank when every item has a price).
+function unpricedText(n){return n>0?`+ ${n} item${n===1?'':'s'} not priced`:'';}
 
 // Substitutions a line offers: "jaggery or sugar", "(can use corn starch as a replacement)", "use passion fruit or pineapple juice if…".
 const ADJ1=/^(purple|black|white|red|green|yellow|orange|blue|brown|golden|light|dark|fresh|frozen|dried|sweet|hot|mild|large|small|whole|raw|plain|unsalted|salted|smoked|ground)$/i;
@@ -256,6 +268,6 @@ function subsOf(text){const raw=decode(String(text||''));const out=[];const add=
   const RO=/\(\s*or\s+([^)]+)\)/gi;while((m=RO.exec(t)))add(m[1]);
   return out.slice(0,6);}
 
-const api={subsOf,display,learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,photoOf,cssSafeUrl,stepsOf,cleanStep,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
+const api={unpriced,unpricedText,onlyPacked,subsOf,display,learnKey,decode,readQty,unitOf,parseLine,isBasic,matchLine,amountFor,findRecipe,fromSchema,photoOf,cssSafeUrl,stepsOf,cleanStep,minutes,servings,guessMeta,pageLines,pasteLines,looksLikeIngredient,build,cost,norm};
 if(typeof window!=='undefined')window.RecipeCore=api;if(typeof module!=='undefined')module.exports=api;
 })();
