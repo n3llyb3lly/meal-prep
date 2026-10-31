@@ -16,6 +16,7 @@
 <script src="./tools/first-core.js"></script>
 <script src="./tools/learn-core.js"></script>
 <script src="./tools/learn-checks.js"></script>
+<script src="./tools/recipe-core.js"></script>
 <title>Meal Prep self-test</title>
 <style>body{margin:0;background:#EDF1F3;font-family:'Figtree',system-ui,sans-serif;color:#15202B}a{color:#17375E}a:hover{color:#15202B}*{box-sizing:border-box}</style>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#16734C"/><text x="50" y="64" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="40" fill="#fff">✓</text></svg></template>
@@ -234,6 +235,25 @@ class Component extends DCLogic {
     if(window.LearnCore&&window.LearnChecks){let last=null;for(const [gn,name,got,want] of window.LearnChecks()){if(gn!==last){grp(gn);last=gn;}eq(name,got,want);}}
     grp('Colour contrast (WP27)');
     for(const th of ['light','dark'])for(const [a,b] of M.PAIRS){const c=M.contrast(M.TOKENS[th][a],M.TOKENS[th][b]);cur.rows.push({name:`${th}: ${a} on ${b}`,ok:c>=4.5,detail:`${c.toFixed(2)}:1 (needs 4.5)`});}
+    {const RC=window.RecipeCore;if(RC&&RC.subsOf){
+    grp('Recipe substitutions and possible ingredients (6.6)');
+    eq('Naranjilla line offers 4 swaps',RC.subsOf("14 oz naranjilla or lulo pulp (thawed if frozen – use passion fruit or pineapple juice if you can't find naranjilla juice)"),['naranjilla pulp','lulo pulp','passion fruit juice','pineapple juice']);
+    eq('Corn flour line offers corn starch',RC.subsOf('1 cup purple or black corn flour (can use corn starch –aka maicena – as a replacement)'),['purple corn flour','black corn flour','corn starch']);
+    eq('Panela or brown sugar',RC.subsOf('12-14 oz panela or brown sugar (adjust to your taste)'),['panela','brown sugar']);
+    eq('All spice berries offer none',RC.subsOf('4-5 all spice berries'),[]);
+    // A small stand-in catalog and word-overlap matcher; test/recipe-core.test.js runs the same cases with the app's own matcher and catalog.json.
+    const CAT=[{id:'pineapple_chunks',name:'Pineapple chunks in juice',unit:'oz',pkg:20,price:1.49},{id:'pineapple',name:'Pineapple',unit:'each',pkg:1,price:2.29},{id:'cornstarch',name:'Corn starch',unit:'oz',pkg:16,price:1.79},{id:'flour',name:'All purpose flour',unit:'lb',pkg:5,price:1.95}];
+    const PC=Object.fromEntries(CAT.map(x=>[x.id,x]));const wd=s=>String(s).toLowerCase().replace(/[^a-z ]/g,'').split(' ').filter(w=>w&&w!=='in'&&w!=='with');
+    const fz=t=>{const tw=wd(t);return CAT.map(p=>{const pw=wd(p.name);const hit=tw.filter(w=>pw.includes(w)).length;return {p,sc:hit/Math.max(tw.length,1)-.05*(pw.length-hit)};}).filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc);};
+    const ml=l=>RC.matchLine(RC.parseLine(l),{P:PC,fuzzy:fz}).iid;
+    eq('"pineapple juice" is not Pineapple chunks in juice',ml('1 cup pineapple juice')==='pineapple_chunks',false);
+    eq('"pineapple chunks in juice" still matches it',ml('1 (20 oz) can pineapple chunks in juice'),'pineapple_chunks');
+    eq('"corn starch" matches Corn starch',ml('2 tbsp corn starch'),'cornstarch');
+    eq('Form word only after "in"',[RC.onlyPacked('pineapple chunk in juice','juice'),RC.onlyPacked('pineapple juice','juice')],[true,false]);
+    const PP={...PC,u_star_anise:{id:'u_star_anise',name:'Star anise',unit:'each',pkg:1,price:0,possible:true}};
+    const c=RC.cost([{iid:'cornstarch',q:16},{iid:'u_star_anise',q:4}],PP,4,4);
+    eq('Possible items add $0 and count as not priced',[c.whole,c.unpriced,RC.unpricedText(c.unpriced)],[1.79,1,'+ 1 item not priced']);
+    eq('Two not priced',RC.unpricedText(2),'+ 2 items not priced');}}
     const all=G.flatMap(g=>g.rows);const bad=all.filter(r=>!r.ok).length;
     return {summary:bad?`${bad} of ${all.length} checks failed`:`All ${all.length} checks passed`,sumBg:bad?'#FADFDC':'#DCF1E7',sumColor:bad?'#A9231B':'#16734C',
       groups:G.map(g=>({name:g.name,rows:g.rows.map(r=>({...r,mark:r.ok?'Pass':'Fail',color:r.ok?'#16734C':'#A9231B'}))}))};}

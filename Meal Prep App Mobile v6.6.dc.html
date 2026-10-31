@@ -458,6 +458,20 @@
             </div>
           </div>
         </sc-if>
+        <sc-if value="{{ hasAway }}" hint-placeholder-val="{{ false }}">
+          <div style="margin:16px 2px 6px;display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Not at Aldi</span><span style="font-size:12px;color:var(--muted)">{{ awayCount }} · not in the budget</span></div>
+          <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 12px">
+            <sc-for list="{{ awayGroups }}" as="g" hint-placeholder-count="1">
+              <div style="font-size:12.5px;font-weight:600;color:var(--muted);padding:10px 0 2px">{{ g.where }}</div>
+              <sc-for list="{{ g.lines }}" as="l" hint-placeholder-count="1">
+                <button onClick="{{ l.tick }}" style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 0;min-height:52px">
+                  <span style="width:24px;height:24px;border-radius:7px;border:2px solid var(--line-strong);flex:none"></span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:15px">{{ l.name }}</span><span style="display:block;font-size:12px;color:var(--muted)">{{ l.detail }}</span></span>
+                </button>
+              </sc-for>
+            </sc-for>
+          </div>
+        </sc-if>
         <sc-if value="{{ covOn }}" hint-placeholder-val="{{ false }}">
           <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 12px;opacity:.75">
             <button onClick="{{ covTog }}" aria-expanded="{{ covOpen }}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:transparent;color:var(--muted);padding:0;min-height:48px;font-weight:600;font-size:14px"><span style="flex:1">{{ covText }}</span><span aria-hidden="true">{{ covChev }}</span></button>
@@ -1269,12 +1283,12 @@
                   <sc-for list="{{ u.eCats }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.pick }}" style="height:40px;padding:0 12px;border-radius:99px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font-weight:600;font-size:13px;white-space:nowrap">{{ c.label }}</button></sc-for>
                 </div>
                 <input value="{{ u.eWhere }}" onChange="{{ u.onEWhere }}" aria-label="Where to buy it" placeholder="Where to buy it (store, aisle)" style="height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:15px;outline:none"></input>
-                <div style="display:flex;align-items:center;gap:8px">
+                <sc-if value="{{ u.canPrice }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:8px">
                   <span style="font-size:14px;color:var(--muted)">Price $</span>
                   <input type="number" inputmode="decimal" step="0.01" value="{{ u.ePrice }}" onChange="{{ u.onEPrice }}" aria-label="Price" style="width:96px;height:44px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:15px"></input>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-                  <button onClick="{{ u.del }}" style="height:44px;border-radius:10px;border:1px solid var(--bad-line);background:{{ u.delBg }};color:{{ u.delColor }};font-weight:600;font-size:13px">{{ u.delText }}</button>
+                </div></sc-if>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px">
+                  <sc-if value="{{ u.canDel }}" hint-placeholder-val="{{ true }}"><button onClick="{{ u.del }}" style="height:44px;border-radius:10px;border:1px solid var(--bad-line);background:{{ u.delBg }};color:{{ u.delColor }};font-weight:600;font-size:13px">{{ u.delText }}</button></sc-if>
                   <button onClick="{{ u.cancel }}" style="height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13px">Cancel</button>
                   <button onClick="{{ u.save }}" style="height:44px;border-radius:10px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:13px">Save</button>
                 </div>
@@ -1711,6 +1725,20 @@
         </sc-if>
         <sc-if value="{{ storeAllDone }}" hint-placeholder-val="{{ false }}">
           <div style="margin-top:14px;background:var(--good-tint);color:var(--good-ink);border-radius:14px;padding:14px;font-size:15px;line-height:1.45"><b>Everything on the list is in the cart.</b> Tap Done to log the receipt.</div>
+        </sc-if>
+        <sc-if value="{{ hasAway }}" hint-placeholder-val="{{ false }}">
+          <div style="margin:16px 2px 6px;display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Not at Aldi</span><span style="font-size:12px;color:var(--muted)">{{ awayCount }} · not in the budget</span></div>
+          <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 14px">
+            <sc-for list="{{ awayGroups }}" as="g" hint-placeholder-count="1">
+              <div style="font-size:12.5px;font-weight:600;color:var(--muted);padding:10px 0 2px">{{ g.where }}</div>
+              <sc-for list="{{ g.lines }}" as="l" hint-placeholder-count="1">
+                <button onClick="{{ l.tick }}" style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 0;min-height:52px">
+                  <span style="width:24px;height:24px;border-radius:7px;border:2px solid var(--line-strong);flex:none"></span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:15px">{{ l.name }}</span><span style="display:block;font-size:12px;color:var(--muted)">{{ l.detail }}</span></span>
+                </button>
+              </sc-for>
+            </sc-for>
+          </div>
         </sc-if>
         <sc-if value="{{ hasLow }}" hint-placeholder-val="{{ false }}">
           <div style="margin:16px 2px 6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Running low · not in the total</div>
@@ -2948,6 +2976,22 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{ atOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:rgba(21,32,43,.55);display:flex;flex-direction:column;justify-content:flex-end;z-index:44">
+      <div onClick="{{ atClose }}" style="flex:1;min-height:40px"></div>
+      <div style="background:var(--surface);color:var(--ink);border-radius:24px 24px 0 0;width:100%;padding:16px 20px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px">
+        <h2 style="font:700 20px/1.2 'Bricolage Grotesque',sans-serif;margin:0">{{ atTitle }}</h2>
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;color:var(--muted)">Price paid (optional)</span><span style="display:flex;align-items:center;gap:6px;height:48px;border:1px solid var(--primary-ink);border-radius:12px;padding:0 12px"><span style="color:var(--muted)">$</span><input type="text" inputmode="decimal" value="{{ atPrice }}" onChange="{{ onAtPrice }}" aria-label="Price paid" placeholder="0.00" style="flex:1;min-width:0;border:0;background:transparent;color:var(--ink);outline:none;font-size:16px"></input></span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <sc-for list="{{ atStores }}" as="s" hint-placeholder-count="3"><button onClick="{{ s.pick }}" style="height:40px;padding:0 14px;border-radius:99px;border:1px solid {{ s.border }};background:{{ s.bg }};color:{{ s.color }};font-weight:600;font-size:13.5px">{{ s.label }}</button></sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px">
+          <button onClick="{{ atClose }}" style="height:50px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:15px">Cancel</button>
+          <button onClick="{{ atDone }}" style="height:50px;border-radius:12px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:15px">Ticked</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
   <sc-if value="{{ cfOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:absolute;inset:0;background:rgba(21,32,43,.55);display:flex;flex-direction:column;justify-content:flex-end;z-index:44">
       <div onClick="{{ cfClose }}" style="flex:1;min-height:40px"></div>
@@ -3123,6 +3167,8 @@ const TIME_HINT={busy:'Leftovers and no-cook meals first',normal:'Anything under
 const TAG_ORDER=['sweet','spicy','savory','light','hearty','nocook','stovetop','oven','asian','chinese','japanese','korean','indian','mexican','ecuadorian','southern','mediterranean','keto','zerocarb'];
 const TL={nocook:'No-cook',zerocarb:'Zero-carb'};
 const tagLabel=t=>TL[t]||t.charAt(0).toUpperCase()+t.slice(1);
+// What an unpriced item is assumed to add when ranking recipes: the median Aldi package ($2.49) over 4 servings.
+const UNP_PER_SERVING=0.62;
 const CAT_ORDER=['Produce','Meat','Dairy & eggs','Bakery & frozen','Pantry','Drinks','Other'];
 const DEFAULT_CATS=[{name:'Produce',section:'Produce',storage:'fridge',fridge:7,freezer:null,pantry:null,tracking:'quantity',staple:false},{name:'Meat',section:'Meat',storage:'fridge',fridge:3,freezer:180,pantry:null,tracking:'quantity',staple:false},
   {name:'Dairy & eggs',section:'Dairy & eggs',storage:'fridge',fridge:14,freezer:null,pantry:null,tracking:'quantity',staple:false},{name:'Bakery & frozen',section:'Bakery & frozen',storage:'freezer',fridge:5,freezer:240,pantry:null,tracking:'quantity',staple:false},
@@ -3146,7 +3192,7 @@ function normCat(c){if(!c||c._norm)return c;const cats=(c.categories&&c.categori
   const items=c.items.map(it=>{const offers=Array.isArray(it.offers)&&it.offers.length?it.offers.map(o=>({...o,pkg:o.pkg||it.pkg,unit:o.unit||it.unit,pack:o.pack||it.pack,nums:(o.nums||[]).map(String)}))
     :(it.price>0||(it.nums||[]).length?[{store:'aldi',price:it.price,pack:it.pack,unit:it.unit,pkg:it.pkg,nums:(it.nums||[]).map(String),priceDate:it.priceDate,src:it.src}]:[]);return {...it,brand:it.brand||'',node:it.node||null,offers};});
   return {...c,_norm:true,stores:c.stores&&c.stores.length?c.stores:DEFAULT_STORES,nodes,items,favorites:c.favorites||{},catNode};}
-function effItem(p,e,o){const q={...p};if(e)for(const k of ['name','brand','node'])if(e[k]!==undefined)q[k]=e[k];
+function effItem(p,e,o){const q={...p};if(e)for(const k of ['name','brand','node','where'])if(e[k]!==undefined)q[k]=e[k];
   let offers=(p.offers||[]).map(x=>({...x,nums:[...(x.nums||[])]}));
   if(p.own&&!offers.length&&p.price>=0)offers=[{store:p.store0||'aldi',price:p.price,pack:p.pack,unit:p.unit,pkg:p.pkg,nums:[],priceDate:p.priceDate,src:p.src,base:true}];
   if(p.editedAt){const a=offers.find(x=>x.store==='aldi');if(a){a.price=p.price;a.priceDate=String(p.editedAt).slice(0,10);a.src=p.src;}}
@@ -3192,8 +3238,8 @@ function checkCat(c){if(!c||typeof c!=='object')return 'Not a catalog file.';if(
   if(!Array.isArray(c.items)||!Array.isArray(c.recipes))return 'It has no items or recipes.';const I=new Set(c.items.map(x=>x.id));
   for(const r of c.recipes)for(const x of r.ing)if(!I.has(x[0])&&!isNodeId(x[0]))return `Recipe ${r.id} uses unknown item ${x[0]}.`;return null;}
 function fromMaster(M){const d=String(M.updatedAt||'').slice(0,10);return {schemaVersion:1,catalogVersion:M.catalogVersion||'built-in',builtAt:M.updatedAt,items:M.prices.map(p=>({...p,priceDate:d})),recipes:M.recipes,aliases:[]};}
-const OVERLAYS=['keepSheet','qc','pastSheet','pickSheet','cm','qp','acSheet','esSheet','dialog','conflict','hhChanged','memEd','whoSheet','essSheet','calDay','calRange','treePick','itemCard','rowSheet','histOpen','stapleSheet','budgetSheet','itemSheet','recEd','webRec','hadFor','daySheet','sheet','pantryOpen','rcOpen','askTrip','startOpen','storeOpen','sub'];
-const UNDO_KEYS_SKIP=['mig66','bfastOptFrom','history','redo','changeCount','lastExportAt','snoozeUntil','receiptDraft','lastCatalogVersion','catImport','calSeq','stapleNote','mig51','sheetLink','syncLog','idSwaps','lastStore'];
+const OVERLAYS=['awayTick','keepSheet','qc','pastSheet','pickSheet','cm','qp','acSheet','esSheet','dialog','conflict','hhChanged','memEd','whoSheet','essSheet','calDay','calRange','treePick','itemCard','rowSheet','histOpen','stapleSheet','budgetSheet','itemSheet','recEd','webRec','hadFor','daySheet','sheet','pantryOpen','rcOpen','askTrip','startOpen','storeOpen','sub'];
+const UNDO_KEYS_SKIP=['awayTick','mig66','bfastOptFrom','history','redo','changeCount','lastExportAt','snoozeUntil','receiptDraft','lastCatalogVersion','catImport','calSeq','stapleNote','mig51','sheetLink','syncLog','idSwaps','lastStore'];
 const HIST_KEYS=LAYER_KEYS.filter(k=>!UNDO_KEYS_SKIP.includes(k));
 const CLAUDE_MSG="Read this Aldi receipt photo. Reply with plain lines only, no commentary. One line per item in the form: description, quantity, line total, item number (for example: All Purpose Flour, 1, 1.95, 382147). The item number is the 6-digit number at the far left of the item line; leave it blank if there is none. Keep each description exactly as printed. For weighed items, put the net weight in lb as the quantity (the (N) line). Ignore store, card, reference and transaction numbers. Leave out tax, subtotal and payment lines. End with one line: TOTAL,,amount";
 const STOPW=new Set(['oz','lb','lbs','pk','ct','pt','qt','fl','the','and','of','with','ea','each','per','count','pack']);
@@ -3304,6 +3350,9 @@ class Component extends DCLogic {
     {const ms=L.mainStore||'aldi',is=L.itemStore||{};prices=prices.map(p=>{const want=is[p.id]||ms;if(!p.offers||p.store===want)return p;const o=p.offers.find(x=>x.store===want);if(!o||!(o.price>0))return p;const f=unitF(o.unit,p.unit)||1;const pkg=Math.round((o.pkg||p.pkg)*f*1000)/1000;return {...p,store:want,price:o.price,pkg,pack:o.pack||p.pack,priceDate:o.priceDate||p.priceDate,unitCost:pkg>0?o.price/pkg:p.unitCost};});}
     {const LC=window.LearnCore;if(LC&&L.learn)prices=prices.map(p=>{const u=LC.usual(L.learn,p.id,p.store||'aldi');if(!u||p.soldBy==='weight'&&!(p.pkg===1))return p;const e=pe[p.id];if(e&&e.via!=='receipt'&&String(e.at).slice(0,10)>u.last)return p;
       return {...p,price:u.price,src:'receipt',usual:u.n,editedAt:u.last+'T12:00:00.000Z',catPrice:p.catPrice??p.price,unitCost:p.pkg>0?u.price/p.pkg:p.unitCost};});}
+    // A possible item with a priced offer (receipt, ticked with a price, edited) is an ordinary item at that store.
+    prices=prices.map(p=>{if(!p.possible)return p;if(p.price>0)return {...p,possible:false};const o=(p.offers||[]).find(x=>x.price>0);if(!o)return p;
+      const f=unitF(o.unit,p.unit)||1;const pkg=Math.round((o.pkg||p.pkg)*f*1000)/1000;return {...p,possible:false,store:o.store,price:o.price,pkg,pack:o.pack||p.pack,priceDate:o.priceDate||p.priceDate,unitCost:pkg>0?o.price/pkg:p.unitCost};});
     const nodes=[...(C.nodes||[]),...(L.ownNodes||[])];const favs={...(C.favorites||{}),...(L.favorites||{})};
     const kids={},byNode={},Pm={},Nm={};for(const n of nodes){Nm[n.id]=n;(kids[n.parent||'']=kids[n.parent||'']||[]).push(n.id);}for(const p of prices){Pm[p.id]=p;if(p.node&&!p.retired)(byNode[p.node]=byNode[p.node]||[]).push(p);}
     const under=nid=>{const out=[],st=[nid],seen=new Set();while(st.length){const x=st.pop();if(seen.has(x))continue;seen.add(x);out.push(...(byNode[x]||[]));st.push(...(kids[x]||[]));}return out;};
@@ -3384,8 +3433,9 @@ class Component extends DCLogic {
   servOf(it){const r=this._Rm&&this._Rm[it.rid];if(r&&WHOLE.has(r.meal))return (r.serv||4)*(it.mult||1);return this.tpe(r?r.meal:'dinner')*(it.mult||1);}
   needOf(items,R){const n={};for(const it of items){if(it.status!=='open')continue;const r=R[it.rid];if(!r)continue;const s=this.servOf(it);for(const [iid,q] of r.ing)n[iid]=(n[iid]||0)+q*s;const sd=(this.state.sidePair||{})[it.pid];const sr=sd&&R[sd];if(sr)for(const [iid,q] of sr.ing)n[iid]=(n[iid]||0)+q*s;}return n;}
   shopOf(need,P){
-    const S=this.state;const buy=[],covered=[],low=[];let total=0,useVal=0;
+    const S=this.state;const buy=[],covered=[],low=[],away=[];let total=0,useVal=0;
     for(const iid in need){const it=P[iid];if(!it)continue;if((S.skipTrip||{})[iid]&&S.skipTrip[iid]===S.tripStart)continue;const have=this.haveOf(iid,P);
+      if(window.RecipeCore.unpriced(it)&&!this.isStaple(it)){const short=need[iid]-have;if(short>1e-9)away.push({id:iid,it,need:need[iid],have,packs:Math.max(1,Math.ceil(short/(it.pkg||1)-1e-9)),cost:0});else covered.push({id:iid,it});continue;}
       if(this.isStaple(it)){if(this.stapleState(iid)==='out'){const packs=Math.max(1,Math.ceil(need[iid]/it.pkg-1e-9));const cost=r2(packs*it.price);total+=cost;buy.push({id:iid,it,need:need[iid],have:0,packs,cost});}else covered.push({id:iid,it});continue;}
       const dl=this.invDaysLeft(iid,P);useVal+=Math.min(need[iid],have)*it.price/it.pkg*(dl!=null&&dl<=2?2.5:1);
       const short=need[iid]-have;
@@ -3393,10 +3443,29 @@ class Component extends DCLogic {
       else covered.push({id:iid,it});}
     for(const p of S.prices){if(!this.isStaple(p)||need[p.id])continue;if(this.stapleState(p.id)==='low')low.push({id:p.id,it:p,packs:1,cost:p.price});}
     for(const iid in need){const p=P[iid];if(p&&this.isStaple(p)&&this.stapleState(iid)==='low')low.push({id:iid,it:p,packs:1,cost:p.price});}
-    return {buy,covered,low,total:r2(total),useVal};
+    return {buy,covered,low,away,total:r2(total),useVal};
   }
   spent(){const S=this.state;let s=0;for(const k in S.bought)if(!S.bought[k].optional)s+=S.bought[k].cost;for(const r of (S.receipts||[]))if(r.tripStart===S.tripStart)s+=r.total;return r2(s);}
-  mealCost(r,s,P){let c=0;for(const [iid,q] of r.ing){const it=P[iid];if(it&&!it.staple)c+=q*s*it.price/it.pkg;}return c;}
+  storeFor(w){const t=String(w||'').toLowerCase();if(!t)return null;const st=(this.cat&&this.cat.stores)||DEFAULT_STORES;const hit=st.find(s=>t.includes(String(s.name||'').toLowerCase())||t.includes(s.id));return hit?hit.id:null;}
+  awayVals(shop){const S=this.state;const awayG={};for(const l of (shop.away||[])){if(S.bought[l.id])continue;const w=(l.it.where||'').trim()||'Store not noted';(awayG[w]=awayG[w]||[]).push(l);}
+    const groups=Object.keys(awayG).sort((a,b)=>(a==='Store not noted')-(b==='Store not noted')||a.localeCompare(b)).map(w=>({where:w,lines:awayG[w].sort((a,b)=>a.it.name.localeCompare(b.it.name)).map(l=>({id:l.id,name:l.it.name,detail:`Menu uses ${fmtQ(l.need,l.it.unit)}${l.have>0?`, you have ${fmtQ(l.have,l.it.unit)}`:''}.`,tick:()=>this.setState({awayTick:{id:l.id,price:'',store:this.storeFor(l.it.where)}})}))}));
+    const n=groups.reduce((a,g)=>a+g.lines.length,0);const a=S.awayTick;const p=a&&this.P()[a.id];
+    const stores=((this.cat&&this.cat.stores)||DEFAULT_STORES).filter(s=>!(S.storeGone||{})[s.id]);
+    return {hasAway:n>0,awayGroups:groups,awayCount:`${n} item${n===1?'':'s'}`,
+      atOpen:!!p,atTitle:p?p.name:'',atPrice:a?a.price:'',onAtPrice:e=>this.setState({awayTick:{...this.state.awayTick,price:e.target.value}}),
+      atStores:p?stores.map(s=>{const on=a.store===s.id;return {label:this.storeName(s.id),bg:on?'var(--primary)':'var(--surface)',color:on?'var(--on-accent)':'var(--ink)',border:on?'var(--primary)':'var(--line)',pick:()=>this.setState({awayTick:{...this.state.awayTick,store:on?null:s.id}})};}):[],
+      atDone:()=>this.awayDone(),atClose:()=>this.setState({awayTick:null})};}
+  awayDone(){const S=this.state,a=S.awayTick;if(!a)return;const P=this.P();const p=P[a.id];if(!p){this.setState({awayTick:null});return;}
+    const v=parseFloat(a.price),paid=v>0?r2(v):0,st=a.store,t=this.today();
+    if(paid>0&&!st){this.flash('Pick the store to save the price');return;}
+    const pack={store:st,price:paid,pkg:p.pkg,unit:p.unit,pack:p.pack,priceDate:t,src:'edited',at:new Date().toISOString()};const patch={awayTick:null};
+    if(paid>0&&st){patch.offerEdits={...(S.offerEdits||{}),[a.id]:{...((S.offerEdits||{})[a.id]||{}),[st]:pack}};
+      if(this.linked()){const own=String(a.id).startsWith('u_');const ob=own?this.obPatch(S.outbox,'item.add',a.id,d=>({...d,offers:[...(d.offers||[]).filter(o=>o.store!==st),{store:st,price:paid,pkg:p.pkg,unit:p.unit,pack:p.pack,nums:[],priceDate:t,src:'edited'}]})):null;
+        patch.outbox=ob||[...(S.outbox||[]),{...this.chg('offer.set',{item:a.id,store:st,price:paid,pack:p.pack,unit:p.unit,pkg:p.pkg,date:t,via:'edited'},{}),needs:7}];}}
+    this.relayer(patch,()=>this.buyLine({id:a.id,it:p,packs:1,cost:paid}));}
+  mealCost(r,s,P){let c=0;for(const [iid,q] of r.ing){const it=P[iid];if(it&&!it.staple&&!window.RecipeCore.unpriced(it))c+=q*s*it.price/it.pkg;}return c;}
+  // Distinct ingredients with no price yet (possible items), leaving out staples and optional lines.
+  unpricedOf(r,P){const s=new Set();for(const x of r.ing){const it=P[x[0]];if(it&&!it.staple&&!x[3]&&window.RecipeCore.unpriced(it))s.add(x[0]);}return s.size;}
 
   commit(label,patch,ref,extra){const S=this.state;const before={};for(const k of [...HIST_KEYS,...(extra||[])])before[k]=S[k];
     const history=[{id:uid(),at:new Date().toISOString(),label,ref:ref||null,before},...(S.history||[])].slice(0,30);this.relayer({...patch,history,redo:[],changeCount:(S.changeCount||0)+1});this.askPersist();this._lastCommit=Date.now();this.flash(label,/^Opened a new/.test(label)?()=>this.undoLast():null);this.maybeBackup(/^Cooked/.test(label)?'event':null);}
@@ -3542,13 +3611,13 @@ class Component extends DCLogic {
       if(this.isStaple(p)){staples[iid]='have';sa[iid]=true;}else inv[iid]=[...(inv[iid]||[]),this.newBatch(e.sp,e.q,date,paid)];
       ph[iid]=[...(ph[iid]||[]),{date,store,paid,unitPrice:r2(e.q>0?e.net/e.q:0),regular:r2(e.sale?e.sp.price:paid),sale:e.sale,discount:e.disc}].slice(-20);
       if(!e.sale){const sp=e.sp;const toOffer=()=>{oe[iid]={...(oe[iid]||{}),[store]:{price:paid,pkg:sp.pkg,unit:sp.unit,pack:sp.pack,priceDate:date,src:'receipt',at:new Date().toISOString()}};};
-        if(p.own){if(store!==(p.store0||'aldi'))toOffer();}else if(store==='aldi'&&(p.offers||[]).some(o=>o.store==='aldi'))pe[iid]={price:paid,at:date+'T12:00:00.000Z',via:'receipt'};else toOffer();}}
+        if(p.own){if(p.possible||store!==(p.store0||'aldi'))toOffer();}else if(store==='aldi'&&(p.offers||[]).some(o=>o.store==='aldi'))pe[iid]={price:paid,at:date+'T12:00:00.000Z',via:'receipt'};else toOffer();}}
     const aliases=[...(S.aliases||[])];for(const {r} of calcs)if(r.text&&r.how!=='alias'&&r.iid){const k=ntext(r.text);const i=aliases.findIndex(a=>a.text===k);if(i>=0)aliases[i]={text:k,item:r.iid,store};else aliases.push({text:k,item:r.iid,store});}
     const numLinks={...(S.numLinks||{})};for(const {r} of calcs)if(r.num&&r.iid&&r.iid!=='__ignore'&&this.itemByNum(r.num,store)!==r.iid)numLinks[nkey(store,r.num)]=r.iid;
     let outbox=S.outbox||[];
     if(this.linked()){const add=[];
       for(const iid in g){const p=P[iid],e=g[iid];if(!p||e.sale)continue;const paid=r2(e.packs>0?e.net/e.packs:e.net);
-        if(p.own){const o2=this.obPatch(outbox,'item.add',iid,x=>store===(p.store0||'aldi')?{...x,price:paid,priceDate:date}:{...x,offers:[...(x.offers||[]).filter(o=>o.store!==store),{store,price:paid,pkg:e.sp.pkg,unit:e.sp.unit,pack:e.sp.pack,nums:[],priceDate:date,src:'receipt'}]});if(o2)outbox=o2;}else add.push(this.chg('price.set',{item:iid,price:paid,date,via:'receipt',store},this.priceBase(iid,store)));}
+        if(p.own){const o2=this.obPatch(outbox,'item.add',iid,x=>store===(p.store0||'aldi')?{...x,price:paid,priceDate:date}:{...x,offers:[...(x.offers||[]).filter(o=>o.store!==store),{store,price:paid,pkg:e.sp.pkg,unit:e.sp.unit,pack:e.sp.pack,nums:[],priceDate:date,src:'receipt'}]});if(o2)outbox=o2;else{const pc=this.chg('price.set',{item:iid,price:paid,date,via:'receipt',store},{});add.push(p.possible?{...pc,needs:7}:pc);}}else add.push(this.chg('price.set',{item:iid,price:paid,date,via:'receipt',store},this.priceBase(iid,store)));}
       for(const k in numLinks){if(numLinks[k]===(S.numLinks||{})[k])continue;const it=numLinks[k];const [st,n]=splitKey(k);
         if(String(it).startsWith('u_')){const o2=this.obPatch(outbox,'item.add',it,x=>({...x,nums:st==='aldi'?[...new Set([...(x.nums||[]),n])]:(x.nums||[]),offers:st==='aldi'?x.offers:(x.offers||[]).map(o=>o.store===st?{...o,nums:[...new Set([...(o.nums||[]),n])]}:o)}));if(o2)outbox=o2;}else add.push(this.chg('number.link',{num:n,item:it,store:st}));}
       const oldA=Object.fromEntries((S.aliases||[]).map(a=>[a.text,a.item]));for(const a of aliases)if(oldA[a.text]!==a.item)add.push(this.chg('alias.add',{text:a.text,item:a.item,store:a.store||''}));
@@ -3762,7 +3831,7 @@ class Component extends DCLogic {
       if(costOnly)return {c:sh.total,obj:-sh.total};
       let sc=0;const cnt={};for(const it of all){const r=R[it.rid];if(!r)continue;cnt[it.rid]=(cnt[it.rid]||0)+1;const mt=meta(r);sc+=this.prefOf(r).pf*.5+r.ing.filter(g=>expF.has(g[0])).length*1.5+this.rateEff(r.id)*1.5;if(r.meal==='lunch'&&mt.total<=20)sc+=1.2;if(r.meal==='breakfast'&&mt.total<=10)sc+=.6;}
       for(const k in cnt)if(cnt[k]>1)sc-=(cnt[k]-1)*6;
-      return {c:sh.total,obj:sc-over*15-sh.total*.03+sh.useVal*.3};};
+      return {c:sh.total,obj:sc-over*15-(sh.total+(sh.away||[]).length*2.49)*.03+sh.useVal*.3};};
     const climb=(st,iters,costOnly)=>{let cur=st.slice(),ce=ev(cur,costOnly);
       for(let i=0;i<iters;i++){const cand=cur.slice();const j=Math.floor(rng()*slots.length);cand[j]=pick(slots[j]);const e=ev(cand,costOnly);if(e.obj>=ce.obj){cur=cand;ce=e;}}
       return {rids:cur,...ev(cur,false)};};
@@ -3785,27 +3854,27 @@ class Component extends DCLogic {
     const onMenu={};for(const i of open)onMenu[i.rid]=(onMenu[i.rid]||0)+1;
     const sel=on=>({bg:on?'var(--primary)':'var(--surface)',color:on?'var(--on-accent)':'var(--ink)',border:on?'var(--primary)':'var(--line)'});
     const q=S.libQ.trim().toLowerCase();
-    const toX=r=>{const mult=S.libMult[r.id]??this.multFor(r);const n=ppl*mult;const can=r.ing.every(([iid,qq])=>{const p=P[iid];return !p||p.staple||this.qty(iid)>=qq*n-1e-9;});return {r,mult,mt:meta(r),...this.prefOf(r),can,ue:r.ing.filter(x=>exp.has(x[0])).length,per:this.mealCost(r,1,P)};};
+    const toX=r=>{const mult=S.libMult[r.id]??this.multFor(r);const n=ppl*mult;const can=r.ing.every(([iid,qq])=>{const p=P[iid];return !p||p.staple||this.qty(iid)>=qq*n-1e-9;});return {r,mult,mt:meta(r),...this.prefOf(r),can,ue:r.ing.filter(x=>exp.has(x[0])).length,per:this.mealCost(r,1,P),unp:this.unpricedOf(r,P)};};
     const list=S.recipes.filter(r=>{const mt=meta(r);{const lk=S.libKind||'main';if(lk==='breakfast'?!(r.kind==='main'&&(r.meal==='breakfast'||r.bfast)):lk==='main'?(r.kind!=='main'||r.meal==='breakfast'):r.kind!==lk)return false;}if(false&&!(S.libMeal==='main'?isMainM(r.meal):r.meal===S.libMeal))return false;if(S.libEasy&&mt.hands>15)return false;if(S.libTime&&mt.total>S.libTime)return false;if(S.libKeeps&&mt.keeps<3)return false;
         for(const t of S.libTags)if(!r.tags.includes(t))return false;
         if(q&&!(r.name.toLowerCase().includes(q)||r.tags.some(t=>tagLabel(t).toLowerCase().includes(q))||r.ing.some(x=>P[x[0]]&&P[x[0]].name.toLowerCase().includes(q))))return false;return true;})
       .map(toX)
       .filter(x=>(!S.libNow||x.can)&&(!S.libExp||x.ue>0));
-    const so=S.libSort;list.sort((a,b)=>so==='cheap'?(a.per-b.per):so==='exp'?((b.ue-a.ue)||(a.mt.total-b.mt.total)):so==='az'?a.r.name.localeCompare(b.r.name):((a.mt.total-b.mt.total)||a.r.name.localeCompare(b.r.name)));
+    const so=S.libSort;list.sort((a,b)=>so==='cheap'?((a.per+a.unp*UNP_PER_SERVING)-(b.per+b.unp*UNP_PER_SERVING)):so==='exp'?((b.ue-a.ue)||(a.mt.total-b.mt.total)):so==='az'?a.r.name.localeCompare(b.r.name):((a.mt.total-b.mt.total)||a.r.name.localeCompare(b.r.name)));
     const rowOf=x=>{const r=x.r;const extra=Math.max(0,r2(this.menuTotal([...open,{rid:r.id,mult:x.mult,status:'open'}],R,P)-baseTotal));
       const over=extra>.005&&baseTotal+extra>avail+1e-9;const arm=S.confirmFor===r.id;
       const flags=[];if(onMenu[r.id])flags.push({t:onMenu[r.id]>1?`On menu ×${onMenu[r.id]}`:'On menu',bg:'var(--tint)',c:'var(--primary-ink)'});
       for(const nm of (x.block||[]))flags.push({t:`Not for ${nm}`,bg:'var(--warn-tint)',c:'var(--warn-ink)'});const elig=r.meal!=='snack'&&x.mt.keeps>=2;const dbl=x.mult===2;
       const CUI=(r.tags||[]).find(t=>['mexican','indian','italian','chinese','thai','japanese','korean','asian','mediterranean','greek','french','american','middle eastern','cajun','southern'].includes(t));
-      return {rid:r.id,cMeta:`${x.mt.total} min${CUI?' · '+tagLabel(CUI):''}`,cAdds:'Adds '+money(extra>.005?extra:0),name:r.name,meta:[ML[r.meal],`${x.mt.total} min`,`makes ${ppl*x.mult}`,`${money(x.per)} a serving ${r.ing.every(([iid])=>!P[iid]||P[iid].staple||P[iid].src!=='estimate')?'●':'○'}`,...r.tags.slice(0,2).map(tagLabel)].join(' · '),
+      return {rid:r.id,cMeta:`${x.mt.total} min${CUI?' · '+tagLabel(CUI):''}`,cAdds:'Adds '+money(extra>.005?extra:0)+(x.unp?' '+window.RecipeCore.unpricedText(x.unp):''),name:r.name,meta:[ML[r.meal],`${x.mt.total} min`,`makes ${ppl*x.mult}`,`${money(x.per)} a serving${x.unp?' '+window.RecipeCore.unpricedText(x.unp):''} ${r.ing.every(([iid])=>!P[iid]||P[iid].staple||P[iid].src!=='estimate')?'●':'○'}`,...r.tags.slice(0,2).map(tagLabel)].join(' · '),
         hasMultTag:elig||dbl,multTag:`${x.mult}x`,multAria:dbl?'Cooking double. Tap for single':'Tap to cook double',multBg:dbl?'var(--tint)':'var(--surface)',multColor:dbl?'var(--primary-ink)':'var(--muted)',multBorder:dbl?'var(--primary-ink)':'var(--line)',toggleMult:()=>this.setState({libMult:{...this.state.libMult,[r.id]:dbl?1:2}}),flags,hasFlags:flags.length>0,
         mults:[1,2].map(m=>({label:`${m}x`,...sel(x.mult===m),pick:()=>this.setState({libMult:{...S.libMult,[r.id]:m},confirmFor:null})})),
-        extraText:'Adds '+money(extra>.005?extra:0),extraSub:'to buy now',costHelp:()=>this.info('Why two costs?',"Food used is what one serving's ingredients cost, leaving out pantry staples like spices and oil. Adds is what you would pay now: whole packages, after counting what is already in your kitchen. A recipe that uses one carrot still adds a whole bag, and the rest stays in your kitchen."),
+        extraText:'Adds '+money(extra>.005?extra:0)+(x.unp?' '+window.RecipeCore.unpricedText(x.unp):''),extraSub:'to buy now',costHelp:()=>this.info('Why two costs?',"Food used is what one serving's ingredients cost, leaving out pantry staples like spices and oil. Adds is what you would pay now: whole packages, after counting what is already in your kitchen. A recipe that uses one carrot still adds a whole bag, and the rest stays in your kitchen."),
         addText:'Add',addBg:'var(--primary)',addColor:'var(--on-accent)',
         add:()=>this.addToMenu(r.id,x.mult),...this.recBits(r,flags),
         open:()=>this.setState({sheet:{rid:r.id,serv:ppl*x.mult,kicker:`Library · ${ML[r.meal]}`}})};};const libRows=list.map(rowOf);const libGroups=this.groupRows(list,rowOf);const cookedBefore=(!q&&!S.libTime&&!S.libNow&&!S.libExp&&!S.libKeeps&&!S.libEasy&&!S.libTags.length)?this.cookedBefore(rowOf,toX):[];
     const GM=this.mergedOn()?['breakfast','main']:TARGET_MEALS;const remG=m=>m==='main'?rem.lunch+rem.dinner:rem[m];
-    const sugGroups=GM.filter(m=>remG(m)>0).map(m=>{const xs=S.recipes.filter(r=>(m==='main'?isMainM(r.meal):r.meal===m)&&!onMenu[r.id]).map(toX).filter(x=>!x.block.length).sort((a,b)=>(b.pf-a.pf)||(b.can-a.can)||(b.ue-a.ue)||(a.per-b.per));const more=!!(S.sugMore||{})[m];
+    const sugGroups=GM.filter(m=>remG(m)>0).map(m=>{const xs=S.recipes.filter(r=>(m==='main'?isMainM(r.meal):r.meal===m)&&!onMenu[r.id]).map(toX).filter(x=>!x.block.length).sort((a,b)=>(b.pf-a.pf)||(b.can-a.can)||(b.ue-a.ue)||((a.per+a.unp*UNP_PER_SERVING)-(b.per+b.unp*UNP_PER_SERVING)));const more=!!(S.sugMore||{})[m];
       return {label:MLP[m],sub:`${remG(m)} open`,rows:xs.slice(0,more?12:3).map(rowOf),hasMore:xs.length>3,moreText:more?'Show fewer':`Show more ${MLP[m].toLowerCase()}`,more:()=>this.setState({sugMore:{...(this.state.sugMore||{}),[m]:!more}})};}).filter(g=>g.rows.length);const sugRows=[];
     const remAll=TARGET_MEALS.reduce((a,m)=>a+rem[m],0);
     const allTags=[...new Set(S.recipes.flatMap(r=>r.tags))].sort((a,b)=>{const ia=TAG_ORDER.indexOf(a),ib=TAG_ORDER.indexOf(b);return ((ia<0?99:ia)-(ib<0?99:ib))||a.localeCompare(b);});
@@ -3813,7 +3882,7 @@ class Component extends DCLogic {
     const DC=this.desCov();const menuGroups=(this.mergedOn()?['breakfast','main','dessert']:['breakfast','lunch','dinner','dessert']).map(m=>{const its=live.filter(i=>m==='main'?isMainM(R[i.rid].meal):R[i.rid].meal===m);const mx=(m==='main'?2:1)*this.tripDays();
       return {label:MLP[m],sub:m==='dessert'?(DC.n?`${DC.c} of ${DC.n} dessert day${DC.n===1?'':'s'}`:'No dessert days on'):`${Math.min(cov[m],mx)} of ${mx} covered`,
         rows:its.map(i=>{const r=R[i.rid],mt=meta(r);const done=i.status==='cooked';const adds=done?0:Math.max(0,r2(baseTotal-this.menuTotal(open.filter(o=>o.pid!==i.pid),R,P)));
-          return {name:r.name,color:done?'var(--faint)':'var(--ink)',meta:done?`Cooked ${mdDate(i.cookedOn||t0)}`:`${WHOLE.has(r.meal)?this.servOf(i):ppl*(i.mult||1)} servings · ${mt.total} min`,cost:`adds ${money(adds)}`,canEdit:!done,
+          return {name:r.name,color:done?'var(--faint)':'var(--ink)',meta:done?`Cooked ${mdDate(i.cookedOn||t0)}`:`${WHOLE.has(r.meal)?this.servOf(i):ppl*(i.mult||1)} servings · ${mt.total} min`,cost:`adds ${money(adds)}`+(this.unpricedOf(r,P)?' '+window.RecipeCore.unpricedText(this.unpricedOf(r,P)):''),canEdit:!done,
             mults:[1,2].map(n=>({label:`${n}x`,...sel((i.mult||1)===n),pick:()=>this.setMenuMult(i.pid,n)})),remove:()=>this.removeFromMenu(i.pid),
             open:()=>this.setState({sheet:{rid:r.id,serv:ppl*(i.mult||1),kicker:`My menu · ${ML[m]}`}})};})};}).filter(g=>g.rows.length);
     const remTotal=TARGET_MEALS.reduce((a,m)=>a+rem[m],0);
@@ -4099,27 +4168,30 @@ class Component extends DCLogic {
     return {d:{...d,ings},made,P:{...this.P(),...Object.fromEntries(made.map(i=>[i.id,i]))}};}
   recConv(q,u,p){if(u===p.unit)return q;const a=window.MealCore.convert(q,u,p.unit);if(a!=null)return a;const C=window.CookCore;const b=C&&C.convert(q,u,p.unit==='each'?'count':p.unit,p.name);return b?Math.round(b.q*1e4)/1e4:null;}
   recUnits(p,cur){const us=[...window.MealCore.unitsFor(p.unit)];for(const u of ['tsp','tbsp','cup','count',cur])if(u&&!us.includes(u)&&this.recConv(1,u,p)!=null)us.push(u);return us;}
-  saveRec(andTrip){const S=this.state,e=S.recEd;if(!e)return;const pz=this.possPrep(e.d);const b=this.recBuild(pz.d,pz.P);const oi=pz.made.length?{ownItems:[...(S.ownItems||[]),...pz.made]}:{};if(b.err){this.flash(b.err);return;}const r=b.r,at=new Date().toISOString();
+  saveRec(andTrip){const S=this.state,e=S.recEd;if(!e)return;const pz=this.possPrep(e.d);const b=this.recBuild(pz.d,pz.P);const oi=pz.made.length?{ownItems:[...(S.ownItems||[]),...pz.made]}:{};
+    // Possible items go first, so the sheet knows them (and swaps their ids) before the recipe that uses them.
+    const obi=this.linked()&&pz.made.length?pz.made.map(it=>this.itemAddChg(it,S.numLinks)):[];if(b.err){this.flash(b.err);return;}const r=b.r,at=new Date().toISOString();
     const reopen=id=>e.back&&e.back.rid===id?e.back:{rid:id,serv:S.people*this.multFor({...r,id}),kicker:`Library · ${ML[r.meal]}`};
     if(e.mode==='web'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
       const d=e.d,RC=window.RecipeCore;const nr={...r,id,source:'From the web',created:at,editedAt:at,...(d.basics&&d.basics.length?{basics:d.basics}:{})};
       // Items the person picked for unmatched or wrong lines are used first next time.
       const LC=window.LearnCore,lc=LC&&LC.clone?LC.clone(S.learn):null;const ra={...(S.recipeAliases||{})};for(const x of d.ings)if(x.web&&x.web.picked&&x.iid){const k=RC.learnKey(x.web.item);if(!k)continue;ra[k]=x.iid;if(lc)LC.record(lc,'name','recipe:'+k,'@'+x.iid,'user-edit');}
-      const obp=nr.keeper&&this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
+      const obp=nr.keeper&&this.linked()?{outbox:[...(S.outbox||[]),...obi,this.chg('recipe.add',this.recData(nr,id))]}:obi.length?{outbox:[...(S.outbox||[]),...obi]}:{};
       const mp=andTrip?{menu:[...S.menu,{pid:uid(),rid:id,mult:1,status:'open',addedOn:this.today()}]}:{};
       this.commit(`Added recipe ${r.name}${andTrip?' to this trip':''}`,{...oi,ownRecipes:[...(S.ownRecipes||[]),nr],recipeAliases:ra,...(lc?{learn:lc}:{}),recEd:null,sheet:andTrip?null:reopen(id),...obp,...mp});
       this.flash(andTrip?`Saved ${r.name} and added it to this trip.`:`Saved ${r.name}. It's in your recipes.`);return;}
     if(e.mode==='new'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
-      const nr={...r,id,source:'My recipe',created:at,editedAt:at};const obp=this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
+      const nr={...r,id,source:'My recipe',created:at,editedAt:at};const obp=this.linked()?{outbox:[...(S.outbox||[]),...obi,this.chg('recipe.add',this.recData(nr,id))]}:{};
       this.commit(`Added recipe ${r.name}`,{...oi,ownRecipes:[...(S.ownRecipes||[]),nr],recEd:null,sheet:reopen(id),...obp});this.flash(`Saved ${r.name}. It's in the library.`);return;}
     if(e.mode==='own'){const was=(S.ownRecipes||[]).find(x=>x.id===e.id)||{};const ownRecipes=(S.ownRecipes||[]).map(x=>x.id===e.id?{...x,...r,editedAt:at}:x);const nr=ownRecipes.find(x=>x.id===e.id);
       // A web recipe that was kept on the phone goes to the sheet when it's marked as a keeper.
       const ob=!this.linked()||!nr||(nr.fromWeb&&!nr.keeper)?null:nr.fromWeb&&!was.keeper?[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,e.id))]:this.obPatch(S.outbox,'recipe.add',e.id,()=>this.recData(nr,e.id));
-      this.commit(`Edited ${r.name}`,{...oi,ownRecipes,recEd:null,sheet:reopen(e.id),...(ob?{outbox:ob}:{})});this.flash(`Saved ${r.name}`);return;}
+      const isR=c=>c.type==='recipe.add'&&c.data&&c.data.id===e.id;const ob2=obi.length?(ob?[...ob.filter(c=>!isR(c)),...obi,...ob.filter(isR)]:[...(S.outbox||[]),...obi]):ob;
+      this.commit(`Edited ${r.name}`,{...oi,ownRecipes,recEd:null,sheet:reopen(e.id),...(ob2?{outbox:ob2}:{})});this.flash(`Saved ${r.name}`);return;}
     const orig=this.cat.recipes.find(x=>x.id===e.id);if(!orig){this.setState({recEd:null});return;}const re={...(S.recipeEdits||{})};
     if(recSig({...orig,...meta(orig)})===recSig({...orig,...r})){if(!re[e.id]){this.setState({recEd:null,sheet:reopen(e.id)});this.flash('No changes to save');return;}
       delete re[e.id];this.commit(`Back to the original ${orig.name}`,{recipeEdits:re,recEd:null,sheet:reopen(e.id)});this.flash('That matches the original, so the app is using the original again.');return;}
-    re[e.id]={...r,editedAt:at,baseVersion:this.cat.catalogVersion};const obp=this.linked()?{outbox:[...(S.outbox||[]),this.recEditChg(orig,r)]}:{};
+    re[e.id]={...r,editedAt:at,baseVersion:this.cat.catalogVersion};const obp=this.linked()?{outbox:[...(S.outbox||[]),...obi,this.recEditChg(orig,r)]}:{};
     this.commit(`Saved your version of ${orig.name}`,{...oi,recipeEdits:re,recEd:null,sheet:reopen(e.id),...obp});this.flash(`Saved your version of ${r.name}`);}
   useOriginal(id){const S=this.state;const orig=this.cat.recipes.find(x=>x.id===id);if(!orig||!(S.recipeEdits||{})[id])return;
     const re={...S.recipeEdits};delete re[id];this.commit(`Back to the original ${orig.name}`,{recipeEdits:re,isArm:null});this.flash(`Using the original ${orig.name} again`);if(this.cat.recipes.some(x=>x.id===id+'_mine'))this.sheetToo();}
@@ -4129,10 +4201,10 @@ class Component extends DCLogic {
     this.commit(`Deleted recipe ${r.name}`,{ownRecipes:S.ownRecipes.filter(x=>x.id!==id),outbox:(S.outbox||[]).filter(c=>!(c.type==='recipe.add'&&c.data&&c.data.id===id)),recEd:null,sheet:null});if((S.idSwaps||{})[id])this.sheetToo();this.flash(`Deleted ${r.name}`);}
   recEdVals(){const S=this.state,e=S.recEd;if(!e)return {reOpen:false,reMeals:[],reTags:[],reIngs:[],reCanTrip:false,hasReBasics:false,reCanKeep:false};const d=e.d,P=this.P();
     const sel=on=>({bg:on?'var(--primary)':'var(--surface)',color:on?'var(--on-accent)':'var(--ink)',border:on?'var(--primary)':'var(--line)'});const set=k=>ev=>this.recSet({[k]:ev.target.value});
-    const serv=Math.max(1,Math.round(+d.serv||1));let cost=0;
+    const serv=Math.max(1,Math.round(+d.serv||1));let cost=0,unp=0;
     const MC=window.MealCore;const web=e.mode==='web';let nAsk=0;
     const ings=d.ings.map(x=>{const w=x.web||null;const remove=()=>this.recSet({ings:d.ings.filter(y=>y.k!==x.k)});
-      if(!x.iid&&w&&w.item){const sg=w.cand&&P[w.cand];const us=['each','oz','lb','tsp','tbsp','cup','fl oz'];const u=x.u&&us.includes(x.u)?x.u:'each';const had=(this.state.ownItems||[]).find(o=>o.possible&&normName(o.name)===normName(w.item));
+      if(!x.iid&&w&&w.item){const sg=w.cand&&P[w.cand];if(!x.o)unp++;const us=['each','oz','lb','tsp','tbsp','cup','fl oz'];const u=x.u&&us.includes(x.u)?x.u:'each';const had=(this.state.ownItems||[]).find(o=>o.possible&&normName(o.name)===normName(w.item));
         if(!(parseFloat(x.q)>0))nAsk++;
         return {k:x.k,name:w.item.charAt(0).toUpperCase()+w.item.slice(1),sub:had?(had.where?`In your possible ingredients · ${had.where}`:'In your possible ingredients'):'Not at Aldi',q:x.q||'',unit:u,units:us,u,oneUnit:false,manyUnits:true,
           onU:ev=>this.recIng(x.k,{u:ev.target.value}),onQ:ev=>this.recIng(x.k,{q:ev.target.value}),onAw:ev=>this.recIng(x.k,{aw:ev.target.value}),hasHint:false,hint:'',hasItem:true,remove,border:'var(--line)',cardBg:'var(--surface)',
@@ -4142,7 +4214,7 @@ class Component extends DCLogic {
         return {k:x.k,name:nm,sub:'No Aldi item matched',q:'',unit:'',units:[],u:'',oneUnit:true,manyUnits:false,hasHint:false,hint:'',hasItem:false,remove,border:'var(--warn-line)',cardBg:'var(--warn-soft)',
           webAsk:true,webNote:`The recipe says “${x.aw}”.`,pickItem:()=>this.webPickItem(x.k),pickText:'Pick item',hasSug:!!sg,sugText:sg?`Use ${sg.name}`:'',useSug:()=>{if(sg)this.webPick(x.k,sg.id);},leave:remove,
           onU:()=>{},onQ:()=>{},onAw:()=>{},optText:'',optBg:'',optColor:'',optBorder:'',toggleOpt:()=>{}};}
-      const p=P[x.iid]||this.nodeItem(x.iid)||{name:x.iid,unit:'',price:0,pkg:1};const us=this.recUnits(p,x.u);const u=x.u&&us.includes(x.u)?x.u:p.unit;const q0=parseFloat(x.q);const q=q0>0?(this.recConv(q0,u,p)??q0):0;const est=u!==p.unit&&MC.convert(1,u,p.unit)==null;if(q>0&&!p.staple&&!x.o)cost+=q*p.price/p.pkg;
+      const p=P[x.iid]||this.nodeItem(x.iid)||{name:x.iid,unit:'',price:0,pkg:1};const us=this.recUnits(p,x.u);const u=x.u&&us.includes(x.u)?x.u:p.unit;const q0=parseFloat(x.q);const q=q0>0?(this.recConv(q0,u,p)??q0):0;const est=u!==p.unit&&MC.convert(1,u,p.unit)==null;if(q>0&&!p.staple&&!x.o){if(window.RecipeCore.unpriced(p))unp++;else cost+=q*p.price/p.pkg;}
       return {...this.altVals(x,P),k:x.k,name:p.name,sub:[p.pack,money(p.price)+(p.pack==='per lb'?'/lb':''),p.staple?'staple, not costed':''].filter(Boolean).join(' · '),q:x.q,unit:p.unit&&p.unit!=='each'?p.unit:'each',aw:x.aw,units:us,u,oneUnit:us.length<2,manyUnits:us.length>1,onU:ev=>this.recIng(x.k,{u:ev.target.value}),
         hasHint:q0>0&&u!==p.unit,hint:q0>0&&u!==p.unit?`${est?'About ':'= '}${fmtQ(q,p.unit)}`:'',
         onQ:ev=>this.recIng(x.k,{q:ev.target.value}),onAw:ev=>this.recIng(x.k,{aw:ev.target.value}),
@@ -4163,7 +4235,7 @@ class Component extends DCLogic {
       reReheats:!!d.reheats,reTrack:d.reheats?'var(--good)':'var(--line)',reKnob:d.reheats?20:0,toggleReheats:()=>this.recSet({reheats:!d.reheats}),
       reTags:[...new Set([...TAG_ORDER,...d.tags])].map(t=>({label:tagLabel(t),...sel(d.tags.includes(t)),pick:()=>this.recSet({tags:d.tags.includes(t)?d.tags.filter(x=>x!==t):[...d.tags,t]})})),
       reIngs:ings,noReIngs:!ings.length,reIngHint:`Amounts for the whole recipe, which makes ${serv}. The app scales them to the servings you cook.`,reAddIng:()=>this.addRecIng(),
-      hasReCost:cost>0,reCost:web?(()=>{const n=Math.max(1,Math.round(+S.people||serv));return `Cost for your household: ${money(cost*n/serv)} · ${n} portion${n===1?'':'s'}`;})():`About ${money(cost/serv)} a serving · ${money(cost)} for the whole recipe`,
+      hasReCost:cost>0||unp>0,reCost:(web?(()=>{const n=Math.max(1,Math.round(+S.people||serv));return `Cost for your household: ${money(cost*n/serv)} · ${n} portion${n===1?'':'s'}`;})():`About ${money(cost/serv)} a serving · ${money(cost)} for the whole recipe`)+(unp?' '+window.RecipeCore.unpricedText(unp):''),
       reLink:d.link,onReLink:set('link'),reClose:()=>this.closeRecEd(),reSave:()=>this.saveRec(),reSaveText:e.mode==='cat'?'Save my version':web?'Save to my recipes':'Save recipe',reCanTrip:web,reSaveTrip:()=>this.saveRec(true),
       reCanDel:e.mode==='own',reDel:()=>this.deleteRec(),reDelText:'Delete',reDelBg:'var(--surface)',reDelColor:'var(--bad-ink)'};}
   myRecVals(){const S=this.state,R=this.R();const ed=S.recipeEdits||{};
@@ -4218,10 +4290,19 @@ class Component extends DCLogic {
     const why=[x.b?`${x.b} batch${x.b===1?'':'es'} in your kitchen`:'',x.rec.length?`recipe${x.rec.length===1?'':'s'} ${x.rec.join(', ')}`:'',x.al?`${x.al} receipt name${x.al===1?'':'s'}`:''].filter(Boolean);
     if(why.length){this.flash(`Can't delete ${u.name} yet. It's used by ${why.join(' and ')}.`);return;}
     const bought={...S.bought};delete bought[id];this.commit(`Deleted ${u.name}`,{ownItems:S.ownItems.filter(x=>x.id!==id),outbox:(S.outbox||[]).filter(c=>!(c.type==='item.add'&&c.data&&c.data.id===id)),bought,isArm:null,uEdit:null});if((S.idSwaps||{})[id])this.sheetToo();}
-  saveUserItem(id){const S=this.state,e=S.uEdit;if(!e||!e.name.trim())return;const c=this.catOf(e.cat);
+  saveUserItem(id){const S=this.state,e=S.uEdit;if(!e||!e.name.trim())return;
+    if(!(S.ownItems||[]).some(u=>u.id===id)){const ci=this.cat&&this.cat.items.find(x=>x.id===id);if(!ci){this.setState({uEdit:null});return;}const w=(e.where||'').trim(),nm=e.name.trim();const prev=(S.itemEdits||{})[id]||{};
+      const ie={...(S.itemEdits||{}),[id]:{...prev,where:w,...(nm!==ci.name?{name:nm}:{})}};const ob=[...(S.outbox||[])];
+      if(this.linked()&&w!==(prev.where??ci.where??''))ob.push({...this.chg('item.where',{id,where:w},{changed:ci.changed||null}),needs:7});
+      if(this.linked()&&nm!==(prev.name||ci.name))ob.push(this.chg('item.update',{id,fields:{name:nm}},{}));
+      this.commit(`Edited ${nm}`,{itemEdits:ie,uEdit:null,outbox:ob});return;}
+    const c=this.catOf(e.cat);
     const ownItems=S.ownItems.map(u=>u.id!==id?u:{...u,name:e.name.trim(),...(e.where!=null?{where:e.where.trim()}:{}),price:+e.price>=0&&e.price!==''?r2(+e.price):u.price,...(u.cat!==c.name?{cat:c.name,storage:c.storage,fridge:c.fridge,freezer:c.freezer,pantry:c.pantry,staple:!!c.staple,tracking:c.tracking||null}:{})});
     const u2=ownItems.find(x=>x.id===id);const ob=this.linked()&&u2?this.obPatch(S.outbox,'item.add',id,()=>this.itemData(u2,S.numLinks)):null;
-    this.commit(`Edited ${e.name.trim()}`,{ownItems,uEdit:null,...(ob?{outbox:ob}:{})});}
+    const was=S.ownItems.find(u=>u.id===id)||{};
+    // Already sent: the item.add is gone from the outbox, so send the new store on its own.
+    const wq=this.linked()&&u2&&u2.possible&&!ob&&(u2.where||'')!==(was.where||'')?[...(S.outbox||[]),{...this.chg('item.where',{id,where:u2.where||''}),needs:7}]:null;
+    this.commit(`Edited ${e.name.trim()}`,{ownItems,uEdit:null,...(ob||wq?{outbox:ob||wq}:{})});}
   mergeCandidates(){const S=this.state;if(!this.cat)return [];const byN={};for(const p of this.cat.items)if(!p.retired)byN[normName(p.name)]=p;
     return (S.ownItems||[]).filter(u=>byN[normName(u.name)]&&!(S.itemSettings||{})[u.id]?.noMerge).map(u=>({u,c:byN[normName(u.name)]}));}
   mergeItem(uidv,cid){const S=this.state;const u=(S.ownItems||[]).find(x=>x.id===uidv),c=this.cat.items.find(x=>x.id===cid);if(!u||!c)return;
@@ -4259,12 +4340,13 @@ class Component extends DCLogic {
       isNewText:s.q?`Add “${s.q.trim()}” as a new item`:'Add a new item',
       isNewGo:()=>this.setState({itemSheet:{...s,step:'new',draft:{name:s.q.trim().replace(/\b\w/g,ch=>ch.toUpperCase()),cat:'Other',price:'',amt:'',unit:'each',cart:s.mode==='cart'||s.mode==='kitchen'}}})};}
   userItemVals(){const S=this.state;const sel=on=>({bg:on?'var(--primary)':'var(--surface)',color:on?'var(--on-accent)':'var(--ink)',border:on?'var(--primary)':'var(--line)'});const e=S.uEdit;
-    const rows=[...(S.ownItems||[])].sort((a,b)=>!!b.possible-!!a.possible).map(u=>{const editing=e&&e.id===u.id;const x=this.usesOf(u.id);const del=S.isArm==='del:'+u.id;
+    const catPoss=(this.cat?this.cat.items:[]).filter(c=>c.possible&&!c.retired).map(c=>({...c,...((S.itemEdits||{})[c.id]||{}),fromCat:true}));
+    const rows=[...catPoss,...[...(S.ownItems||[])].sort((a,b)=>!!b.possible-!!a.possible)].map(u=>{const editing=e&&e.id===u.id;const x=this.usesOf(u.id);const del=S.isArm==='del:'+u.id;
       return {name:u.name,sub:u.possible?['Possible ingredient',u.where?`Where: ${u.where}`:'No store noted yet',`added ${mdDate(u.created||this.today())}`].join(' · '):`${u.cat} · ${u.pack} · ${money(u.price)} · added ${mdDate(u.created||u.priceDate||this.today())}${x.b?` · ${x.b} in kitchen`:''}`,editing,notEditing:!editing,
         edit:()=>this.setState({uEdit:{id:u.id,name:u.name,cat:u.cat,price:String(u.price),where:u.where||''}}),eWhere:editing?(e.where||''):'',onEWhere:ev=>this.setState({uEdit:{...e,where:ev.target.value}}),
         eName:editing?e.name:'',onEName:ev=>this.setState({uEdit:{...e,name:ev.target.value}}),ePrice:editing?e.price:'',onEPrice:ev=>this.setState({uEdit:{...e,price:ev.target.value}}),
-        eCats:editing?this.cats().map(c=>({label:c.name,...sel(c.name===e.cat),pick:()=>this.setState({uEdit:{...e,cat:c.name}})})):[],
-        save:()=>this.saveUserItem(u.id),cancel:()=>this.setState({uEdit:null}),del:()=>this.deleteUserItem(u.id),delText:'Delete',delBg:'var(--surface)',delColor:'var(--bad-ink)'};});
+        eCats:editing&&!u.fromCat?this.cats().map(c=>({label:c.name,...sel(c.name===e.cat),pick:()=>this.setState({uEdit:{...e,cat:c.name}})})):[],
+        save:()=>this.saveUserItem(u.id),cancel:()=>this.setState({uEdit:null}),canDel:!u.fromCat,canPrice:!u.fromCat,del:()=>this.deleteUserItem(u.id),delText:'Delete',delBg:'var(--surface)',delColor:'var(--bad-ink)'};});
     const merges=this.mergeCandidates().map(({u,c})=>{const x=this.usesOf(u.id);const arm=S.isArm==='merge:'+u.id;
       return {text:`${u.name} is now in the catalog as “${c.name}”. Link them?`,sub:`Moves ${x.b} batch${x.b===1?'':'es'}, ${x.al} receipt name${x.al===1?'':'s'} and ${x.rec.length} recipe${x.rec.length===1?'':'s'} to the catalog item.`,
         goText:'Link them',goBg:'var(--primary)',
@@ -4520,7 +4602,7 @@ class Component extends DCLogic {
     if(link&&link.url&&link.key){
       if(!(quick&&last)){
         const j=await this.fetchJson(link.url+'?key='+encodeURIComponent(link.key)+'&schema=2&have='+encodeURIComponent((last&&last.catalogVersion)||''),{cache:'no-store'},20000);
-        sheet={at:new Date().toISOString(),version:j.version||null,problems:j.problems||null,error:j.ok?null:(j.error||'network'),fromSheet:false};
+        sheet={at:new Date().toISOString(),version:j.version||null,problems:j.problems||null,error:j.ok?null:(j.error||'network'),fromSheet:false,script:j.ok?(+j.script||0):null};
         if(j.ok&&j.catalog){const c={...j.catalog,catalogVersion:j.version||j.catalog.catalogVersion};const bad=checkCat(c);
           if(bad){msg=`The sheet's catalog can't be used: ${bad} The app is still using the previous one.`;sheet.error='bad';}else{fresh=c;sheet.fromSheet=true;}}
         else if(j.ok&&j.notModified)sheet.fromSheet=true;
@@ -4532,10 +4614,14 @@ class Component extends DCLogic {
     return {cat:normCat(fresh||last||builtIn),prev:normCat(fresh?(last||builtIn):null),fresh:!!fresh,msg,sheet};
   }
   linked(){const l=this.state.sheetLink;return !!(l&&l.url&&l.key);}
+  scriptV(){return +((this.state.sheetLink||{}).script)||0;}
+  noteScript(j){if(!j||!j.ok)return;const v=+j.script||0;const l=this.state.sheetLink;if(l&&(+l.script||0)!==v)this.save({sheetLink:{...l,script:v}});}
+  // Possible ingredients need script 7. Older scripts would add them with a $0 price and break the catalog.
+  itemAddChg(u,nl){const c=this.chg('item.add',this.itemData(u,nl));return u.possible?{...c,needs:7}:c;}
   chg(type,data,base){return {id:'c_'+Date.now().toString(36)+'_'+uid(),type,at:new Date().toISOString(),data,base:base||{}};}
   priceBase(id,store){const c=this.cat&&this.cat.items.find(x=>x.id===id);if(!c)return {};if(!store||store==='aldi')return {price:c.price,priceDate:c.priceDate||null};const o=(c.offers||[]).find(x=>x.store===store);return o?{price:o.price,priceDate:o.priceDate||null}:{};}
   recBase(id){const c=this.cat&&this.cat.recipes.find(x=>x.id===id);return c?{changed:c.changed||null}:{};}
-  itemData(u,nl){const o={};for(const k of ['id','name','cat','pack','unit','pkg','price','src','priceDate','staple','storage','fridge','freezer','pantry','soldBy','family','tracking','aldi'])o[k]=u[k]??null;o.nums=Object.keys(nl||{}).filter(n=>!n.includes(':')&&nl[n]===u.id);o.brand=u.brand||'';o.flavor=u.flavor||'';o.unsorted=!!u.unsorted;o.node=u.node||null;o.store=u.store0||'aldi';
+  itemData(u,nl){const o={};for(const k of ['id','name','cat','pack','unit','pkg','price','src','priceDate','staple','storage','fridge','freezer','pantry','soldBy','family','tracking','aldi','possible','where'])o[k]=u[k]??null;o.nums=Object.keys(nl||{}).filter(n=>!n.includes(':')&&nl[n]===u.id);o.brand=u.brand||'';o.flavor=u.flavor||'';o.unsorted=!!u.unsorted;o.node=u.node||null;o.store=u.store0||'aldi';
     const oe=(this.state.offerEdits||{})[u.id]||{};o.offers=Object.keys(oe).filter(s=>!oe[s].removed).map(s=>({store:s,price:oe[s].price,pack:oe[s].pack||null,unit:oe[s].unit||u.unit,pkg:oe[s].pkg||u.pkg,nums:Object.keys(nl||{}).filter(k=>k.startsWith(s+':')&&nl[k]===u.id).map(k=>splitKey(k)[1]),priceDate:oe[s].priceDate||null,src:oe[s].src||'edited'}));return o;}
   recData(r,id){const o={id:id||null};for(const k of ['meal','name','tags','serv','ing','total','hands','keeps','reheats','link','notes','photo','steps'])o[k]=r[k]??null;if(!id)delete o.id;return o;}
   recEditChg(orig,r){if(/^my (recipe|version)$/i.test(orig.source||''))return this.chg('recipe.update',this.recData({...orig,...r},orig.id),{changed:orig.changed||null});
@@ -4543,8 +4629,8 @@ class Component extends DCLogic {
   obPatch(ob,type,id,fn){const i=(ob||[]).findIndex(c=>c.type===type&&c.data&&c.data.id===id);if(i<0)return null;const out=[...ob];out[i]={...out[i],data:fn(out[i].data)};return out;}
   obRename(ob,from,to){const q='"'+from+'"';return (ob||[]).map(c=>{const s=JSON.stringify(c.data);return s&&s.includes(q)?{...c,data:JSON.parse(s.split(q).join('"'+to+'"'))}:c;});}
   chgLabel(c){const d=c.data||{},P=this.P();const nm=id=>(P[id]&&P[id].name)||id;
-    return ({'item.add':`new item ${d.name}`,'price.set':`price of ${nm(d.item)}`,'number.link':`Aldi number ${d.num}`,'alias.add':`receipt name ${d.text}`,'recipe.add':`recipe ${d.name}`,'recipe.update':`recipe ${d.name}`,'recipe.edit':`my version of ${d.recipe&&d.recipe.name}`,'item.merge':`link of ${nm(d.from)}`,'item.update':`details of ${nm(d.id)}`,'item.place':`group of ${nm(d.item)}`,'offer.set':`${this.storeName(d.store)} price of ${nm(d.item)}`,'node.add':`group ${d.name}`,'favorite.set':'a favorite','learn.batch':`${(d.records||[]).length} learned words and names`})[c.type]||c.type;}
-  startSync(lc){if(lc&&lc.sheet)this.setState({sheetStatus:lc.sheet});
+    return ({'item.add':`new item ${d.name}`,'price.set':`price of ${nm(d.item)}`,'number.link':`Aldi number ${d.num}`,'alias.add':`receipt name ${d.text}`,'recipe.add':`recipe ${d.name}`,'recipe.update':`recipe ${d.name}`,'recipe.edit':`my version of ${d.recipe&&d.recipe.name}`,'item.merge':`link of ${nm(d.from)}`,'item.update':`details of ${nm(d.id)}`,'item.place':`group of ${nm(d.item)}`,'offer.set':`${this.storeName(d.store)} price of ${nm(d.item)}`,'node.add':`group ${d.name}`,'favorite.set':'a favorite','learn.batch':`${(d.records||[]).length} learned words and names`,'item.where':`store for ${nm(d.id)}`})[c.type]||c.type;}
+  startSync(lc){if(lc&&lc.sheet)this.setState({sheetStatus:lc.sheet});if(lc&&lc.sheet&&lc.sheet.script!=null)this.noteScript({ok:true,script:lc.sheet.script});
     if(!this._syncWired){this._syncWired=true;
       const wake=()=>{this._retryAt=0;clearTimeout(this._retryT);};
       window.addEventListener('online',()=>{wake();this.sendOutbox();});
@@ -4555,20 +4641,21 @@ class Component extends DCLogic {
   async sendOutbox(manual){if(!this.linked()||this._sending)return;const l=this.state.sheetLink;
     if(manual){this._retryAt=0;this._refused=false;clearTimeout(this._retryT);if(l.hold)await new Promise(r=>this.save({sheetLink:{...l,hold:false}},r));}
     if(this._refused||(this._retryAt&&Date.now()<this._retryAt))return;
-    const ready=()=>{const S=this.state,ob=S.outbox||[];if(!(S.sheetLink&&S.sheetLink.hold))return ob.filter(c=>!c.stuck);
-      const held=new Set(ob.filter(c=>c.init&&(c.type==='item.add'||c.type==='recipe.add')&&c.data&&c.data.id).map(c=>c.data.id));
+    const ready=()=>{const S=this.state,ob=S.outbox||[];const hold=!!(S.sheetLink&&S.sheetLink.hold);const sv=this.scriptV();
+      const wait=c=>(hold&&c.init)||(c.needs||0)>sv;
+      const held=new Set(ob.filter(c=>wait(c)&&(c.type==='item.add'||c.type==='recipe.add'||c.type==='item.where')&&c.data&&c.data.id).map(c=>c.data.id));
       const uses=c=>{const d=c.data||{};const ids=[d.item,d.id,d.from,...(d.ing||[]).map(x=>x[0]),...((d.recipe&&d.recipe.ing)||[]).map(x=>x[0])];return ids.some(x=>held.has(x));};
-      return ob.filter(c=>!c.stuck&&!c.init&&!uses(c));};
+      return ob.filter(c=>!c.stuck&&!wait(c)&&!uses(c));};
     if(!ready().length){this.applySwaps();return;}
     this._sending=true;this.setState({sending:true});let any=false;
     try{for(let guard=0;guard<40;guard++){const batch=ready().slice(0,50);if(!batch.length)break;const L=this.state.sheetLink;if(!L||!L.url)break;
-        const j=await this.fetchJson(L.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:L.key,device:'phone',changes:batch.map(({tries,stuck,init,...c})=>c)})},30000);
+        const j=await this.fetchJson(L.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:L.key,device:'phone',changes:batch.map(({tries,stuck,init,needs,...c})=>c)})},30000);
         const at=new Date().toISOString();
         if(!j||!j.ok){const err=(j&&j.error)||'network';
           if(err==='refused'){this._refused=true;this.setState({sheetStatus:{...(this.state.sheetStatus||{}),error:'refused'}});}
           else{this._fails=(this._fails||0)+1;const m=[1,5,15,60][Math.min(this._fails,4)-1];this._retryAt=Date.now()+m*60000;clearTimeout(this._retryT);this._retryT=setTimeout(()=>this.sendOutbox(),m*60000+500);}
           this.setState({lastSend:{at,ok:false,text:err}});break;}
-        this._fails=0;this._retryAt=0;
+        this._fails=0;this._retryAt=0;this.noteScript(j);
         const r=await this.applyResults(batch,j);any=any||r.done+r.dropped>0;this.setState({lastSend:{at,ok:true,text:`${r.done} sent${r.dropped?`, ${r.dropped} not used`:''}${r.kept?`, ${r.kept} kept to retry`:''}`}});
         if(!r.done&&!r.dropped)break;}
     }finally{this._sending=false;this.setState({sending:false});}
@@ -4577,9 +4664,11 @@ class Component extends DCLogic {
     const pe={...S.priceEdits},nl={...(S.numLinks||{})},al=[...(S.aliases||[])],oe={...(S.offerEdits||{})},ie={...(S.itemEdits||{})};const log=[],toasts=[];let done=0,dropped=0,kept=0;const at=new Date().toISOString();
     const outbox=[];for(const c of (S.outbox||[])){if(!sent.has(c.id)){outbox.push(c);continue;}const x=R[c.id],st=x&&x.status;
       if(st==='applied'||st==='duplicate'){done++;continue;}
+      if(st==='rejected'&&/^Unknown change type/.test(x.message||'')){kept++;outbox.push({...c,stuck:true,tries:(c.tries||0)+1});log.push({id:uid(),at,kind:'stuck',cid:c.id,msg:`Update your Google script to send the ${this.chgLabel(c)}.`});continue;}
       if(st==='conflict'||st==='rejected'){dropped++;const m=x.message||(st==='conflict'?`${this.chgLabel(c)}: the sheet kept its own value.`:`The sheet couldn't use the ${this.chgLabel(c)}.`);log.push({id:uid(),at,kind:st,msg:m});toasts.push(m);
         if(st==='conflict'){const d=c.data||{};if(c.type==='price.set'&&(!d.store||d.store==='aldi'))delete pe[d.item];else if((c.type==='price.set'||c.type==='offer.set')&&oe[d.item]){const o={...oe[d.item]};delete o[d.store];oe[d.item]=o;}
           else if(c.type==='number.link'){delete nl[nkey(d.store,d.num)];delete nl[d.num];}else if(c.type==='item.place'&&ie[d.item]){const e={...ie[d.item]};delete e.node;ie[d.item]=e;}
+          else if(c.type==='item.where'&&ie[d.id]){const e={...ie[d.id]};delete e.where;ie[d.id]=e;}
           else if(c.type==='item.update'&&ie[d.id]){const e={...ie[d.id]};for(const k in (d.fields||{}))delete e[k];ie[d.id]=e;}
           else if(c.type==='alias.add'){const si=x.sheet&&typeof x.sheet==='object'?x.sheet.item:x.sheet;const i=al.findIndex(a=>a.text===d.text);if(si&&i>=0)al[i]={...al[i],item:si};}}
         continue;}
@@ -4622,7 +4711,7 @@ class Component extends DCLogic {
   buildInitial(){const S=this.state;const ob=[];const nl=S.numLinks||{};const I=Object.fromEntries(this.cat.items.map(x=>[x.id,x]));const cnt={items:0,recipes:0,mine:0,nums:0,names:0,prices:0};
     const add=(c,k)=>{ob.push({...c,init:true});if(k)cnt[k]++;};
     for(const n of (S.ownNodes||[]))add(this.chg('node.add',n));
-    for(const u of (S.ownItems||[]))add(this.chg('item.add',this.itemData(u,nl)),'items');
+    for(const u of (S.ownItems||[]))add(this.itemAddChg(u,nl),'items');
     for(const r of (S.ownRecipes||[]))if(!(r.fromWeb&&!r.keeper))add(this.chg('recipe.add',this.recData(r,r.id)),'recipes');
     for(const id in (S.recipeEdits||{})){const orig=this.cat.recipes.find(x=>x.id===id);if(orig)add(this.recEditChg(orig,S.recipeEdits[id]),'mine');}
     for(const from in (S.itemMerges||{}))add(this.chg('item.merge',{from,to:S.itemMerges[from]}));
@@ -4655,7 +4744,7 @@ class Component extends DCLogic {
       goSheet:()=>{this.setState({sub:'sheet',shUrl:l.url||'',shKey:l.key||'',shShow:false,shNote:null});if(this.scrollRef.current)this.scrollRef.current.scrollTop=0;},subSheet:S.sub==='sheet',
       shUrl:S.shUrl||'',onShUrl:e=>this.setState({shUrl:e.target.value}),shKey:S.shKey||'',onShKey:e=>this.setState({shKey:e.target.value}),shKeyType:S.shShow?'text':'password',shShowText:S.shShow?'Hide':'Show',toggleShShow:()=>this.setState({shShow:!S.shShow}),
       shTest:()=>this.sheetTest(),shTestText:S.shBusy?'Checking…':'Test and save',shBusy:!!S.shBusy,hasShNote:!!S.shNote,shNoteText:S.shNote?S.shNote.text:'',shNoteBg:S.shNote&&S.shNote.ok?'var(--good-tint)':'var(--bad-tint)',shNoteColor:S.shNote&&S.shNote.ok?'var(--good-ink)':'var(--bad-ink)',
-      shOn:on,shCatLine:cat,shWaitText:S.sending?'Sending…':`${n} change${n===1?'':'s'} waiting to send${held?` (${held} from the first connection wait for Send now)`:''}`,shSendDisabled:!!S.sending||!n,shSend:()=>this.sendOutbox(true),
+      shOn:on,shCatLine:cat,shWaitText:S.sending?'Sending…':`${n} change${n===1?'':'s'} waiting to send${held?` (${held} from the first connection wait for Send now)`:''}${(()=>{const w=(S.outbox||[]).filter(c=>(c.needs||0)>this.scriptV()).length;return w?`. ${w} wait for the new Google script.`:'';})()}`,shSendDisabled:!!S.sending||!n,shSend:()=>this.sendOutbox(true),
       shHasProblems:on&&errs.length>0,shProblemsText:`Your sheet has ${errs.length} problem${errs.length===1?'':'s'}, so the app is using the last good copy. In the sheet, use Meal Prep › Check data.`,shProblems:errs.slice(0,3).map(e=>({text:fe(e)})),
       shHasLog:(S.syncLog||[]).length>0,shLog:(S.syncLog||[]).map(x=>({when:tm(x.at),msg:x.msg,canRetry:x.kind==='stuck'&&ob.some(c=>c.id===x.cid&&c.stuck),retry:()=>this.retryStuck(x.cid,x.id)})),shClearLog:()=>this.save({syncLog:[]}),
       shDisconnect:()=>this.confirm('Disconnect the sheet?','The app goes back to catalog.json from GitHub. Changes waiting to send stay on this phone.','Disconnect',()=>{this._refused=false;this.relayer({sheetLink:{connectedAt:l.connectedAt||null},sheetStatus:null,shUrl:'',shKey:'',shNote:null},()=>this.checkCatalog(true,{}));},true),
@@ -4673,7 +4762,7 @@ class Component extends DCLogic {
     if(b>0||a>0)rows.push(['Your current meals, before → now',`$${b.toFixed(2)} → $${a.toFixed(2)}`]);
     return {file:`Version ${next.catalogVersion}`,rows,note:''};
   }
-  async checkCatalog(quiet,link){const lc=await this.loadCatalog(link||this.state.sheetLink);if(lc.sheet)this.setState({sheetStatus:lc.sheet});
+  async checkCatalog(quiet,link){const lc=await this.loadCatalog(link||this.state.sheetLink);if(lc.sheet)this.setState({sheetStatus:lc.sheet});if(lc.sheet&&lc.sheet.script!=null)this.noteScript({ok:true,script:lc.sheet.script});
     if(lc.msg){this.setState({msg:{ok:false,text:lc.msg}});return;}
     if(!lc.fresh){if(quiet!==true)this.flash(lc.sheet&&lc.sheet.error?(lc.sheet.error==='refused'?'The sheet refused the key':"Couldn't reach the sheet. Using the copy saved on this phone."):'You already have the newest catalog');this.applySwaps();return;}
     const prev=lc.prev;this.cat=lc.cat;const L=this.layer();
@@ -5872,7 +5961,7 @@ class Component extends DCLogic {
         editText:r.mine==='own'?'Edit recipe':r.mine==='edited'?'Edit my version':'Make my version',edit:()=>this.openRecEd(r.mine==='own'?'own':'cat',r.id),
         canRevert:r.mine==='edited',revert:()=>this.useOriginal(r.id),revText:'Use the original',
         facts:[{k:'total',v:`${mt.total} min`},{k:'hands-on',v:`${mt.hands} min`},{k:mt.reheats?'reheats well':'best fresh',v:`${mt.keeps} day${mt.keeps===1?'':'s'}`}],
-        servText:`${serv} serving${serv===1?'':'s'}`,servSub:serv>S.people?`${ppl}, plus ${serv-S.people} for leftovers`:ppl,cost:money(this.mealCost(r,serv,P)),
+        servText:`${serv} serving${serv===1?'':'s'}`,servSub:serv>S.people?`${ppl}, plus ${serv-S.people} for leftovers`:ppl,cost:[money(this.mealCost(r,serv,P)),window.RecipeCore.unpricedText(this.unpricedOf(r,P))].filter(Boolean).join(' '),
         hasOpt:r.nOpt>0,optText:S.optOn[r.id]?`Leave out ${r.nOpt} optional ingredient${r.nOpt===1?'':'s'}`:`Include ${r.nOpt} optional ingredient${r.nOpt===1?'':'s'}`,
         toggleOpt:()=>this.relayer({optOn:{...S.optOn,[r.id]:!S.optOn[r.id]}}),
         ings:(r.ingAll||r.ing).filter(x=>!x[3]||S.optOn[r.id]).concat((r.ingAll||[]).filter(x=>x[3]&&!S.optOn[r.id])).map(([iid,q,aw,o])=>{const it=P[iid]||{name:iid,unit:'',price:0,pkg:1};const amt=q*serv,h=this.haveOf(iid,P);
@@ -5928,7 +6017,7 @@ class Component extends DCLogic {
       statusText:ok?`${money(avail-shop.total-stockCost)} to spare`:'Over by '+money(shop.total+stockCost-avail),statusBg:ok?'var(--good-tint)':'var(--bad-tint)',statusColor:ok?'var(--good-ink)':'var(--bad-ink)',
       infeasible:!menuOk&&S.menu.length>0,hasExtras:extrasCost>0,extrasText:money(extrasCost),
       ...this.itemSheetVals(),...(S.tab==='more'?this.userItemVals():{uRows:[],uMerges:[]}),openAddCart:()=>this.openItemSheet('cart'),openAddKitchen:()=>this.openItemSheet('kitchen'),infeasibleText:`Remove a meal from your menu, log what you already have in Kitchen, or raise the budget in Settings.`,
-      hasBuy:shop.buy.length+stockLines.length+hhLines.length>0,nothingToBuy:shop.buy.length+stockLines.length+hhLines.length===0&&S.menu.length>0,shopGroups,priceDraft:S.priceDraft,onPriceDraft:e=>this.setState({priceDraft:e.target.value}),savePrice:()=>this.savePrice(),
+      ...this.awayVals(shop),hasBuy:shop.buy.length+stockLines.length+hhLines.length>0,nothingToBuy:shop.buy.length+stockLines.length+hhLines.length===0&&S.menu.length>0&&!(shop.away||[]).some(l=>!S.bought[l.id]),shopGroups,priceDraft:S.priceDraft,onPriceDraft:e=>this.setState({priceDraft:e.target.value}),savePrice:()=>this.savePrice(),
       hasLow:lowRows.length>0,lowRows,hasBought:boughtRows.length>0,boughtRows,
       kitchenSub:`${invIds.length} item${invIds.length===1?'':'s'} · ${S.leftovers.length} leftover${S.leftovers.length===1?'':'s'} · ${eatSoon.length} due soon`,
       invSearch:S.invSearch,onInvSearch:e=>this.setState({invSearch:e.target.value}),addRows,
