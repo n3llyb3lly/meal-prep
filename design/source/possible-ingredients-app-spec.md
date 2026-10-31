@@ -1,6 +1,6 @@
 # Possible ingredients: app change spec (6.6 follow-up)
 
-Paste this into Claude Design with `Meal Prep App Mobile v6.6.dc.html` open. It is written against the 6.6 source that is bundled in the live `index.html` (the one with `possPrep`, `altVals` and `saveRec` using `pz.made`). That source is newer than the `.dc.html` in the repo, so line numbers are left out; each edit names the method and quotes the code it changes.
+Paste this into Claude Design with `Meal Prep App Mobile v6.6.dc.html` open. It is written against the 6.6 source with the Oct 31 recipe editor (`possPrep`, `altVals`, `saveRec` using `pz.made`): the copy bundled in the live `index.html`, and the `Meal Prep App Mobile v6.6.dc.html` uploaded to the repo root on Oct 31 at 10:12. Each edit names the method and quotes the code it changes; every quoted line was checked against that file.
 
 The sheet side is done in `design/sheets/Code.gs` (script version 7) and `design/source/tools/recipe-core.js`. Rebundle `tools/recipe-core.js` with the app: `RecipeCore.cost` and two helpers changed.
 
