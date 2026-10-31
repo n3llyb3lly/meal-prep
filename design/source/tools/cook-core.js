@@ -8,7 +8,7 @@ const ALIAS={teaspoon:'tsp',teaspoons:'tsp',t:'tsp',tsp:'tsp',tablespoon:'tbsp',
   stick:'stick',sticks:'stick',each:'count',ct:'count',count:'count',clove:'count',cloves:'count',piece:'count',pieces:'count',whole:'count',large:'count',medium:'count',small:'count'};
 // Grams per US cup. Matched by the first pattern that fits the ingredient name.
 const DENSITY=[[/flour/,125],[/powdered sugar|icing sugar/,120],[/brown sugar/,213],[/sugar/,200],[/cornstarch|corn starch/,128],[/cocoa/,85],[/baking soda/,220],[/baking powder/,192],[/\bsalt\b/,288],
-  [/oats|oatmeal/,90],[/quinoa/,170],[/rice/,185],[/lentil/,192],[/breadcrumb|panko/,108],[/chocolate chip/,170],[/peanut butter|almond butter/,258],[/butter|ghee/,227],
+  [/blueberr|blackberr/,145],[/raspberr/,125],[/strawberr/,150],[/berr/,145],[/cherr/,155],[/grapes?\b/,150],[/mango|pineapple|peach/,165],[/corn\b|peas\b/,145],[/spinach|kale|greens|lettuce|arugula/,30],[/broccoli|cauliflower/,90],[/oats|oatmeal/,90],[/quinoa/,170],[/rice/,185],[/lentil/,192],[/breadcrumb|panko/,108],[/chocolate chip/,170],[/peanut butter|almond butter/,258],[/butter|ghee/,227],
   [/parmesan|grated cheese/,100],[/shredded|cheese|mozzarella|cheddar|paneer/,113],[/honey|maple|syrup|molasses/,340],[/oil/,218],[/yogurt|sour cream|cream cheese/,245],[/cream/,238],
   [/milk|water|broth|stock|juice|vinegar|wine|soy sauce/,240],[/tomato sauce|passata|puree|crushed tomato|marinara/,250],[/cashew|almond|walnut|pecan|peanut|nuts?\b/,140],[/beans|chickpea/,180],
   [/onion/,160],[/tomato/,180],[/pepper|bell/,150],[/carrot/,128],[/spinach/,30],[/cilantro|parsley|basil|herb/,16],[/garlic/,136],[/ginger/,96],[/spice|powder|cumin|paprika|turmeric|masala|chili|cinnamon|seasoning/,100]];

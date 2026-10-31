@@ -31,11 +31,11 @@ function shortenText({days,budget,fit,wont}){return `The trip becomes ${days} da
 
 // WP60: shelf life for items created from a receipt line. days null = no date.
 const SHELF_RULES=[
-  [/yogurt|kefir|milk\b|creamer|cottage|sour cream|cream cheese/i,'fridge',14,'dairy'],
+  [/yogurt|kefir|(?<!evaporated |condensed |coconut |almond |oat )milk\b|creamer|cottage|sour cream|cream cheese/i,'fridge',14,'dairy'],
   [/\bcheese|brie|mozzarella|cheddar|parmesan/i,'fridge',30,'cheese'],
   [/\beggs?\b/i,'fridge',28,'eggs'],
   [/summer sausage|salami stick|jerky|pepperoni stick/i,'pantry',60,'shelf-stable sausage'],
-  [/frozen/i,'freezer',180,'frozen'],
+  [/frozen|ice cream/i,'freezer',180,'frozen'],
   [/\bcanned|\bcan\b|chunk light|tuna|sardines|black beans|kidney beans|chickpeas|garbanzo|refried|soup\b|broth|stock\b|coconut milk|diced tomatoes|tomato paste|evaporated/i,'pantry',365,'canned'],
   [/marinara|pasta sauce|salsa|pickles?|peanut butter|jam\b|jelly|honey|syrup|ketchup|mustard|mayo|hot sauce|soy sauce|dressing|alfredo|pesto jar/i,'pantry',180,'jarred'],
   [/pasta|spaghetti|penne|rotini|macaroni|noodles|\brice\b|oats|oatmeal|quinoa|lentils|flour|sugar|cornmeal|dry beans/i,'pantry',365,'dry'],
@@ -45,8 +45,8 @@ const SHELF_RULES=[
   [/spinach|lettuce|salad|greens|arugula|herbs?|cilantro|parsley|basil|berries|strawberr|raspberr|blueberr|mushroom/i,'fridge',5,'tender produce'],
   [/avocado/i,'pantry',4,'produce'],[/roma|tomato/i,'pantry',5,'produce'],[/green onion|scallion/i,'fridge',7,'produce'],
   [/onion|potato|sweet potato|garlic|squash/i,'pantry',30,'produce'],[/apple|orange|lemon|lime|carrot|celery|cabbage/i,'fridge',21,'produce'],
-  [/pepper|cucumber|zucchini|broccoli|cauliflower|banana|grape|pear|peach|plum|mango/i,'fridge',7,'produce'],
-  [/chicken|beef|pork|turkey|ground|steak|salmon|tilapia|shrimp|sausage|bacon|ham\b|deli|fish/i,'fridge',4,'meat'],
+  [/(?<!black |white )\bpeppers?\b(?! flakes)|cucumber|zucchini|broccoli|cauliflower|banana|grape|pear|peach|plum|mango/i,'fridge',7,'produce'],
+  [/chicken|beef|pork|turkey|ground (beef|turkey|pork|chicken|lamb)|steak|salmon|tilapia|shrimp|sausage|bacon|ham\b|deli|fish/i,'fridge',4,'meat'],
   [/butter/i,'fridge',60,'butter'],[/hummus|dip\b|tofu/i,'fridge',10,'fridge'],[/coffee|tea\b/i,'pantry',180,'pantry']];
 function shelfGuess(name){const n=String(name||'');for(const [re,storage,days,kind] of SHELF_RULES)if(re.test(n))return {storage,days,kind};return {storage:null,days:null,kind:'unknown'};}
 const NO_DATE='9999-12-31';
