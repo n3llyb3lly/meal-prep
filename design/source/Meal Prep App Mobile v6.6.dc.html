@@ -878,17 +878,17 @@
               <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px"><span style="font:700 16px 'Bricolage Grotesque',sans-serif">{{ sg.label }}</span><span style="font-size:12.5px;color:var(--muted)">{{ sg.sub }}</span></div>
               <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 12px">
                 <sc-for list="{{ sg.rows }}" as="r" hint-placeholder-count="3">
-                  <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:6px 0;min-height:60px">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;border-top:1px solid var(--line);padding:8px 0;min-height:60px">
                     <button onClick="{{ r.open }}" aria-hidden="true" tabindex="-1" style="flex:none;width:52px;height:52px;border-radius:12px;border:0;padding:0 2px;background:{{ r.tileBg }};color:#FFFFFF;font-weight:700;font-size:11px;line-height:1.1;overflow:hidden">{{ r.tileText }}</button>
-                    <button onClick="{{ r.open }}" style="flex:1;min-width:0;text-align:left;border:0;background:transparent;color:var(--ink);padding:0">
+                    <button onClick="{{ r.open }}" style="flex:1 1 calc(100% - 60px);min-width:0;text-align:left;border:0;background:transparent;color:var(--ink);padding:0">
                       <span style="display:block;font-weight:600;font-size:14.5px;line-height:1.3">{{ r.name }}</span>
                       <span style="display:block;font-size:12px;color:var(--muted);line-height:1.35;margin-top:1px">{{ r.meta }}</span>
                       <sc-if value="{{ r.hasFlags }}" hint-placeholder-val="{{ false }}"><span style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><sc-for list="{{ r.flags }}" as="f" hint-placeholder-count="1"><span style="font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:99px;background:{{ f.bg }};color:{{ f.c }}">{{ f.t }}</span></sc-for></span></sc-if>
                     </button>
-                    <sc-if value="{{ r.hasMultTag }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.toggleMult }}" aria-label="{{ r.multAria }}" style="flex:none;height:30px;min-width:34px;padding:0 6px;border-radius:99px;border:1px solid {{ r.multBorder }};background:{{ r.multBg }};color:{{ r.multColor }};font-weight:700;font-size:12px">{{ r.multTag }}</button></sc-if>
+                    <div style="display:flex;align-items:center;gap:8px;margin-left:auto"><sc-if value="{{ r.hasMultTag }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.toggleMult }}" aria-label="{{ r.multAria }}" style="flex:none;height:30px;min-width:34px;padding:0 6px;border-radius:99px;border:1px solid {{ r.multBorder }};background:{{ r.multBg }};color:{{ r.multColor }};font-weight:700;font-size:12px">{{ r.multTag }}</button></sc-if>
                     <div style="flex:none;text-align:right;white-space:nowrap"><div style="font-weight:600;font-size:13.5px;font-variant-numeric:tabular-nums">{{ r.extraText }}</div><button onClick="{{ r.costHelp }}" style="border:0;background:transparent;color:var(--muted);font-size:11.5px;padding:0;text-decoration:underline dotted">{{ r.extraSub }}</button></div>
                     <button onClick="{{ r.fav }}" aria-label="{{ r.favAria }}" style="flex:none;width:36px;height:44px;border:0;background:transparent;color:{{ r.favColor }};font-size:20px;padding:0">{{ r.favMark }}</button>
-                    <button onClick="{{ r.add }}" style="flex:none;height:40px;padding:0 12px;border-radius:10px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:13.5px">Add</button>
+                    <button onClick="{{ r.add }}" style="flex:none;height:40px;padding:0 12px;border-radius:10px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:13.5px">Add</button></div>
                   </div>
                 </sc-for>
                 <sc-if value="{{ sg.hasMore }}" hint-placeholder-val="{{ false }}"><button onClick="{{ sg.more }}" style="width:100%;height:42px;border:0;border-top:1px solid var(--line);background:transparent;color:var(--primary-ink);font-weight:600;font-size:13.5px">{{ sg.moreText }}</button></sc-if>
@@ -978,17 +978,17 @@
             <sc-if value="{{ lg.hasLabel }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:baseline;gap:8px;margin-top:6px"><span style="font:700 16px 'Bricolage Grotesque',sans-serif">{{ lg.label }}</span><span style="font-size:12.5px;color:var(--muted)">{{ lg.sub }}</span></div></sc-if>
             <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 12px">
               <sc-for list="{{ lg.rows }}" as="r" hint-placeholder-count="4">
-                  <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:6px 0;min-height:60px">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;border-top:1px solid var(--line);padding:8px 0;min-height:60px">
                     <button onClick="{{ r.open }}" aria-hidden="true" tabindex="-1" style="flex:none;width:52px;height:52px;border-radius:12px;border:0;padding:0 2px;background:{{ r.tileBg }};color:#FFFFFF;font-weight:700;font-size:11px;line-height:1.1;overflow:hidden">{{ r.tileText }}</button>
-                    <button onClick="{{ r.open }}" style="flex:1;min-width:0;text-align:left;border:0;background:transparent;color:var(--ink);padding:0">
+                    <button onClick="{{ r.open }}" style="flex:1 1 calc(100% - 60px);min-width:0;text-align:left;border:0;background:transparent;color:var(--ink);padding:0">
                       <span style="display:block;font-weight:600;font-size:14.5px;line-height:1.3">{{ r.name }}</span>
                       <span style="display:block;font-size:12px;color:var(--muted);line-height:1.35;margin-top:1px">{{ r.meta }}</span>
                       <sc-if value="{{ r.hasFlags }}" hint-placeholder-val="{{ false }}"><span style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><sc-for list="{{ r.flags }}" as="f" hint-placeholder-count="1"><span style="font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:99px;background:{{ f.bg }};color:{{ f.c }}">{{ f.t }}</span></sc-for></span></sc-if>
                     </button>
-                    <sc-if value="{{ r.hasMultTag }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.toggleMult }}" aria-label="{{ r.multAria }}" style="flex:none;height:30px;min-width:34px;padding:0 6px;border-radius:99px;border:1px solid {{ r.multBorder }};background:{{ r.multBg }};color:{{ r.multColor }};font-weight:700;font-size:12px">{{ r.multTag }}</button></sc-if>
+                    <div style="display:flex;align-items:center;gap:8px;margin-left:auto"><sc-if value="{{ r.hasMultTag }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.toggleMult }}" aria-label="{{ r.multAria }}" style="flex:none;height:30px;min-width:34px;padding:0 6px;border-radius:99px;border:1px solid {{ r.multBorder }};background:{{ r.multBg }};color:{{ r.multColor }};font-weight:700;font-size:12px">{{ r.multTag }}</button></sc-if>
                     <div style="flex:none;text-align:right;white-space:nowrap"><div style="font-weight:600;font-size:13.5px;font-variant-numeric:tabular-nums">{{ r.extraText }}</div><button onClick="{{ r.costHelp }}" style="border:0;background:transparent;color:var(--muted);font-size:11.5px;padding:0;text-decoration:underline dotted">{{ r.extraSub }}</button></div>
                     <button onClick="{{ r.fav }}" aria-label="{{ r.favAria }}" style="flex:none;width:36px;height:44px;border:0;background:transparent;color:{{ r.favColor }};font-size:20px;padding:0">{{ r.favMark }}</button>
-                    <button onClick="{{ r.add }}" style="flex:none;height:40px;padding:0 12px;border-radius:10px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:13.5px">Add</button>
+                    <button onClick="{{ r.add }}" style="flex:none;height:40px;padding:0 12px;border-radius:10px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:13.5px">Add</button></div>
                   </div>
               </sc-for>
             </div>
@@ -998,11 +998,11 @@
               <div style="font:700 16px 'Bricolage Grotesque',sans-serif;margin-top:4px">Favorites and cooked before</div>
               <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 12px">
                 <sc-for list="{{ cookedBefore }}" as="r" hint-placeholder-count="2">
-                  <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:6px 0;min-height:60px">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;border-top:1px solid var(--line);padding:8px 0;min-height:60px">
                     <button onClick="{{ r.open }}" aria-hidden="true" tabindex="-1" style="flex:none;width:44px;height:44px;border-radius:10px;border:0;padding:0 2px;background:{{ r.tileBg }};color:#FFFFFF;font-weight:700;font-size:10.5px;overflow:hidden">{{ r.tileText }}</button>
-                    <button onClick="{{ r.open }}" style="flex:1;min-width:0;text-align:left;border:0;background:transparent;color:var(--ink);padding:0"><span style="display:block;font-weight:600;font-size:14.5px;line-height:1.3">{{ r.name }}</span><span style="display:block;font-size:12px;color:var(--muted)">{{ r.cbSub }}</span></button>
-                    <button onClick="{{ r.fav }}" aria-label="{{ r.favAria }}" style="flex:none;width:36px;height:44px;border:0;background:transparent;color:{{ r.favColor }};font-size:20px;padding:0">{{ r.favMark }}</button>
-                    <button onClick="{{ r.add }}" style="flex:none;height:40px;padding:0 12px;border-radius:10px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:13.5px">Add</button>
+                    <button onClick="{{ r.open }}" style="flex:1 1 calc(100% - 60px);min-width:0;text-align:left;border:0;background:transparent;color:var(--ink);padding:0"><span style="display:block;font-weight:600;font-size:14.5px;line-height:1.3">{{ r.name }}</span><span style="display:block;font-size:12px;color:var(--muted)">{{ r.cbSub }}</span></button>
+                    <div style="display:flex;align-items:center;gap:8px;margin-left:auto"><button onClick="{{ r.fav }}" aria-label="{{ r.favAria }}" style="flex:none;width:36px;height:44px;border:0;background:transparent;color:{{ r.favColor }};font-size:20px;padding:0">{{ r.favMark }}</button>
+                    <button onClick="{{ r.add }}" style="flex:none;height:40px;padding:0 12px;border-radius:10px;border:0;background:var(--primary);color:var(--on-accent);font-weight:600;font-size:13.5px">Add</button></div>
                   </div>
                 </sc-for>
               </div>
@@ -1268,6 +1268,7 @@
                 <div style="display:flex;flex-wrap:wrap;gap:6px">
                   <sc-for list="{{ u.eCats }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.pick }}" style="height:40px;padding:0 12px;border-radius:99px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font-weight:600;font-size:13px;white-space:nowrap">{{ c.label }}</button></sc-for>
                 </div>
+                <input value="{{ u.eWhere }}" onChange="{{ u.onEWhere }}" aria-label="Where to buy it" placeholder="Where to buy it (store, aisle)" style="height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:15px;outline:none"></input>
                 <div style="display:flex;align-items:center;gap:8px">
                   <span style="font-size:14px;color:var(--muted)">Price $</span>
                   <input type="number" inputmode="decimal" step="0.01" value="{{ u.ePrice }}" onChange="{{ u.onEPrice }}" aria-label="Price" style="width:96px;height:44px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:15px"></input>
@@ -2002,6 +2003,7 @@
                   <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">{{ i.name }}</div><div style="font-size:12.5px;color:var(--muted)">{{ i.sub }}</div></div>
                   <button onClick="{{ i.remove }}" aria-label="Remove ingredient" style="width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:16px;flex:none">×</button>
                 </div>
+                <sc-if value="{{ i.hasAlts }}" hint-placeholder-val="{{ false }}"><label style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:600;color:var(--muted)">The recipe allows</span><select value="{{ i.altVal }}" onChange="{{ i.onAlt }}" aria-label="Choose an ingredient" style="height:44px;border:1px solid var(--primary-ink);border-radius:10px;padding:0 10px;background:var(--surface);color:var(--ink);font-size:14.5px;width:100%"><sc-for list="{{ i.alts }}" as="a" hint-placeholder-count="2"><option value="{{ a.v }}">{{ a.label }}</option></sc-for></select></label></sc-if>
                 <sc-if value="{{ i.webAsk }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:8px">
                   <div style="font-size:13px;color:var(--warn-ink);line-height:1.4">{{ i.webNote }}</div>
                   <div style="display:flex;flex-wrap:wrap;gap:6px">
@@ -4072,14 +4074,32 @@ class Component extends DCLogic {
   recIng(k,p){this.setState(s=>s.recEd?{recEd:{...s.recEd,d:{...s.recEd.d,ings:s.recEd.d.ings.map(x=>x.k===k?{...x,...p}:x)},dirty:true,arm:null}}:null);}
   addRecIng(){this.openItemSheet('recipe',p=>this.setState(s=>s.recEd?{recEd:{...s.recEd,d:{...s.recEd.d,ings:[...s.recEd.d.ings,{k:uid(),iid:p.id,q:'',aw:'',o:false}]},dirty:true}}:null));}
   closeRecEd(){const e=this.state.recEd;if(!e)return;if(e.dirty){this.confirm('Throw away your changes?','Your edits to this recipe are not saved.','Throw away',()=>this.setState({recEd:null,sheet:e.back||null}),true);return;}this.setState({recEd:null,sheet:e.back||null});}
-  recBuild(){const d=this.state.recEd.d,P=this.P();const serv=Math.max(1,Math.round(+d.serv||1));
+  recBuild(d0,P0){const d=d0||this.state.recEd.d,P=P0||this.P();const serv=Math.max(1,Math.round(+d.serv||1));
     if(!d.name.trim())return {err:'Give the recipe a name first'};if(!d.ings.length)return {err:'Add at least one ingredient'};
     const miss=d.ings.find(x=>!x.iid);if(miss)return {err:`Pick an item for ${miss.web?miss.web.item:'each ingredient'}, or leave it out`};
     const bad=d.ings.find(x=>!(+x.q>0));if(bad)return {err:`Add an amount for ${(P[bad.iid]||{}).name||'each ingredient'}`};
     const total=Math.max(1,Math.round(+d.total||0)),hands=Math.min(total,Math.max(0,Math.round(+d.hands||0)));
     return {r:{meal:d.meal,name:d.name.trim(),tags:d.tags,serv,link:d.link.trim(),hands,total,keeps:d.keeps,reheats:d.reheats,...(d.fromWeb?{fromWeb:true,keeper:!!d.keeper}:{}),...(d.photo?{photo:d.photo}:{}),...(Array.isArray(d.steps)&&d.steps.length?{steps:d.steps}:{}),
-      ing:d.ings.map(x=>{const p=P[x.iid]||this.nodeItem(x.iid)||{unit:''};const MC=window.MealCore;const q0=+x.q;const qb=x.u&&x.u!==p.unit?(MC.convert(q0,x.u,p.unit)??q0):q0;const a=[x.iid,Math.round(qb/serv*1e5)/1e5,x.aw.trim()];if(x.o)a.push(1);return a;})}};}
-  saveRec(andTrip){const S=this.state,e=S.recEd;if(!e)return;const b=this.recBuild();if(b.err){this.flash(b.err);return;}const r=b.r,at=new Date().toISOString();
+      ing:d.ings.map(x=>{const p=P[x.iid]||this.nodeItem(x.iid)||{unit:''};const MC=window.MealCore;const q0=+x.q;const qb=x.u&&x.u!==p.unit?(this.recConv(q0,x.u,p)??q0):q0;const a=[x.iid,Math.round(qb/serv*1e5)/1e5,x.aw.trim()];if(x.o)a.push(1);return a;})}};}
+  altVals(x,P){const RC=window.RecipeCore;if(!RC||!RC.subsOf||!x.aw)return {hasAlts:false,alts:[],altVal:'0',onAlt:()=>{}};this._altC=this._altC||{};
+    const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);const key=x.aw;let subs=this._altC[key];if(!subs){const mo=this.webMatchOpts();subs=RC.subsOf(x.aw).map(n=>{const m=RC.matchLine(RC.parseLine(n),mo);return {name:n,iid:m.iid&&P[m.iid]?m.iid:null};});this._altC[key]=subs;}
+    if(!subs.length)return {hasAlts:false,alts:[],altVal:'0',onAlt:()=>{}};const w=x.web||{};const curName=x.iid&&P[x.iid]?P[x.iid].name:(w.item||'');
+    const opts=[];const seen=new Set();const push=o=>{const k=o.iid||('n:'+o.name.toLowerCase());if(seen.has(k))return;seen.add(k);opts.push(o);};
+    if(x.orig)push(x.orig);push({name:curName,iid:x.iid||null});for(const s of subs)push(s);
+    const cur=opts.findIndex(o=>x.iid?o.iid===x.iid:!o.iid&&o.name.toLowerCase()===curName.toLowerCase());
+    return {hasAlts:opts.length>1,altVal:String(cur<0?0:cur),alts:opts.map((o,i)=>({v:String(i),label:cap(o.name)+(o.iid?(P[o.iid].name.toLowerCase()!==o.name.toLowerCase()?` · Aldi: ${P[o.iid].name}`:' · at Aldi'):' · not at Aldi')})),
+      onAlt:ev=>{const o=opts[+ev.target.value];if(!o||ev.target.value===String(cur))return;const orig=x.orig||{name:curName,iid:x.iid||null};
+        if(o.iid){this.recIng(x.k,{orig,web:{...(x.web||{}),item:o.name.toLowerCase()}});this.webPick(x.k,o.iid);return;}
+        const a=window.CookCore&&window.CookCore.parseAmt(x.aw);this.recIng(x.k,{orig,iid:null,q:a&&a.q>0?String(a.q):(x.q||'1'),u:a&&a.unit&&a.unit!=='count'?a.unit:'each',web:{...(x.web||{}),item:o.name.toLowerCase(),cand:null,picked:false}});}};}
+  possPrep(d){const S=this.state;const own=[...(S.ownItems||[])];const made=[];const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+    const ings=d.ings.map(x=>{if(x.iid||!x.web||!x.web.item)return x;const nm=cap(x.web.item.trim());const u=x.u||'each';
+      let it=[...own,...made].find(o=>o.possible&&normName(o.name)===normName(nm));if(!it){it={...this.makeUserItem({name:nm,cat:'Pantry',price:0,amt:1,unit:u==='count'?'each':u,src:'from a recipe'}),possible:true};
+        const taken=new Set([...own,...made].map(o=>o.id));let n=2;const base=it.id;while(taken.has(it.id))it.id=base+'_'+(n++);made.push(it);}
+      const q=it.unit===u?x.q:(window.MealCore.convert(+x.q,u,it.unit)??x.q);return {...x,iid:it.id,u:undefined,q:String(q)};});
+    return {d:{...d,ings},made,P:{...this.P(),...Object.fromEntries(made.map(i=>[i.id,i]))}};}
+  recConv(q,u,p){if(u===p.unit)return q;const a=window.MealCore.convert(q,u,p.unit);if(a!=null)return a;const C=window.CookCore;const b=C&&C.convert(q,u,p.unit==='each'?'count':p.unit,p.name);return b?Math.round(b.q*1e4)/1e4:null;}
+  recUnits(p,cur){const us=[...window.MealCore.unitsFor(p.unit)];for(const u of ['tsp','tbsp','cup','count',cur])if(u&&!us.includes(u)&&this.recConv(1,u,p)!=null)us.push(u);return us;}
+  saveRec(andTrip){const S=this.state,e=S.recEd;if(!e)return;const pz=this.possPrep(e.d);const b=this.recBuild(pz.d,pz.P);const oi=pz.made.length?{ownItems:[...(S.ownItems||[]),...pz.made]}:{};if(b.err){this.flash(b.err);return;}const r=b.r,at=new Date().toISOString();
     const reopen=id=>e.back&&e.back.rid===id?e.back:{rid:id,serv:S.people*this.multFor({...r,id}),kicker:`Library · ${ML[r.meal]}`};
     if(e.mode==='web'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
       const d=e.d,RC=window.RecipeCore;const nr={...r,id,source:'From the web',created:at,editedAt:at,...(d.basics&&d.basics.length?{basics:d.basics}:{})};
@@ -4087,20 +4107,20 @@ class Component extends DCLogic {
       const LC=window.LearnCore,lc=LC&&LC.clone?LC.clone(S.learn):null;const ra={...(S.recipeAliases||{})};for(const x of d.ings)if(x.web&&x.web.picked&&x.iid){const k=RC.learnKey(x.web.item);if(!k)continue;ra[k]=x.iid;if(lc)LC.record(lc,'name','recipe:'+k,'@'+x.iid,'user-edit');}
       const obp=nr.keeper&&this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
       const mp=andTrip?{menu:[...S.menu,{pid:uid(),rid:id,mult:1,status:'open',addedOn:this.today()}]}:{};
-      this.commit(`Added recipe ${r.name}${andTrip?' to this trip':''}`,{ownRecipes:[...(S.ownRecipes||[]),nr],recipeAliases:ra,...(lc?{learn:lc}:{}),recEd:null,sheet:andTrip?null:reopen(id),...obp,...mp});
+      this.commit(`Added recipe ${r.name}${andTrip?' to this trip':''}`,{...oi,ownRecipes:[...(S.ownRecipes||[]),nr],recipeAliases:ra,...(lc?{learn:lc}:{}),recEd:null,sheet:andTrip?null:reopen(id),...obp,...mp});
       this.flash(andTrip?`Saved ${r.name} and added it to this trip.`:`Saved ${r.name}. It's in your recipes.`);return;}
     if(e.mode==='new'){const slug=normName(r.name).replace(/ /g,'_').slice(0,40)||uid();const taken=new Set(S.recipes.map(x=>x.id));let id='u_'+slug,n=2;while(taken.has(id))id='u_'+slug+'_'+(n++);
       const nr={...r,id,source:'My recipe',created:at,editedAt:at};const obp=this.linked()?{outbox:[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,id))]}:{};
-      this.commit(`Added recipe ${r.name}`,{ownRecipes:[...(S.ownRecipes||[]),nr],recEd:null,sheet:reopen(id),...obp});this.flash(`Saved ${r.name}. It's in the library.`);return;}
+      this.commit(`Added recipe ${r.name}`,{...oi,ownRecipes:[...(S.ownRecipes||[]),nr],recEd:null,sheet:reopen(id),...obp});this.flash(`Saved ${r.name}. It's in the library.`);return;}
     if(e.mode==='own'){const was=(S.ownRecipes||[]).find(x=>x.id===e.id)||{};const ownRecipes=(S.ownRecipes||[]).map(x=>x.id===e.id?{...x,...r,editedAt:at}:x);const nr=ownRecipes.find(x=>x.id===e.id);
       // A web recipe that was kept on the phone goes to the sheet when it's marked as a keeper.
       const ob=!this.linked()||!nr||(nr.fromWeb&&!nr.keeper)?null:nr.fromWeb&&!was.keeper?[...(S.outbox||[]),this.chg('recipe.add',this.recData(nr,e.id))]:this.obPatch(S.outbox,'recipe.add',e.id,()=>this.recData(nr,e.id));
-      this.commit(`Edited ${r.name}`,{ownRecipes,recEd:null,sheet:reopen(e.id),...(ob?{outbox:ob}:{})});this.flash(`Saved ${r.name}`);return;}
+      this.commit(`Edited ${r.name}`,{...oi,ownRecipes,recEd:null,sheet:reopen(e.id),...(ob?{outbox:ob}:{})});this.flash(`Saved ${r.name}`);return;}
     const orig=this.cat.recipes.find(x=>x.id===e.id);if(!orig){this.setState({recEd:null});return;}const re={...(S.recipeEdits||{})};
     if(recSig({...orig,...meta(orig)})===recSig({...orig,...r})){if(!re[e.id]){this.setState({recEd:null,sheet:reopen(e.id)});this.flash('No changes to save');return;}
       delete re[e.id];this.commit(`Back to the original ${orig.name}`,{recipeEdits:re,recEd:null,sheet:reopen(e.id)});this.flash('That matches the original, so the app is using the original again.');return;}
     re[e.id]={...r,editedAt:at,baseVersion:this.cat.catalogVersion};const obp=this.linked()?{outbox:[...(S.outbox||[]),this.recEditChg(orig,r)]}:{};
-    this.commit(`Saved your version of ${orig.name}`,{recipeEdits:re,recEd:null,sheet:reopen(e.id),...obp});this.flash(`Saved your version of ${r.name}`);}
+    this.commit(`Saved your version of ${orig.name}`,{...oi,recipeEdits:re,recEd:null,sheet:reopen(e.id),...obp});this.flash(`Saved your version of ${r.name}`);}
   useOriginal(id){const S=this.state;const orig=this.cat.recipes.find(x=>x.id===id);if(!orig||!(S.recipeEdits||{})[id])return;
     const re={...S.recipeEdits};delete re[id];this.commit(`Back to the original ${orig.name}`,{recipeEdits:re,isArm:null});this.flash(`Using the original ${orig.name} again`);if(this.cat.recipes.some(x=>x.id===id+'_mine'))this.sheetToo();}
   deleteRec(){const S=this.state,e=S.recEd;if(!e||e.mode!=='own')return;const id=e.id;const r=(S.ownRecipes||[]).find(x=>x.id===id);if(!r)return;
@@ -4112,13 +4132,19 @@ class Component extends DCLogic {
     const serv=Math.max(1,Math.round(+d.serv||1));let cost=0;
     const MC=window.MealCore;const web=e.mode==='web';let nAsk=0;
     const ings=d.ings.map(x=>{const w=x.web||null;const remove=()=>this.recSet({ings:d.ings.filter(y=>y.k!==x.k)});
+      if(!x.iid&&w&&w.item){const sg=w.cand&&P[w.cand];const us=['each','oz','lb','tsp','tbsp','cup','fl oz'];const u=x.u&&us.includes(x.u)?x.u:'each';const had=(this.state.ownItems||[]).find(o=>o.possible&&normName(o.name)===normName(w.item));
+        if(!(parseFloat(x.q)>0))nAsk++;
+        return {k:x.k,name:w.item.charAt(0).toUpperCase()+w.item.slice(1),sub:had?(had.where?`In your possible ingredients · ${had.where}`:'In your possible ingredients'):'Not at Aldi',q:x.q||'',unit:u,units:us,u,oneUnit:false,manyUnits:true,
+          onU:ev=>this.recIng(x.k,{u:ev.target.value}),onQ:ev=>this.recIng(x.k,{q:ev.target.value}),onAw:ev=>this.recIng(x.k,{aw:ev.target.value}),hasHint:false,hint:'',hasItem:true,remove,border:'var(--line)',cardBg:'var(--surface)',
+          webAsk:true,webNote:had?'Saved before. Note where you found it under Settings › Items.':'Saves to your possible ingredients, so you can note where to buy it.',pickItem:()=>this.webPickItem(x.k),pickText:'Pick an Aldi item',hasSug:!!sg,sugText:sg?`Use ${sg.name}`:'',useSug:()=>{if(sg)this.webPick(x.k,sg.id);},leave:remove,
+          hasFrom:true,fromText:`Recipe: ${x.aw}`,optText:x.o?'Optional':'Needed',optBg:x.o?'var(--warn-tint)':'var(--surface)',optColor:x.o?'var(--warn-ink)':'var(--muted)',optBorder:x.o?'var(--warn-line)':'var(--line)',toggleOpt:()=>this.recIng(x.k,{o:!x.o}),...this.altVals(x,P)};}
       if(!x.iid){nAsk++;const sg=w&&w.cand&&P[w.cand];const nm=w&&w.item?w.item.charAt(0).toUpperCase()+w.item.slice(1):'Pick an item';
         return {k:x.k,name:nm,sub:'No Aldi item matched',q:'',unit:'',units:[],u:'',oneUnit:true,manyUnits:false,hasHint:false,hint:'',hasItem:false,remove,border:'var(--warn-line)',cardBg:'var(--warn-soft)',
           webAsk:true,webNote:`The recipe says “${x.aw}”.`,pickItem:()=>this.webPickItem(x.k),pickText:'Pick item',hasSug:!!sg,sugText:sg?`Use ${sg.name}`:'',useSug:()=>{if(sg)this.webPick(x.k,sg.id);},leave:remove,
           onU:()=>{},onQ:()=>{},onAw:()=>{},optText:'',optBg:'',optColor:'',optBorder:'',toggleOpt:()=>{}};}
-      const p=P[x.iid]||this.nodeItem(x.iid)||{name:x.iid,unit:'',price:0,pkg:1};const us=MC.unitsFor(p.unit);const u=x.u&&us.includes(x.u)?x.u:p.unit;const q0=parseFloat(x.q);const q=q0>0?(MC.convert(q0,u,p.unit)??q0):0;if(q>0&&!p.staple&&!x.o)cost+=q*p.price/p.pkg;
-      return {k:x.k,name:p.name,sub:[p.pack,money(p.price)+(p.pack==='per lb'?'/lb':''),p.staple?'staple, not costed':''].filter(Boolean).join(' · '),q:x.q,unit:p.unit&&p.unit!=='each'?p.unit:'each',aw:x.aw,units:us,u,oneUnit:us.length<2,manyUnits:us.length>1,onU:ev=>this.recIng(x.k,{u:ev.target.value}),
-        hasHint:(q0>0&&u!==p.unit)||MC.kindOf(p.unit)==='weight',hint:[q0>0&&u!==p.unit?`= ${fmtQ(q,p.unit)}`:'',MC.kindOf(p.unit)==='weight'?`${p.name} is sold by weight. Enter oz or lb.`:''].filter(Boolean).join(' · '),
+      const p=P[x.iid]||this.nodeItem(x.iid)||{name:x.iid,unit:'',price:0,pkg:1};const us=this.recUnits(p,x.u);const u=x.u&&us.includes(x.u)?x.u:p.unit;const q0=parseFloat(x.q);const q=q0>0?(this.recConv(q0,u,p)??q0):0;const est=u!==p.unit&&MC.convert(1,u,p.unit)==null;if(q>0&&!p.staple&&!x.o)cost+=q*p.price/p.pkg;
+      return {...this.altVals(x,P),k:x.k,name:p.name,sub:[p.pack,money(p.price)+(p.pack==='per lb'?'/lb':''),p.staple?'staple, not costed':''].filter(Boolean).join(' · '),q:x.q,unit:p.unit&&p.unit!=='each'?p.unit:'each',aw:x.aw,units:us,u,oneUnit:us.length<2,manyUnits:us.length>1,onU:ev=>this.recIng(x.k,{u:ev.target.value}),
+        hasHint:q0>0&&u!==p.unit,hint:q0>0&&u!==p.unit?`${est?'About ':'= '}${fmtQ(q,p.unit)}`:'',
         onQ:ev=>this.recIng(x.k,{q:ev.target.value}),onAw:ev=>this.recIng(x.k,{aw:ev.target.value}),
         optText:x.o?'Optional':'Needed',optBg:x.o?'var(--warn-tint)':'var(--surface)',optColor:x.o?'var(--warn-ink)':'var(--muted)',optBorder:x.o?'var(--warn-line)':'var(--line)',toggleOpt:()=>this.recIng(x.k,{o:!x.o}),
         remove,hasItem:true,...(()=>{const ask=!!w&&!(parseFloat(x.q)>0);if(ask)nAsk++;
@@ -4127,7 +4153,7 @@ class Component extends DCLogic {
     const orig=e.mode==='cat'?this.cat.recipes.find(x=>x.id===e.id):null;const del=e.arm==='del';
     return {reOpen:true,reTitle:web?'New recipe from the web':e.mode==='new'?'New recipe':e.mode==='own'?'Edit recipe':(S.recipeEdits||{})[e.id]?'Edit my version':'Make my version',
       hasReNote:e.mode==='cat'||web,reNote:orig?`Changes save as your version of ${orig.name}. The original stays in the catalog and you can switch back to it. Your version goes to the spreadsheet as a second recipe.`
-        :web?`${hostOf(d.link)?`Read from ${hostOf(d.link)}. `:''}${ings.length-nAsk} of ${ings.length} ingredients are matched to Aldi items.${nAsk?` Check the ${nAsk} in amber.`:''} Amounts are as written; the app scales them when you plan.`:'',
+        :web?`${hostOf(d.link)?`Read from ${hostOf(d.link)}. `:''}${(()=>{const nP=d.ings.filter(x=>!x.iid&&x.web&&x.web.item).length;const nA=d.ings.filter(x=>x.iid).length;return `${nA} of ${ings.length} matched to Aldi items.${nP?` ${nP} will be saved to your possible ingredients.`:''}`;})()}${nAsk?` Check the ${nAsk} in amber.`:''} Amounts are as written; the app scales them when you plan.`:'',
       hasReBasics:!!(d.basics&&d.basics.length),reBasics:`Pantry basics, not on your list: ${(d.basics||[]).join(' · ')}`,
       reCanKeep:!!d.fromWeb&&this.linked(),reKeep:!!d.keeper,reKeepTrack:d.keeper?'var(--good)':'var(--line)',reKeepKnob:d.keeper?20:0,toggleKeep:()=>this.recSet({keeper:!d.keeper}),
       reName:d.name,onReName:set('name'),reMeals:MEALS.map(m=>({label:ML[m],...sel(d.meal===m),pick:()=>this.recSet({meal:m})})),
@@ -4174,7 +4200,7 @@ class Component extends DCLogic {
   openWebEditor(rec){const S=this.state,RC=window.RecipeCore,P=this.P();const b=RC.build(rec.ings,this.webMatchOpts());const total=Math.max(1,Math.round(+rec.total||30));
     const d={name:rec.name||'',meal:MEALS.includes(rec.meal)?rec.meal:(S.libMeal||'dinner'),serv:Math.max(1,Math.min(24,Math.round(+rec.serv||4))),total:String(total),hands:String(Math.min(total,Math.round(+rec.hands||15))),
       keeps:3,reheats:true,tags:(rec.tags||[]).filter(t=>TAG_ORDER.includes(t)),link:rec.link||'',fromWeb:true,keeper:false,basics:b.basics,...(rec.photo?{photo:rec.photo}:{}),...(Array.isArray(rec.steps)&&rec.steps.length?{steps:rec.steps.slice()}:{}),
-      ings:b.rows.map(r=>({k:uid(),iid:r.iid,...(()=>{const v=RC.display(r.q,P[r.iid]);return {q:v.q,u:v.u&&P[r.iid]&&v.u!==P[r.iid].unit?v.u:undefined};})(),aw:r.text,o:!!r.optional,web:{item:r.item,how:r.how,cand:((r.cands||[]).find(c=>c.iid&&c.iid!==r.iid&&P[c.iid]&&c.sc>=.6)||{}).iid||null}}))};
+      ings:b.rows.map(r=>({k:uid(),iid:r.iid,...(()=>{const p=P[r.iid];if(!p){const a=window.CookCore&&window.CookCore.parseAmt(r.text);return {q:a&&a.q>0?String(a.q):'1',u:a&&a.unit&&a.unit!=='count'?a.unit:'each'};}const v=RC.display(r.q,p);if(p&&!(parseFloat(v.q)>0)){const a=window.CookCore&&window.CookCore.parseAmt(r.text);if(a&&a.q>0&&this.recConv(a.q,a.unit,p)!=null)return {q:String(a.q),u:a.unit===p.unit?undefined:a.unit};}return {q:v.q,u:v.u&&P[r.iid]&&v.u!==P[r.iid].unit?v.u:undefined};})(),aw:r.text,o:!!r.optional,web:{item:r.item,how:r.how,cand:((r.cands||[]).find(c=>c.iid&&c.iid!==r.iid&&P[c.iid]&&c.sc>=.6)||{}).iid||null}}))};
     this.setState({webRec:null,recEd:{mode:'web',id:null,d,arm:null,dirty:true,back:null},sheet:null});}
   webPick(k,iid){const P=this.P(),RC=window.RecipeCore;this.setState(s=>{if(!s.recEd)return null;const d=s.recEd.d;
     return {recEd:{...s.recEd,dirty:true,arm:null,d:{...d,ings:d.ings.map(x=>{if(x.k!==k)return x;const p=P[iid];const a=p?RC.amountFor(RC.parseLine(x.aw),p):{q:null};
@@ -4193,7 +4219,7 @@ class Component extends DCLogic {
     if(why.length){this.flash(`Can't delete ${u.name} yet. It's used by ${why.join(' and ')}.`);return;}
     const bought={...S.bought};delete bought[id];this.commit(`Deleted ${u.name}`,{ownItems:S.ownItems.filter(x=>x.id!==id),outbox:(S.outbox||[]).filter(c=>!(c.type==='item.add'&&c.data&&c.data.id===id)),bought,isArm:null,uEdit:null});if((S.idSwaps||{})[id])this.sheetToo();}
   saveUserItem(id){const S=this.state,e=S.uEdit;if(!e||!e.name.trim())return;const c=this.catOf(e.cat);
-    const ownItems=S.ownItems.map(u=>u.id!==id?u:{...u,name:e.name.trim(),price:+e.price>=0&&e.price!==''?r2(+e.price):u.price,...(u.cat!==c.name?{cat:c.name,storage:c.storage,fridge:c.fridge,freezer:c.freezer,pantry:c.pantry,staple:!!c.staple,tracking:c.tracking||null}:{})});
+    const ownItems=S.ownItems.map(u=>u.id!==id?u:{...u,name:e.name.trim(),...(e.where!=null?{where:e.where.trim()}:{}),price:+e.price>=0&&e.price!==''?r2(+e.price):u.price,...(u.cat!==c.name?{cat:c.name,storage:c.storage,fridge:c.fridge,freezer:c.freezer,pantry:c.pantry,staple:!!c.staple,tracking:c.tracking||null}:{})});
     const u2=ownItems.find(x=>x.id===id);const ob=this.linked()&&u2?this.obPatch(S.outbox,'item.add',id,()=>this.itemData(u2,S.numLinks)):null;
     this.commit(`Edited ${e.name.trim()}`,{ownItems,uEdit:null,...(ob?{outbox:ob}:{})});}
   mergeCandidates(){const S=this.state;if(!this.cat)return [];const byN={};for(const p of this.cat.items)if(!p.retired)byN[normName(p.name)]=p;
@@ -4233,9 +4259,9 @@ class Component extends DCLogic {
       isNewText:s.q?`Add “${s.q.trim()}” as a new item`:'Add a new item',
       isNewGo:()=>this.setState({itemSheet:{...s,step:'new',draft:{name:s.q.trim().replace(/\b\w/g,ch=>ch.toUpperCase()),cat:'Other',price:'',amt:'',unit:'each',cart:s.mode==='cart'||s.mode==='kitchen'}}})};}
   userItemVals(){const S=this.state;const sel=on=>({bg:on?'var(--primary)':'var(--surface)',color:on?'var(--on-accent)':'var(--ink)',border:on?'var(--primary)':'var(--line)'});const e=S.uEdit;
-    const rows=(S.ownItems||[]).map(u=>{const editing=e&&e.id===u.id;const x=this.usesOf(u.id);const del=S.isArm==='del:'+u.id;
-      return {name:u.name,sub:`${u.cat} · ${u.pack} · ${money(u.price)} · added ${mdDate(u.created||u.priceDate||this.today())}${x.b?` · ${x.b} in kitchen`:''}`,editing,notEditing:!editing,
-        edit:()=>this.setState({uEdit:{id:u.id,name:u.name,cat:u.cat,price:String(u.price)}}),
+    const rows=[...(S.ownItems||[])].sort((a,b)=>!!b.possible-!!a.possible).map(u=>{const editing=e&&e.id===u.id;const x=this.usesOf(u.id);const del=S.isArm==='del:'+u.id;
+      return {name:u.name,sub:u.possible?['Possible ingredient',u.where?`Where: ${u.where}`:'No store noted yet',`added ${mdDate(u.created||this.today())}`].join(' · '):`${u.cat} · ${u.pack} · ${money(u.price)} · added ${mdDate(u.created||u.priceDate||this.today())}${x.b?` · ${x.b} in kitchen`:''}`,editing,notEditing:!editing,
+        edit:()=>this.setState({uEdit:{id:u.id,name:u.name,cat:u.cat,price:String(u.price),where:u.where||''}}),eWhere:editing?(e.where||''):'',onEWhere:ev=>this.setState({uEdit:{...e,where:ev.target.value}}),
         eName:editing?e.name:'',onEName:ev=>this.setState({uEdit:{...e,name:ev.target.value}}),ePrice:editing?e.price:'',onEPrice:ev=>this.setState({uEdit:{...e,price:ev.target.value}}),
         eCats:editing?this.cats().map(c=>({label:c.name,...sel(c.name===e.cat),pick:()=>this.setState({uEdit:{...e,cat:c.name}})})):[],
         save:()=>this.saveUserItem(u.id),cancel:()=>this.setState({uEdit:null}),del:()=>this.deleteUserItem(u.id),delText:'Delete',delBg:'var(--surface)',delColor:'var(--bad-ink)'};});
