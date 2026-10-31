@@ -137,3 +137,17 @@ test('an item.add the phone already priced (a receipt at another store) arrives 
   const I = Object.fromEntries(plain(G.buildCatalog_(null).catalog.items).map(x => [x.id, x]));
   assert.deepStrictEqual([I.star_anise.possible, I.star_anise.price, I.lulo.possible], [undefined, 3.99, undefined]);
 });
+
+test('a recipe that arrives before its phone items waits instead of being refused', () => {
+  const { g: G, sheet } = loadCodeGs(tabs());
+  const rec = { id: 'u_colada', meal: 'dinner', name: 'Colada morada', serv: 4, total: 60, ing: [['u_star_anise', 1, '4 star anise'], ['pineapple_juice', 2, '1 cup pineapple juice']] };
+  const [r1] = send(G, [['recipe.add', rec]]);
+  assert.strictEqual(r1.status, 'deferred', r1.message);
+  assert.strictEqual(sheet('Change log')._data.length, 1, 'a deferred change is not logged');
+  // The same change sent again after its item: applied.
+  const ctx = G.context_();
+  const r2 = [G.applyOne_(ctx, { id: 'i1', type: 'item.add', data: possibleAdd('u_star_anise', 'Star anise')[1] }, 't'), G.applyOne_(ctx, { id: 'c-same', type: 'recipe.add', data: rec }, 't')];
+  assert.deepStrictEqual(r2.map(r => r.status), ['applied', 'applied']);
+  const [r3] = send(G, [['recipe.add', { ...rec, id: 'u_other', name: 'Other', ing: [['nope_item', 1, 'x']] }]]);
+  assert.strictEqual(r3.status, 'rejected', 'a missing sheet item is still refused');
+});

@@ -1527,7 +1527,7 @@ var HANDLERS = {
     if (!d.id || !d.name) return { status: 'rejected', message: 'Recipe without an id or name.' };
     if (ctx.map[d.id]) { ctx.idMap[d.id] = ctx.map[d.id]; return { status: 'duplicate', target: ctx.map[d.id], message: 'Already in the sheet as ' + ctx.map[d.id] + '.' }; }
     for (var k in ctx.recRow) if (nname_(ctx.recRow[k].name) === nname_(d.name)) { addIdMap_(ctx, d.id, k, 'recipe'); return { status: 'applied', target: k, message: d.name + ' is already in the sheet as ' + k + '. Linked to it.' }; }
-    var bad = badIngredients_(ctx, d); if (bad) return { status: 'rejected', message: bad };
+    var wait = waitOrRefuse_(ctx, d); if (wait) return wait;
     var base = (String(d.meal || 'x')[0]) + '_' + (String(d.id).replace(/^u_/, '').replace(/[^a-z0-9_]/g, '') || slug_(d.name));
     var id = newId_(base, ctx.recRow);
     writeRecipe_(ctx, id, d, { source: 'My recipe', notes: d.notes || 'Written on the phone' }, null);
@@ -1553,7 +1553,7 @@ var HANDLERS = {
   'recipe.update': function (ctx, d, base) {
     var id = resolve_(ctx, d.id), r = ctx.recRow[id]; if (!r) return { status: 'rejected', target: id, message: 'No recipe ' + id + ' in the sheet.' };
     if (sheetEditedSince_(ctx.recipes, r, base.changed)) return { status: 'conflict', target: id, message: r.name + ' was changed in the sheet. The sheet\'s version was kept.' };
-    var bad = badIngredients_(ctx, d); if (bad) return { status: 'rejected', target: id, message: bad };
+    var wait = waitOrRefuse_(ctx, d, id); if (wait) return wait;
     writeRecipe_(ctx, id, d, null, r);
     return { status: 'applied', target: id, message: 'Updated recipe ' + id + '.' };
   },
@@ -1563,7 +1563,7 @@ var HANDLERS = {
   'recipe.edit': function (ctx, d, base) {
     var orig = String(d.orig || ''), rec = d.recipe || {}; if (!orig || !rec.name) return { status: 'rejected', message: 'Edit without the original recipe or a name.' };
     var id = orig + '_mine', name = String(rec.name).replace(/ \(my version\)$/, '') + ' (my version)';
-    var bad = badIngredients_(ctx, rec); if (bad) return { status: 'rejected', target: id, message: bad };
+    var wait = waitOrRefuse_(ctx, rec, id); if (wait) return wait;
     var r = ctx.recRow[id];
     if (r) {
       if (sheetEditedSince_(ctx.recipes, r, base.changed)) { ctx.idMap['edit:' + orig] = id; return { status: 'conflict', target: id, message: name + ' was changed in the sheet. The sheet\'s version was kept.' }; }
@@ -1647,6 +1647,15 @@ function clearPossible_(ctx, id) {
 function badIngredients_(ctx, d) {
   var missing = (d.ing || []).map(function (x) { return resolve_(ctx, x[0]); }).filter(function (id) { return !ctx.itemRow[id]; });
   return missing.length ? (d.name || 'Recipe') + ' uses items the sheet doesn\'t have: ' + missing.join(', ') + '. Send those items first.' : null;
+}
+// Version 7: a recipe whose only missing items are the phone's own (u_…) waits for them instead of being refused, so
+// a recipe.add that arrives before its item.add (an older phone, or a possible ingredient held back) is applied on a retry.
+// Deferred changes are not logged, so the retry is not answered as a duplicate.
+function waitOrRefuse_(ctx, d, target) {
+  var bad = badIngredients_(ctx, d); if (!bad) return null;
+  var missing = (d.ing || []).map(function (x) { return resolve_(ctx, x[0]); }).filter(function (id) { return !ctx.itemRow[id]; });
+  var mine = missing.every(function (id) { return /^u_/.test(id); });
+  return { status: mine ? 'deferred' : 'rejected', target: target, message: mine ? (d.name || 'Recipe') + ' waits for its items (' + missing.join(', ') + ') to reach the sheet.' : bad };
 }
 
 // Writes a Recipes row and replaces its Ingredients rows. extra = {source, notes} for a new row; existing = the row being replaced.
