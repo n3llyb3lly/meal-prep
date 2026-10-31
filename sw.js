@@ -2,7 +2,7 @@
 // phones without changing this file. Icons and the manifest are cache-first. vendor/ (the receipt text reader,
 // about 11 MB) is cache-first and downloaded only the first time the app asks for it, not at install.
 // Photos shared to the installed app (Android share sheet) arrive as a POST to ./share; see receiveShare below.
-const SHELL='aldi-meal-prep-shell-v2',DATA='aldi-meal-prep-data',VENDOR='aldi-meal-prep-vendor';
+const SHELL='aldi-meal-prep-shell-v3',DATA='aldi-meal-prep-data',VENDOR='aldi-meal-prep-vendor';
 const PRE=['./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/maskable-512.png'];
 // Everything the text reader needs offline, saved on the first scan so the next one works with no connection.
 // Both cores: phones without SIMD load the plain one. Versions are pinned in vendor/tesseract/VERSION.

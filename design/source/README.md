@@ -1,14 +1,16 @@
-# Editable source for the app (6.3.1)
+# Editable source for the app (6.6)
 
 `index.html` in the repo root is a bundled build. This folder holds the editable source it was built from:
 
-- `Meal Prep App Mobile v6.3.dc.html` is the app. It loads `support.js` and `tools/*.js` next to it.
+- `Meal Prep App Mobile v6.6.dc.html` is the app (earlier versions are kept). It loads `support.js` and `tools/*.js` next to it.
+- `tools/first-core.js` (window.FirstCore) holds the 6.6 first-use rules: cookable amounts, carry cap, shelf-life guess, mismatch ranking, two-read numbers, leftover ticks, backup schedule and retention. `design/sheets/Code.gs` uses the same retention rule (`backupKeep_`), checked by `test/backup.test.js`.
+- `first-use-work-order.md` is the 6.6 spec (WP54 to WP67).
 - `tools/receipt-core.js` (window.ReceiptCore) holds the receipt reading rules and suggestions.
 - `tools/house-core.js` (window.HouseCore) holds the household, portion and gallery rules.
 - `tools/meal-core.js` (window.MealCore) holds the shared rules, units and tokens.
 - `tools/recipe-core.js` (window.RecipeCore) reads web recipes (a schema.org Recipe block, page text or pasted lines) and matches their ingredients to catalog items with the receipt matcher.
 - `tools/catalog-lib.js` is used by the catalog builder.
-- `Self Test.dc.html` is the self-test. Open it in a browser and every check should pass.
+- `Self Test.dc.html` is the self-test. Open it in a browser and every check should pass (264 in 6.6).
 
 ## Working on it in Claude Code
 1. Edit the files here, not `index.html`.

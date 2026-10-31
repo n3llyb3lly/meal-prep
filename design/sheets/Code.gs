@@ -648,7 +648,7 @@ var BACKUP_FOLDER = 'Meal Prep backups';
 var BACKUP_PARTS = '_parts';
 var BACKUP_CHUNK = 350000;           // characters in one part, both ways
 var BACKUP_MAX_PARTS = 60;           // about 21 MB of base64
-var BACKUP_KEEP = { daily: 7, weekly: 4 };   // Nelson's choice; same as FirstCore.backupKeep in the app
+var BACKUP_KEEP = { daily: 7, weekly: 4 };   // Nelson's choice (the work order said 14 and 8)
 var BACKUP_ENCS = ['gzip-base64', 'base64'];
 var BACKUP_NAME_RE = /^[A-Za-z0-9._-]{1,120}\.json$/;
 var BACKUP_ID_RE = /^[A-Za-z0-9_-]{1,80}$/;
@@ -717,7 +717,7 @@ function backupSave_(b) {
     // parts older than a day belong to uploads that never finished
     filesIn_(tmp).forEach(function (f) { if (at - f.getDateCreated().getTime() > 864e5) f.setTrashed(true); });
     var keep = b.keep && b.keep.daily >= 1 && b.keep.weekly >= 0 ? { daily: Math.min(31, b.keep.daily | 0), weekly: Math.min(52, b.keep.weekly | 0) } : BACKUP_KEEP;
-    var all = backupFiles_(folder), kept = backupKeep_(all, at, keep, tz_()), deleted = 0;
+    var all = backupFiles_(folder), kept = backupKeep_(all, at, keep), deleted = 0;
     kept[file.getId()] = true;
     all.forEach(function (x) { if (!kept[x.fileId]) { x.file.setTrashed(true); deleted++; } });
     return { ok: true, action: 'backup.save', part: part, parts: parts, saved: true, name: b.name, fileId: file.getId(), deleted: deleted };
@@ -735,21 +735,18 @@ function backupFiles_(folder) {
 }
 
 /**
- * Which backups to keep: the newest of each of the last keep.daily days (today counts as one), plus the newest of
- * each of the last keep.weekly calendar weeks (Monday to Sunday; this week counts as one). Days are calendar days in
- * the sheet's time zone. Fixed weeks, not "7-13 days ago": with a rolling window the file that would stand for a week
- * is often deleted the day before it gets the job, so weekly copies go missing.
+ * Which backups to keep. Same rule as FirstCore.backupKeep in the app (design/source/tools/first-core.js), checked by
+ * test/backup.test.js: the newest backup of each of the 7 most recent days that have one, plus the newest of each
+ * week (fixed 7-day blocks counted from 1 Jan 1970, in UTC) for backups less than 4 weeks old. Fixed blocks keep a
+ * week's copy stable from one day to the next; counting days that have a backup means a phone that was off for a
+ * while still keeps its last 7 days of backups.
  * files: [{fileId, at}] (any order). Returns {fileId: true} for the ones to keep.
  */
-function backupKeep_(files, now, keep, tz) {
-  var dayN = function (ms) { var s = Utilities.formatDate(new Date(ms), tz || 'UTC', 'yyyy-MM-dd').split('-'); return Math.round(Date.UTC(+s[0], s[1] - 1, +s[2]) / 864e5); };
-  var weekN = function (d) { return Math.floor((d + 3) / 7); };   // day 0 (1 Jan 1970) was a Thursday
-  var today = dayN(now), byDay = {}, byWeek = {}, out = {};
-  files.slice().sort(function (a, b) { return b.at - a.at; }).forEach(function (f) {
-    var d = Math.min(today, dayN(f.at)), ago = today - d, w = weekN(today) - weekN(d);
-    if (ago < keep.daily && !byDay[ago]) { byDay[ago] = 1; out[f.fileId] = true; }
-    if (w < keep.weekly && !byWeek[w]) { byWeek[w] = 1; out[f.fileId] = true; }
-  });
+function backupKeep_(files, now, keep) {
+  var D = 864e5, daily = keep.daily || 7, weekly = keep.weekly || 4, out = {}, days = {}, nDays = 0, weeks = {};
+  var s = files.slice().sort(function (a, b) { return b.at - a.at; });
+  s.forEach(function (f) { var dk = Math.floor(f.at / D); if (nDays < daily && !days[dk]) { days[dk] = 1; nDays++; out[f.fileId] = true; } });
+  s.forEach(function (f) { if (now - f.at > weekly * 7 * D) return; var wk = Math.floor(f.at / (7 * D)); if (!weeks[wk]) { weeks[wk] = 1; out[f.fileId] = true; } });
   return out;
 }
 

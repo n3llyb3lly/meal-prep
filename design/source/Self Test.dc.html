@@ -13,6 +13,7 @@
 <script src="./tools/house-core.js"></script>
 <script src="./tools/receipt-core.js"></script>
 <script src="./tools/cook-core.js"></script>
+<script src="./tools/first-core.js"></script>
 <script src="./tools/learn-core.js"></script>
 <script src="./tools/learn-checks.js"></script>
 <title>Meal Prep self-test</title>
@@ -142,6 +143,35 @@ class Component extends DCLogic {
     eq('A brand-only line gets the kind of item',RC.suggest('La Croix 12pk').name,'Sparkling water');
     grp('Receipt prices (WP52)');
     eq('Within 8% updates quietly',RC.classifyPrice(1.89,1.80),'quiet');eq('A drop of 8% or more defaults to sale',RC.classifyPrice(1.50,1.89),'drop');eq('A rise defaults to a new price',RC.classifyPrice(2.10,1.89),'rise');eq('A discount line marks a sale',RC.classifyPrice(1.50,1.89,.39),'sale');
+    }}
+    {const F=window.FirstCore;if(F){
+    grp('6.6 first use (first-core)');
+    eq('2¾ cloves of garlic reads 3',F.cookAmt(2.75,'each','garlic cloves').text,'3');
+    eq('¾ of a pepper rounds up to 1',F.cookAmt(.75,'each','green pepper').text,'1');
+    eq('⅛ tsp reads a pinch',F.cookAmt(.125,'tsp','chili powder').text,'a pinch');
+    eq('Tablespoons round to ½',F.cookAmt(1.3,'tbsp','olive oil').text,'1½ tbsp');
+    eq('An overspend of $164.16 carries $60 on a $120 week',F.carry({budget:17.14,spent:181.3,weekly:120,hadReceipts:true}).carry,-60);
+    eq('The card says both numbers',F.carryText(F.carry({budget:17.14,spent:181.3,weekly:120,hadReceipts:true})),'Overspent $164.16, $60.00 carries forward');
+    eq('No receipts, no carry',F.carry({budget:50,spent:0,weekly:120,hadReceipts:false}).carry,0);
+    eq('Unspent stays capped at a week',F.carry({budget:300,spent:0,weekly:120,hadReceipts:true}).carry,120);
+    eq('$137 on a 1-day trip is flagged',F.sizeCheck({total:137.39,share:17.14,days:1}).big,true);
+    eq('Shorten text',F.shortenText({days:1,budget:17.14,fit:2,wont:4}),"The trip becomes 1 day and the budget $17.14. 2 meals fit and 4 won't.");
+    eq('Canned tuna keeps a year',F.shelfGuess('Chunk Light Tuna').days,365);
+    eq('Marinara keeps 180 days',F.shelfGuess('Marinara Pasta Sauce').days,180);
+    eq('Sparkling water keeps 180 days',F.shelfGuess('Sparkling Water Lime').days,180);
+    eq('Summer sausage keeps 60 days',F.shelfGuess('Summer Sausage').days,60);
+    eq('Unknown items get no date',F.shelfGuess('Mystery Thing').days,null);
+    eq('A one-digit misread ranks first',F.rankCandidates([{amount:2.49},{amount:3.86},{amount:1.00}],.3)[0].fix,3.56);
+    eq('Two reads must agree',[F.twoRead('382745','382745'),F.twoRead('282743','382745')],['382745',null]);
+    eq('2 extra portions tick one 2-portion slot',F.leftoverTicks([{key:'a',pe:2,k:'d1',m:'dinner'},{key:'b',pe:2,k:'d2',m:'lunch'}],2,'d1','lunch'),['a']);
+    eq('Appetite stops map to portions',F.APPETITE.map(a=>a[1]),[.5,.75,1,1.25,1.5]);
+    eq('11:41 am has passed breakfast only',F.passedMeals(11.68),['breakfast']);
+    eq('Long parentheticals are cut',[F.shortTitle('Shakshuka (eggs in spiced tomato sauce)'),F.shortTitle('Tacos (beef)')],['Shakshuka','Tacos (beef)']);
+    eq('Backup is due after a day',F.backupDue({lastAt:0,now:1e9,changes:0}),true);
+    eq('Backup waits 30 minutes between events',F.backupDue({lastAt:1e9,now:1e9+6e5,changes:0,event:true}),false);
+    const D=864e5,now=40*D;const files=Array.from({length:40},(_,i)=>({name:'f'+i,at:now-i*D}));const del=F.backupKeep(files,now,7,4);
+    eq('Retention keeps 7 daily plus weekly copies',files.length-del.length<=11&&files.length-del.length>=7,true);
+    eq('Three days without a backup is stale',F.backupStale(0,3*D),true);
     }}
     {const C=window.CookCore;if(C){
     grp('6.4 units and recipe text (cook-core)');
