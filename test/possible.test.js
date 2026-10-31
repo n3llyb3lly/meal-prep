@@ -123,3 +123,17 @@ test('the version 5.3 catalog shape is unchanged', () => {
   const v1 = plain(G.toV1_(G.buildCatalog_(null).catalog));
   assert.ok(v1.items.every(x => !('possible' in x) && !('where' in x)));
 });
+
+test('an item.add the phone already priced (a receipt at another store) arrives as an ordinary item', () => {
+  const { g: G, sheet } = loadCodeGs(tabs());
+  const [a, b] = send(G, [
+    ['item.add', { ...possibleAdd('u_star_anise', 'Star anise', 'Cub')[1], offers: [{ store: 'cub', price: 3.99, pack: '1 oz', unit: 'oz', pkg: 1, priceDate: '2026-10-31', src: 'receipt' }] }],
+    ['item.add', { ...possibleAdd('u_lulo', 'Lulo pulp')[1], price: 4.49, priceDate: '2026-10-31', src: 'receipt' }]]);
+  assert.deepStrictEqual([a.status, b.status], ['applied', 'applied']);
+  assert.strictEqual(rowOf(sheet, 'star_anise').possible, 'N');
+  assert.deepStrictEqual([rowOf(sheet, 'lulo').possible, rowOf(sheet, 'lulo').price], ['N', 4.49]);
+  const offers = sheet('Offers')._data;
+  assert.ok(offers.some(r => r[0] === 'star_anise' && r[1] === 'cub' && r[2] === 3.99));
+  const I = Object.fromEntries(plain(G.buildCatalog_(null).catalog.items).map(x => [x.id, x]));
+  assert.deepStrictEqual([I.star_anise.possible, I.star_anise.price, I.lulo.possible], [undefined, 3.99, undefined]);
+});

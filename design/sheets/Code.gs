@@ -1253,7 +1253,8 @@ var HANDLERS = {
       return { status: 'applied', target: byName, message: d.name + ' is already in the sheet as ' + byName + '. Linked to it.' };
     }
     // Version 7: an ingredient from a recipe that Aldi doesn't sell. No price yet, so price, date and source stay blank.
-    var poss = truthy_(d.possible) && !(+d.price > 0);
+    // A receipt price the phone folded into a queued item.add (its price, or an offer at another store) makes it ordinary.
+    var poss = truthy_(d.possible) && !(+d.price > 0) && !(d.offers || []).some(function (o) { return +o.price > 0; });
     var base = String(d.id).replace(/^u_/, ''); if (!/^[a-z0-9_]+$/.test(base)) base = slug_(d.name) || 'item';
     var id = newId_(base, ctx.itemRow);
     var nums = (d.nums || []).filter(function (n) { return /^\d{4,8}$/.test(String(n)); });
@@ -1283,7 +1284,6 @@ var HANDLERS = {
         price_date: o.priceDate ? dateVal_(o.priceDate) : '', price_source: o.src === 'estimate' ? 'estimate' : (o.src === 'receipt' ? 'receipt' : 'phone') });
     });
     addIdMap_(ctx, d.id, id, 'item');
-    if (!poss && offers.some(function (o) { return +o.price > 0; })) clearPossible_(ctx, id);
     return { status: 'applied', target: id, message: 'Added ' + d.name + ' as ' + id + (poss ? ' (a possible ingredient, no price yet)' : '') + '.' };
   },
 
