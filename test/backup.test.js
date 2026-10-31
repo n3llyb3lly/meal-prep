@@ -129,31 +129,29 @@ test('an unknown action fails cleanly instead of looking like an empty change ba
   assert.strictEqual(post({ changes: [] }).ok, true, 'a plain change batch still works');
 });
 
-test('retention keeps the newest of each of the last 7 days and of each of the last 4 calendar weeks', () => {
-  const { g } = setup();
-  const now = Date.UTC(2026, 9, 19, 12), files = [];   // Monday 19 October 2026
-  // two backups a day for 40 days: 08:00 and 20:00 (today only has 08:00 so far)
-  for (let ago = 0; ago < 40; ago++) for (const h of [8, 20]) { const at = Date.UTC(2026, 9, 19 - ago, h); if (at <= now) files.push({ fileId: ago + '@' + h, at }); }
-  const kept = Object.keys(plain(g.backupKeep_(files, now, { daily: 7, weekly: 4 }, 'UTC'))).sort((a, b) => parseInt(a) - parseInt(b));
-  // days 0-6: the newest that day. Weeks: this one and last one are already covered; then Sunday 11 Oct and Sunday 4 Oct.
-  assert.deepStrictEqual(kept, ['0@8', '1@20', '2@20', '3@20', '4@20', '5@20', '6@20', '8@20', '15@20']);
-});
+// The app's own rule, FirstCore.backupKeep (design/source/tools/first-core.js), returns the names to delete.
+const FirstCore = require('../design/source/tools/first-core.js');
+const fcKept = (files, now) => { const del = new Set(FirstCore.backupKeep(files.map(f => ({ name: f.fileId, at: f.at })), now, 7, 4)); return files.map(f => f.fileId).filter(id => !del.has(id)).sort(); };
+const gsKept = (g, files, now) => Object.keys(plain(g.backupKeep_(files, now, { daily: 7, weekly: 4 }))).sort();
 
-test('retention with a gap keeps the newest backup of each week that has one', () => {
+test('retention is the same rule as FirstCore.backupKeep', () => {
   const { g } = setup();
-  const now = Date.UTC(2026, 9, 19, 12), at = ago => Date.UTC(2026, 9, 19 - ago, 9);
-  // 10 and 12 days ago share the week of 5 Oct; 16 is the week of 28 Sep; 26, 30 and 60 are more than 4 weeks back
-  const files = [10, 12, 16, 26, 30, 60].map(a => ({ fileId: 'd' + a, at: at(a) }));
-  assert.deepStrictEqual(Object.keys(plain(g.backupKeep_(files, now, { daily: 7, weekly: 4 }, 'UTC'))).sort(), ['d10', 'd16']);
-});
-
-test('the time zone decides which day a backup belongs to', () => {
-  const { g } = setup();
-  g.Utilities.formatDate = (d, tz, f) => new Date(d.getTime() + (tz === 'America/Chicago' ? -5 : 0) * 36e5).toISOString().slice(0, 10);
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const now = Date.UTC(2026, 9, 19, 12);
-  // 02:00 and 04:00 UTC on the 19th are both the evening of the 18th in Chicago, so only the later one stays
-  const files = [{ fileId: 'a', at: Date.UTC(2026, 9, 19, 2) }, { fileId: 'b', at: Date.UTC(2026, 9, 19, 4) }, { fileId: 'c', at: Date.UTC(2026, 9, 19, 11) }];
-  assert.deepStrictEqual(Object.keys(plain(g.backupKeep_(files, now, { daily: 7, weekly: 4 }, 'America/Chicago'))).sort(), ['b', 'c']);
+  for (let run = 0; run < 300; run++) {
+    const n = 1 + Math.floor(rnd() * 40), span = [3, 10, 40, 90][run % 4] * DAY;
+    const files = Array.from({ length: n }, (_, i) => ({ fileId: 'f' + i, at: Math.round(now - rnd() * span) }));
+    assert.deepStrictEqual(gsKept(g, files, now), fcKept(files, now), 'run ' + run);
+  }
+});
+
+test('retention keeps the last 7 days that have a backup, even after a gap', () => {
+  const { g } = setup();
+  const now = Date.UTC(2026, 9, 31, 12), at = ago => Date.UTC(2026, 9, 31 - ago, 9);
+  // the phone was off for three weeks: the 7 most recent backup days are kept, however old
+  const files = [0, 22, 23, 24, 25, 26, 27, 28, 29].map(a => ({ fileId: 'd' + a, at: at(a) }));
+  assert.deepStrictEqual(gsKept(g, files, now), ['d0', 'd22', 'd23', 'd24', 'd25', 'd26', 'd27']);
+  assert.deepStrictEqual(gsKept(g, files, now), fcKept(files, now));
 });
 
 test('saving applies retention and never deletes the file it just wrote', () => {
@@ -162,8 +160,11 @@ test('saving applies retention and never deletes the file it just wrote', () => 
   for (let i = 0; i < 50; i++) { setNow(start + i * DAY); save(post, { id: 'r' + i, name: 'meal-prep-r' + i + '.json', obj: { i } }); }
   const names = d.live().filter(f => f._folder._name === 'Meal Prep backups').map(f => f._name);
   assert.ok(names.includes('meal-prep-r49.json'));
-  // last one is Tuesday 20 Oct: 14-20 Oct daily, then Sunday 11 Oct and Sunday 4 Oct for the weeks before
-  assert.deepStrictEqual(names.sort(), [33, 40, 43, 44, 45, 46, 47, 48, 49].map(i => 'meal-prep-r' + i + '.json').sort());
+  // the same files as FirstCore.backupKeep applied after each save, as the app expects
+  let fc = [];
+  for (let i = 0; i < 50; i++) { const t = start + i * DAY; fc.push({ fileId: 'meal-prep-r' + i + '.json', at: t }); const k = new Set(fcKept(fc, t)); fc = fc.filter(f => k.has(f.fileId)); }
+  assert.deepStrictEqual(names.sort(), fc.map(f => f.fileId).sort());
+  assert.ok(names.length >= 7 && names.length <= 12, names.join(', '));
   assert.deepStrictEqual(d.live().filter(f => f._folder._name === '_parts'), [], 'no parts left behind');
   // the same name sent again replaces the file rather than adding a second one
   save(post, { id: 'r49', name: 'meal-prep-r49.json', obj: { i: 'again' } });
